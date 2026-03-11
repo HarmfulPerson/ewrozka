@@ -50,9 +50,10 @@ export default function SpotkanieePage() {
         return;
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+      const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001').replace(/\/+$/, '');
+      const apiBase = base.endsWith('/api') ? base : `${base}/api`;
       const response = await fetch(
-        `${API_URL}/api/meeting-room/join/${params.token}`,
+        `${apiBase}/meeting-room/join/${params.token}`,
         { headers: { Authorization: `Token ${user.token}` } },
       );
 

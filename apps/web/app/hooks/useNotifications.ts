@@ -2,8 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { getApiBaseUrl } from '../lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8001';
+function getServerBaseUrl() {
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8001').replace(/\/+$/, '');
+  return base.endsWith('/api') ? base.replace(/\/api\/?$/, '') : base;
+}
 
 export function useNotifications(token: string | null | undefined) {
   const [pendingCount, setPendingCount] = useState<number>(0);
@@ -13,7 +17,7 @@ export function useNotifications(token: string | null | undefined) {
     if (!token) return;
 
     // Pobierz wstępny licznik przez REST
-    fetch(`${API_URL}/api/notifications/pending-count`, {
+    fetch(`${getApiBaseUrl()}/notifications/pending-count`, {
       headers: { Authorization: `Token ${token}` },
     })
       .then((r) => r.ok ? r.json() : null)
@@ -25,7 +29,7 @@ export function useNotifications(token: string | null | undefined) {
       .catch(() => {/* ignore */});
 
     // Połącz WebSocket
-    const socket = io(`${API_URL}/notifications`, {
+    const socket = io(`${getServerBaseUrl()}/notifications`, {
       transports: ['websocket'],
     });
     socketRef.current = socket;

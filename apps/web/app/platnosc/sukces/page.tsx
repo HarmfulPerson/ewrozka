@@ -5,11 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import './sukces.css';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+function apiUrl(path: string) {
+  const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001').replace(/\/+$/, '');
+  const apiBase = base.endsWith('/api') ? base : `${base}/api`;
+  return `${apiBase}/${path}`;
+}
 
 async function verifyStripeSession(sessionId: string): Promise<void> {
   try {
-    await fetch(`${API_URL}/api/stripe/verify-session`, {
+    await fetch(apiUrl('stripe/verify-session'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId }),
@@ -21,7 +25,7 @@ async function verifyStripeSession(sessionId: string): Promise<void> {
 
 async function verifyPaymentIntent(paymentIntentId: string): Promise<void> {
   try {
-    await fetch(`${API_URL}/api/stripe/verify-payment-intent`, {
+    await fetch(apiUrl('stripe/verify-payment-intent'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ paymentIntentId }),

@@ -2,8 +2,9 @@
  * API dla kalendarza, dostępności i appointmentów
  */
 
-const getBaseUrl = () =>
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8001/api';
+import { getApiBaseUrl } from './api';
+
+const getBaseUrl = getApiBaseUrl;
 
 async function fetchApi(endpoint: string, options?: RequestInit) {
   const url = `${getBaseUrl()}/${endpoint}`;
@@ -58,7 +59,7 @@ export async function apiRateAppointment(
   rating: number,
   comment?: string,
 ): Promise<void> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'}/api/appointments/${id}/rate`, {
+  const res = await fetch(`${getApiBaseUrl()}/appointments/${id}/rate`, {
     method: 'POST',
     headers: { Authorization: `Token ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ rating, comment: comment?.trim() || undefined }),

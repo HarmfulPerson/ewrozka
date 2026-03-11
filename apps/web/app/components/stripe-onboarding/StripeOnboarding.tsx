@@ -8,7 +8,11 @@ import {
 import { loadConnectAndInitialize } from '@stripe/connect-js';
 import './StripeOnboarding.css';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+function apiUrl(path: string) {
+  const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001').replace(/\/+$/, '');
+  const apiBase = base.endsWith('/api') ? base : `${base}/api`;
+  return `${apiBase}/${path}`;
+}
 
 interface StripeOnboardingProps {
   token: string;
@@ -28,7 +32,7 @@ export function StripeOnboarding({ token, onComplete, onExit }: StripeOnboarding
         publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
         locale: 'pl-PL',
         fetchClientSecret: async () => {
-          const res = await fetch(`${API_URL}/api/stripe/connect/account-session`, {
+          const res = await fetch(apiUrl('stripe/connect/account-session'), {
             method: 'POST',
             headers: {
               Authorization: `Token ${token}`,

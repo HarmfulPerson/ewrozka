@@ -16,7 +16,12 @@ import { apiGetGuestBookingDetails } from '../../../lib/api-meetings';
 import './guest-payment.css';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8001';
+
+function apiUrl(path: string) {
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8001').replace(/\/+$/, '');
+  const apiBase = base.endsWith('/api') ? base : `${base}/api`;
+  return `${apiBase}/${path}`;
+}
 
 interface BookingDetails {
   id: string;
@@ -46,7 +51,7 @@ function GuestCheckoutForm({
 
   const verifyAndSucceed = async (paymentIntentId: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/guest-bookings/verify-payment`, {
+      const res = await fetch(apiUrl('guest-bookings/verify-payment'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentIntentId }),
@@ -153,7 +158,7 @@ export default function GuestPaymentPage() {
 
         if (details.status === 'accepted') {
           const res = await fetch(
-            `${API_URL}/api/guest-bookings/${bookingId}/payment-intent`,
+            apiUrl(`guest-bookings/${bookingId}/payment-intent`),
             { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) },
           );
           if (!res.ok) {

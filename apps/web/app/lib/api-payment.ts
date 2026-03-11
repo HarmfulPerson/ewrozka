@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+import { getApiBaseUrl } from './api';
 
 export interface WalletDto {
   balance: number;
@@ -19,7 +19,7 @@ export interface TransactionDto {
 }
 
 async function fetchApi(endpoint: string, options?: RequestInit) {
-  const url = `${API_URL}/api/${endpoint}`;
+  const url = `${getApiBaseUrl()}/${endpoint}`;
   console.log('[api-payment] Fetching:', url, 'Options:', options);
   const response = await fetch(url, {
     ...options,

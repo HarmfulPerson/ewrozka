@@ -3,8 +3,15 @@
  * Base URL: NEXT_PUBLIC_API_URL (np. http://localhost:8001/api)
  */
 
-const getBaseUrl = () =>
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8001/api';
+function getApiBaseUrl(): string {
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8001').replace(/\/+$/, '');
+  return base.endsWith('/api') ? base : `${base}/api`;
+}
+
+const getBaseUrl = getApiBaseUrl;
+
+/** Eksportowana – do budowania URL-i API w innych modułach. */
+export { getApiBaseUrl };
 
 /** URL bazowy serwera (bez /api) – do serwowania uploadów. */
 export function getUploadsBaseUrl(): string {

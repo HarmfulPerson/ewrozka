@@ -14,13 +14,17 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
 );
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+function apiUrl(path: string) {
+  const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001').replace(/\/+$/, '');
+  const apiBase = base.endsWith('/api') ? base : `${base}/api`;
+  return `${apiBase}/${path}`;
+}
 
 async function apiCreatePaymentIntent(
   token: string,
   appointmentId: number,
 ): Promise<{ clientSecret: string }> {
-  const res = await fetch(`${API_URL}/api/stripe/payment-intent`, {
+  const res = await fetch(apiUrl('stripe/payment-intent'), {
     method: 'POST',
     headers: {
       Authorization: `Token ${token}`,
@@ -53,7 +57,7 @@ function CheckoutForm({ appointmentId, onSuccess, onCancel }: CheckoutFormProps)
   /** Wywołaj backend, żeby zaktualizował status spotkania i potwierdź sukces. */
   const verifyAndSucceed = async (paymentIntentId: string) => {
     try {
-      const res = await fetch(`${API_URL}/api/stripe/verify-payment-intent`, {
+      const res = await fetch(apiUrl('stripe/verify-payment-intent'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentIntentId }),
@@ -74,7 +78,7 @@ function CheckoutForm({ appointmentId, onSuccess, onCancel }: CheckoutFormProps)
     for (let i = 0; i < maxAttempts; i++) {
       await new Promise((r) => setTimeout(r, 2000));
       try {
-        const res = await fetch(`${API_URL}/api/stripe/verify-payment-intent`, {
+        const res = await fetch(apiUrl('stripe/verify-payment-intent'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ paymentIntentId }),

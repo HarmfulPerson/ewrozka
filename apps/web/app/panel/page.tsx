@@ -15,7 +15,11 @@ import {
 import { PaymentModal } from '../components/payment/PaymentModal';
 import './panel-dashboard.css';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+function apiUrl(path: string) {
+  const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001').replace(/\/+$/, '');
+  const apiBase = base.endsWith('/api') ? base : `${base}/api`;
+  return `${apiBase}/${path}`;
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pl-PL', {
@@ -305,7 +309,7 @@ function PanelPage() {
           onClose={() => setShowFeaturedModal(false)}
           onSuccess={handleFeaturedSuccess}
           clientSecretLoader={() =>
-            fetch(`${API_URL}/api/featured/payment-intent`, {
+            fetch(apiUrl('featured/payment-intent'), {
               method: 'POST',
               headers: {
                 Authorization: `Token ${user.token}`,
