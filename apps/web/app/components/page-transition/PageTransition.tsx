@@ -40,8 +40,8 @@ export default function PageTransition() {
       if (href.startsWith('#')) return;
 
       // Pomiń jeśli to ta sama ścieżka (bez query/hash)
-      const targetPath = href.split('?')[0].split('#')[0];
-      const currentPath = pathname.split('?')[0].split('#')[0];
+      const targetPath = (href.split('?')[0] ?? href).split('#')[0] ?? href;
+      const currentPath = (pathname.split('?')[0] ?? pathname).split('#')[0] ?? pathname;
       if (targetPath === currentPath) return;
 
       // Pomiń przejścia wewnątrz panelu – tam działa PanelPageTransition
