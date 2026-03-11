@@ -31,8 +31,8 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: ${{ runner.os }}-turbo-
+          key: ${{ runner.os }}-turbo-api-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-turbo-api-
 
       - name: Install dependencies
         run: pnpm install
@@ -62,8 +62,8 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: ${{ runner.os }}-turbo-
+          key: ${{ runner.os }}-turbo-web-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-turbo-web-
 
       - name: Install dependencies
         run: pnpm install

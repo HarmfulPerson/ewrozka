@@ -1,18 +1,19 @@
 name: Deploy Staging
 
 on:
-  # Odkomentuj gdy masz VPS i skonfigurowane secrets:
+  # Odkomentuj gdy VPS gotowy i secrets skonfigurowane:
   # push:
   #   branches: [develop]
   workflow_dispatch:
 
 jobs:
   deploy:
+    name: Deploy na staging
     runs-on: ubuntu-latest
     environment: staging
 
     steps:
-      - name: Deploy na serwer (staging)
+      - name: Deploy na serwer (SSH)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -22,23 +23,14 @@ jobs:
             set -e
             cd /opt/ewrozka
 
-            # Pobierz najnowszy kod
             git fetch origin
             git checkout develop
             git pull origin develop
 
-            # Zbuduj i uruchom staging
             docker compose -f docker-compose.staging.yml \
               --env-file .env.staging \
               up -d --build --remove-orphans
 
-            # Uruchom migracje
-            docker compose -f docker-compose.staging.yml \
-              --env-file .env.staging \
-              exec -T api-staging \
-              sh -c "cd /app && node -e \"require('./dist/migration-runner').runMigrations()\"" || true
-
-            # Usuń stare obrazy
             docker image prune -f
 
-            echo "✅ Staging deployed successfully"
+            echo "Staging deployed successfully"
