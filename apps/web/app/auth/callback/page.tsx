@@ -1,10 +1,11 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { setStoredUser } from '../../lib/auth-mock';
 
-export default function AuthCallbackPage() {
+function AuthCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -40,5 +41,23 @@ export default function AuthCallbackPage() {
     }}>
       <p>Logowanie...</p>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        color: 'var(--text-primary)'
+      }}>
+        <p>Logowanie...</p>
+      </div>
+    }>
+      <AuthCallbackInner />
+    </Suspense>
   );
 }
