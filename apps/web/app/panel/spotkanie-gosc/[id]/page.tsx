@@ -2,8 +2,8 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { getStoredUser } from '../../../../lib/auth-mock';
-import { apiGetWizardGuestBookingMeetingRoom } from '../../../../lib/api-meetings';
+import { getStoredUser } from '../../../lib/auth-mock';
+import { apiGetWizardGuestBookingMeetingRoom } from '../../../lib/api-meetings';
 import VideoCall from '../../../spotkanie/components/video-call';
 import '../../../spotkanie/spotkanie.css';
 
