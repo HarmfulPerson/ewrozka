@@ -127,8 +127,8 @@ export default function AdvertisementPage() {
     try {
       const today = new Date();
       const threeMonthsLater = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
-      const fromDate = today.toISOString().split('T')[0];
-      const toDate = threeMonthsLater.toISOString().split('T')[0];
+      const fromDate = today.toISOString().split('T')[0] ?? '';
+      const toDate = threeMonthsLater.toISOString().split('T')[0] ?? '';
       const response = await apiGetAvailableSlots(advertisement!.id, fromDate, toDate);
       const uniqueDates = [...new Set(response.slots.map(slot => slot.date))];
       setAvailableDates(uniqueDates);
@@ -198,7 +198,7 @@ export default function AdvertisementPage() {
       const date = new Date(dateStr);
       const nextDay = new Date(date.getTime() + 24 * 60 * 60 * 1000);
       const fromDate = dateStr;
-      const toDate = nextDay.toISOString().split('T')[0];
+      const toDate = nextDay.toISOString().split('T')[0] ?? '';
       const response = await apiGetAvailableSlots(advertisement.id, fromDate, toDate);
       setAvailableSlots(response.slots);
     } catch (error) {
@@ -244,7 +244,7 @@ export default function AdvertisementPage() {
 
   const formatMonthName = (monthKey: string) => {
     const [year, month] = monthKey.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+    const date = new Date(parseInt(year ?? '0'), parseInt(month ?? '1') - 1, 1);
     return date.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
   };
 
@@ -585,9 +585,9 @@ export default function AdvertisementPage() {
                         <div className="booking-slots">
                           {loadingSlots ? <p className="booking-slots__loading">Ładowanie...</p> : (
                             <div className="booking-slots__grid">
-                              {availableSlots.map((slot, i) => (
+                              {availableSlots.map((slot: SlotDto, i) => (
                                 <button key={i}
-                                  className={`booking-slot ${selectedSlot?.startsAt === slot.startsAt ? 'booking-slot--selected' : ''}`}
+                                  className="booking-slot"
                                   onClick={() => handleSlotSelect(slot)}>
                                   {slot.startTime}
                                 </button>

@@ -448,11 +448,11 @@ export default function MojeSpotkania() {
                                   className="moje-spotkania-rating__comment"
                                   placeholder="Dodaj komentarz (opcjonalnie)..."
                                   rows={2}
-                                  value={pendingRating[item.id].comment}
+                                  value={pendingRating[item.id]?.comment ?? ''}
                                   onChange={(e) =>
                                     setPendingRating((prev) => ({
                                       ...prev,
-                                      [item.id]: { ...prev[item.id], comment: e.target.value },
+                                      [item.id]: { stars: prev[item.id]?.stars ?? 0, comment: e.target.value },
                                     }))
                                   }
                                 />

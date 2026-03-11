@@ -10,7 +10,7 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
   
   // Don't set Content-Type for DELETE requests without body
   const headers: Record<string, string> = {
-    ...options?.headers,
+    ...(options?.headers as Record<string, string> | undefined),
   };
   
   if (options?.body) {

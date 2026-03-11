@@ -100,7 +100,7 @@ export default function GuestSpotkaniePage() {
       <div className="spotkanie-call-wrapper">
         <VideoCall
           roomUrl={room.roomUrl}
-          token={room.token}
+          meetingToken={room.token}
           onLeave={() => setInCall(false)}
         />
       </div>

@@ -37,7 +37,7 @@ export function clearStoredUser(): void {
 
 export function userFromApi(apiUser: ApiUser): StoredUser {
   return {
-    token: apiUser.token,
+    token: apiUser.token ?? '',
     email: apiUser.email,
     username: apiUser.username,
     bio: apiUser.bio,

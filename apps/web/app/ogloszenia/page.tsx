@@ -184,7 +184,7 @@ export default function OgloszeniaPage() {
     if (!sentinel) return;
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+        if (entries[0]?.isIntersecting && hasMore && !loadingMore && !loading) {
           setLoadingMore(true);
           fetchWizards(offset, activeName, activeTopics, activeRating, true)
             .then(() => setOffset(o => o + PAGE_SIZE));

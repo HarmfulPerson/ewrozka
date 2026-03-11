@@ -9,7 +9,7 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
   const url = `${getBaseUrl()}/${endpoint}`;
   
   const headers: Record<string, string> = {
-    ...options?.headers,
+    ...(options?.headers as Record<string, string> | undefined),
   };
   
   if (options?.body && typeof options.body === 'string') {

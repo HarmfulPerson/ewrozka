@@ -236,7 +236,7 @@ export default function PanelLayout({
                   />
                 ) : (
                   <span className="panel-sidebar__avatar-letter">
-                    {(user?.username || 'U')[0].toUpperCase()}
+                    {(user?.username || 'U').charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>

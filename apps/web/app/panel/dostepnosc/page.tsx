@@ -135,8 +135,8 @@ export default function DostepnoscPage() {
       if (selectedDays.length === 0) throw new Error('Wybierz przynajmniej jeden dzień');
       if (!startTime || !endTime) throw new Error('Wybierz godziny');
 
-      const [startH, startM] = startTime.split(':').map(Number);
-      const [endH, endM] = endTime.split(':').map(Number);
+      const [startH = 0, startM = 0] = startTime.split(':').map(Number);
+      const [endH = 0, endM = 0] = endTime.split(':').map(Number);
 
       if (endH * 60 + endM <= startH * 60 + startM) {
         throw new Error('Godzina zakończenia musi być po godzinie rozpoczęcia');

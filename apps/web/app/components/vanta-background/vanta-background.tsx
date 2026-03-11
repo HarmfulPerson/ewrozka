@@ -165,9 +165,9 @@ export function VantaBackground({ children }: VantaBackgroundProps) {
       for (let i = 0; i < numConstellations; i++) {
         const template = zodiacTemplates[Math.floor(Math.random() * zodiacTemplates.length)];
         constellations.push({
-          name: template.name,
-          points: template.points,
-          connections: template.connections,
+          name: template?.name ?? '',
+          points: template?.points ?? [],
+          connections: template?.connections ?? [],
           posX: Math.random() * canvas.width,
           posY: Math.random() * canvas.height,
           opacity: Math.random() * 0.2,
@@ -243,8 +243,8 @@ export function VantaBackground({ children }: VantaBackgroundProps) {
         for (let j = i + 1; j < positions.length; j++) {
           if (connections >= maxConnections) break;
 
-          const dx = positions[i].x - positions[j].x;
-          const dy = positions[i].y - positions[j].y;
+          const dx = (positions[i]?.x ?? 0) - (positions[j]?.x ?? 0);
+          const dy = (positions[i]?.y ?? 0) - (positions[j]?.y ?? 0);
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance < maxConnectionDistance) {
@@ -252,8 +252,8 @@ export function VantaBackground({ children }: VantaBackgroundProps) {
             ctx.strokeStyle = `rgba(139, 92, 246, ${alpha})`;
             ctx.lineWidth = 0.8;
             ctx.beginPath();
-            ctx.moveTo(positions[i].x, positions[i].y);
-            ctx.lineTo(positions[j].x, positions[j].y);
+            ctx.moveTo(positions[i]?.x ?? 0, positions[i]?.y ?? 0);
+            ctx.lineTo(positions[j]?.x ?? 0, positions[j]?.y ?? 0);
             ctx.stroke();
             connections++;
           }
@@ -291,9 +291,9 @@ export function VantaBackground({ children }: VantaBackgroundProps) {
           constellation.posX = Math.random() * canvas.width;
           constellation.posY = Math.random() * canvas.height;
           const template = zodiacTemplates[Math.floor(Math.random() * zodiacTemplates.length)];
-          constellation.name = template.name;
-          constellation.points = template.points;
-          constellation.connections = template.connections;
+          constellation.name = template?.name ?? '';
+          constellation.points = template?.points ?? [];
+          constellation.connections = template?.connections ?? [];
           constellation.scale = 0.8 + Math.random() * 0.6;
           constellation.flashIntensity = 1;
         }
@@ -328,10 +328,10 @@ export function VantaBackground({ children }: VantaBackgroundProps) {
           constellation.connections.forEach(([from, to]) => {
             const fromPoint = constellation.points[from];
             const toPoint = constellation.points[to];
-            const x1 = constellation.posX + fromPoint.x * constellation.scale;
-            const y1 = constellation.posY + fromPoint.y * constellation.scale;
-            const x2 = constellation.posX + toPoint.x * constellation.scale;
-            const y2 = constellation.posY + toPoint.y * constellation.scale;
+            const x1 = constellation.posX + (fromPoint?.x ?? 0) * constellation.scale;
+            const y1 = constellation.posY + (fromPoint?.y ?? 0) * constellation.scale;
+            const x2 = constellation.posX + (toPoint?.x ?? 0) * constellation.scale;
+            const y2 = constellation.posY + (toPoint?.y ?? 0) * constellation.scale;
 
             ctx.beginPath();
             ctx.moveTo(x1, y1);
