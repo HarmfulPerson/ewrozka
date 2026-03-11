@@ -4,6 +4,7 @@ import {
   AdvertisementEntity,
   AppointmentEntity,
   AvailabilityEntity,
+  GuestBookingEntity,
   MeetingRequestEntity,
 } from '@repo/postgresql-typeorm';
 import { I18nService } from 'nestjs-i18n';
@@ -28,6 +29,8 @@ export class AvailabilityService {
     private readonly appointmentRepository: Repository<AppointmentEntity>,
     @InjectRepository(MeetingRequestEntity)
     private readonly meetingRequestRepository: Repository<MeetingRequestEntity>,
+    @InjectRepository(GuestBookingEntity)
+    private readonly guestBookingRepository: Repository<GuestBookingEntity>,
     private readonly i18n: I18nService,
   ) {}
 
@@ -140,6 +143,19 @@ export class AvailabilityService {
           'Nie możesz usunąć tego bloku dostępności, ponieważ istnieje oczekujący wniosek o spotkanie w tym terminie. Odrzuć go najpierw lub poczekaj na zakończenie spotkania.',
         );
       }
+
+      const guestBooking = await this.guestBookingRepository
+        .createQueryBuilder('gb')
+        .where('gb.advertisementId IN (:...adIds)', { adIds })
+        .andWhere('gb.scheduledAt >= :start', { start: block.startsAt })
+        .andWhere('gb.scheduledAt < :end', { end: block.endsAt })
+        .andWhere('gb.status IN (:...statuses)', { statuses: ['pending', 'accepted', 'paid'] })
+        .getOne();
+      if (guestBooking) {
+        throw new BadRequestException(
+          'Nie możesz usunąć tego bloku dostępności, ponieważ istnieje rezerwacja gościa w tym terminie.',
+        );
+      }
     }
 
     await this.availabilityRepository.remove(block);
@@ -209,6 +225,15 @@ export class AvailabilityService {
     for (const r of pendingRequests) {
       if (r.requestedStartsAt) {
         bookedStarts.add(r.requestedStartsAt.toISOString());
+      }
+    }
+
+    const guestBookings = await this.guestBookingRepository.find({
+      where: { advertisementId },
+    });
+    for (const g of guestBookings) {
+      if (['pending', 'accepted', 'paid'].includes(g.status)) {
+        bookedStarts.add(g.scheduledAt.toISOString());
       }
     }
 

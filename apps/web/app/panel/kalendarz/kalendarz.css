@@ -418,3 +418,21 @@
   color: #999;
   opacity: 0.6;
 }
+
+/* Rezerwacje gości – nieco odmienny odcień */
+.calendar-week__appointment--guest {
+  background: rgba(180, 130, 70, 0.2);
+  border-color: rgba(180, 130, 70, 0.45);
+  color: #e8b86d;
+}
+
+.calendar-week__appointment--guest.calendar-week__appointment--clickable:hover {
+  background: rgba(180, 130, 70, 0.35);
+  border-color: rgba(180, 130, 70, 0.6);
+}
+
+.calendar-week__appointment--guest.calendar-week__appointment--locked {
+  background: rgba(160, 115, 60, 0.2);
+  border-color: rgba(160, 115, 60, 0.4);
+  color: #d4a574;
+}

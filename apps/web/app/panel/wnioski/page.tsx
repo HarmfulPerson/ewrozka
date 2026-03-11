@@ -360,6 +360,27 @@ export default function WnioskiPage() {
                     </div>
                   </div>
 
+                  {g.status === 'paid' && (
+                    <div className="wnioski-card__actions">
+                      {canJoin(g.scheduledAt) ? (
+                        <Link href={`/panel/spotkanie-gosc/${g.id}`}
+                          className="wnioski-card__button wnioski-card__button--meeting">
+                          🎥 Dołącz do spotkania
+                        </Link>
+                      ) : (
+                        <div className="wnioski-card__meeting-wrapper">
+                          <div className="wnioski-card__button wnioski-card__button--meeting-disabled">
+                            🎥 Dołącz do spotkania
+                          </div>
+                          <div className="wnioski-tooltip">
+                            <span className="wnioski-tooltip__icon">ℹ</span>
+                            <span className="wnioski-tooltip__text">Dostępne 5 minut przed rozpoczęciem</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {isPending && (
                     <div className="wnioski-card__actions">
                       <button className="wnioski-card__button wnioski-card__button--accept"

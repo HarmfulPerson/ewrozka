@@ -5,7 +5,11 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { getStoredUser } from '../lib/auth-mock';
 import { apiGetMyAppointments, AppointmentDto } from '../lib/api-calendar';
-import { apiGetMyMeetingRequests, MeetingRequestDto } from '../lib/api-meetings';
+import {
+  apiGetMyMeetingRequests,
+  apiGetWizardGuestBookings,
+  MeetingRequestDto,
+} from '../lib/api-meetings';
 import {
   apiGetMyFeaturedStatus,
   apiGetFeaturedConfig,
@@ -61,14 +65,30 @@ function PanelPage() {
     if (!user || !isWizard) { setLoading(false); return; }
 
     Promise.all([
-      apiGetMyAppointments(user.token, { status: 'paid', limit: 3 }),
+      apiGetMyAppointments(user.token, { status: 'paid', limit: 10 }),
       apiGetMyMeetingRequests(user.token, { status: 'pending', limit: 5 }),
+      apiGetWizardGuestBookings(user.token),
     ])
-      .then(([apptRes, reqRes]) => {
-        const sorted = [...apptRes.appointments].sort(
-          (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
-        );
-        setAppointments(sorted.slice(0, 3));
+      .then(([apptRes, reqRes, guestRes]) => {
+        const guestAsAppointments: Array<{ id: string; startsAt: string; durationMinutes: number; clientUsername?: string; meetingToken?: null; isGuest: true; guestBookingId: string }> =
+          (guestRes.bookings || [])
+            .filter((b) => ['paid', 'completed'].includes(b.status))
+            .map((b) => ({
+              id: `guest-${b.id}`,
+              startsAt: b.scheduledAt,
+              durationMinutes: b.durationMinutes,
+              clientUsername: b.guestName,
+              meetingToken: null,
+              isGuest: true as const,
+              guestBookingId: b.id,
+            }));
+        const merged = [
+          ...apptRes.appointments.map((a) => ({ ...a, isGuest: false })),
+          ...guestAsAppointments,
+        ].sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+        const now = Date.now();
+        const upcoming = merged.filter((m) => new Date(m.startsAt).getTime() + (m.durationMinutes || 0) * 60_000 > now);
+        setAppointments(upcoming.slice(0, 3));
         setRequests(reqRes.requests);
       })
       .catch(console.error)
@@ -230,13 +250,22 @@ function PanelPage() {
                           {isActive ? '🟢 Trwa' : timeUntil(apt.startsAt)}
                         </span>
                       )}
-                      {apt.meetingToken && isActive && (
-                        <Link
-                          href={`/spotkanie/${apt.meetingToken}`}
-                          className="dashboard__apt-join"
-                        >
-                          Dołącz →
-                        </Link>
+                      {isActive && (
+                        (apt as { meetingToken?: string | null; isGuest?: boolean; guestBookingId?: string }).isGuest ? (
+                          <Link
+                            href={`/panel/spotkanie-gosc/${(apt as { guestBookingId: string }).guestBookingId}`}
+                            className="dashboard__apt-join"
+                          >
+                            Dołącz →
+                          </Link>
+                        ) : (apt as { meetingToken?: string | null }).meetingToken ? (
+                          <Link
+                            href={`/spotkanie/${(apt as { meetingToken: string }).meetingToken}`}
+                            className="dashboard__apt-join"
+                          >
+                            Dołącz →
+                          </Link>
+                        ) : null
                       )}
                     </div>
                   </div>

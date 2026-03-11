@@ -5,11 +5,17 @@ import Link from 'next/link';
 import { Tooltip } from 'react-tooltip';
 import { toast } from 'react-hot-toast';
 import type { AvailabilityDto, AppointmentDto } from '../../../lib/api-calendar';
+import type { GuestBookingDto } from '../../../lib/api-meetings';
 import { apiCreateAvailability } from '../../../lib/api-calendar';
+
+type CalendarBusyItem =
+  | { kind: 'appointment'; startsAt: string; durationMinutes: number; apt: AppointmentDto }
+  | { kind: 'guest'; startsAt: string; durationMinutes: number; guest: GuestBookingDto };
 
 interface CalendarWeekProps {
   availabilities: AvailabilityDto[];
   appointments: AppointmentDto[];
+  guestBookings: GuestBookingDto[];
   onRefresh: () => void;
   token: string;
 }
@@ -142,7 +148,7 @@ function QuickAddMenu({
 }
 
 /* ── Main component ── */
-export function CalendarWeek({ availabilities, appointments, onRefresh, token }: CalendarWeekProps) {
+export function CalendarWeek({ availabilities, appointments, guestBookings, onRefresh, token }: CalendarWeekProps) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [quickAdd, setQuickAdd] = useState<QuickAddState | null>(null);
   const [quickSaving, setQuickSaving] = useState(false);
@@ -240,42 +246,51 @@ export function CalendarWeek({ availabilities, appointments, onRefresh, token }:
       return `${s.getFullYear()}-${(s.getMonth() + 1).toString().padStart(2, '0')}-${s.getDate().toString().padStart(2, '0')}` === dayString && apt.status === 'paid';
     });
 
+    const dayGuestBookings = (guestBookings || []).filter(g => {
+      const s = new Date(g.scheduledAt);
+      return `${s.getFullYear()}-${(s.getMonth() + 1).toString().padStart(2, '0')}-${s.getDate().toString().padStart(2, '0')}` === dayString
+        && ['pending', 'accepted', 'paid'].includes(g.status);
+    });
+
+    const dayBusyItems: CalendarBusyItem[] = [
+      ...dayAppointments.map(apt => ({ kind: 'appointment' as const, startsAt: apt.startsAt, durationMinutes: apt.durationMinutes, apt })),
+      ...dayGuestBookings.map(g => ({ kind: 'guest' as const, startsAt: g.scheduledAt, durationMinutes: g.durationMinutes, guest: g })),
+    ];
+
     const splitAvailabilityByAppointments = (avail: AvailabilityDto) => {
       const start = new Date(avail.startsAt);
       const end = new Date(avail.endsAt);
       const availStartMins = start.getHours() * 60 + start.getMinutes();
       const availEndMins = end.getHours() * 60 + end.getMinutes();
 
-      const overlappingApts = dayAppointments.filter(apt => {
-        const aptStart = new Date(apt.startsAt);
-        const aptStartMins = aptStart.getHours() * 60 + aptStart.getMinutes();
-        const aptEndMins = aptStartMins + apt.durationMinutes;
-        return aptStartMins < availEndMins && aptEndMins > availStartMins;
+      const overlappingItems = dayBusyItems.filter(item => {
+        const itemStartMins = new Date(item.startsAt).getHours() * 60 + new Date(item.startsAt).getMinutes();
+        const itemEndMins = itemStartMins + item.durationMinutes;
+        return itemStartMins < availEndMins && itemEndMins > availStartMins;
       });
 
-      if (overlappingApts.length === 0) {
-        return [{ start: availStartMins, end: availEndMins, type: 'available' as const, appointment: null }];
+      if (overlappingItems.length === 0) {
+        return [{ start: availStartMins, end: availEndMins, type: 'available' as const, item: null }];
       }
 
-      const sortedApts = overlappingApts.sort((a, b) => {
+      const sortedItems = overlappingItems.sort((a, b) => {
         const aS = new Date(a.startsAt); const bS = new Date(b.startsAt);
         return (aS.getHours() * 60 + aS.getMinutes()) - (bS.getHours() * 60 + bS.getMinutes());
       });
 
-      const blocks: Array<{ start: number; end: number; type: 'available' | 'busy'; appointment: AppointmentDto | null }> = [];
+      const blocks: Array<{ start: number; end: number; type: 'available' | 'busy'; item: CalendarBusyItem | null }> = [];
       let cur = availStartMins;
 
-      for (const apt of sortedApts) {
-        const aptS = new Date(apt.startsAt);
-        const aptStartMins = aptS.getHours() * 60 + aptS.getMinutes();
-        const aptEndMins = aptStartMins + apt.durationMinutes;
-        if (cur < aptStartMins) blocks.push({ start: cur, end: aptStartMins, type: 'available', appointment: null });
-        const busyS = Math.max(cur, aptStartMins);
-        const busyE = Math.min(availEndMins, aptEndMins);
-        if (busyS < busyE) blocks.push({ start: busyS, end: busyE, type: 'busy', appointment: apt });
-        cur = Math.max(cur, aptEndMins);
+      for (const item of sortedItems) {
+        const itemStartMins = new Date(item.startsAt).getHours() * 60 + new Date(item.startsAt).getMinutes();
+        const itemEndMins = itemStartMins + item.durationMinutes;
+        if (cur < itemStartMins) blocks.push({ start: cur, end: itemStartMins, type: 'available', item: null });
+        const busyS = Math.max(cur, itemStartMins);
+        const busyE = Math.min(availEndMins, itemEndMins);
+        if (busyS < busyE) blocks.push({ start: busyS, end: busyE, type: 'busy', item });
+        cur = Math.max(cur, itemEndMins);
       }
-      if (cur < availEndMins) blocks.push({ start: cur, end: availEndMins, type: 'available', appointment: null });
+      if (cur < availEndMins) blocks.push({ start: cur, end: availEndMins, type: 'available', item: null });
       return blocks;
     };
 
@@ -337,62 +352,124 @@ export function CalendarWeek({ availabilities, appointments, onRefresh, token }:
                 </div>
               );
             } else {
-              const apt = block.appointment!;
-              const meetingToken = apt.meetingToken;
-              if (meetingToken) {
-                const aptNow = new Date();
-                const meetingStart = new Date(apt.startsAt);
-                const fiveMinsBefore = new Date(meetingStart.getTime() - 5 * 60 * 1000);
-                const meetingEnd = new Date(meetingStart.getTime() + apt.durationMinutes * 60 * 1000);
-                const isAvailable = aptNow >= fiveMinsBefore && aptNow <= meetingEnd;
-                const fmtD = (d: Date) => `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;
-                const fmtT = (d: Date) => `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                if (isAvailable) {
-                  return (
-                    <Link key={`${avail.id}-busy-${idx}`} href={`/spotkanie/${meetingToken}`}
-                      className="calendar-week__appointment calendar-week__appointment--clickable"
-                      style={{ top: `${top}px`, height: `${height}px` }}
-                      data-tooltip-id="meeting-tooltip"
-                      data-tooltip-content={`Spotkanie z ${apt.clientUsername || 'klientem'} – Kliknij aby dołączyć`}
-                    >
-                      {showText && 'Zajęty'}
-                    </Link>
-                  );
-                } else if (aptNow < fiveMinsBefore) {
-                  const timeUntilMins = Math.ceil((fiveMinsBefore.getTime() - aptNow.getTime()) / 60000);
-                  return (
-                    <div key={`${avail.id}-busy-${idx}`}
-                      className="calendar-week__appointment calendar-week__appointment--locked"
-                      style={{ top: `${top}px`, height: `${height}px` }}
-                      data-tooltip-id="meeting-tooltip"
-                      data-tooltip-html={`<div style="text-align:center"><strong>${apt.clientUsername || 'Klient'}</strong><br/>Dostępne 5 min przed<br/>${fmtD(meetingStart)}, ${fmtT(fiveMinsBefore)}<br/><span style="color:#fbbf24">⏰ Za ${formatTimeUntil(timeUntilMins)}</span></div>`}
-                    >
-                      {showText && '🔒 Zajęty'}
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div key={`${avail.id}-busy-${idx}`}
-                      className="calendar-week__appointment calendar-week__appointment--ended"
-                      style={{ top: `${top}px`, height: `${height}px` }}
-                      data-tooltip-id="meeting-tooltip"
-                      data-tooltip-content="Spotkanie zakończone"
-                    >
-                      {showText && 'Zakończone'}
-                    </div>
-                  );
+              const item = block.item!;
+              const fmtD = (d: Date) => `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;
+              const fmtT = (d: Date) => `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+
+              if (item.kind === 'appointment') {
+                const apt = item.apt;
+                const meetingToken = apt.meetingToken;
+                if (meetingToken) {
+                  const aptNow = new Date();
+                  const meetingStart = new Date(apt.startsAt);
+                  const fiveMinsBefore = new Date(meetingStart.getTime() - 5 * 60 * 1000);
+                  const meetingEnd = new Date(meetingStart.getTime() + apt.durationMinutes * 60 * 1000);
+                  const isAvailable = aptNow >= fiveMinsBefore && aptNow <= meetingEnd;
+                  if (isAvailable) {
+                    return (
+                      <Link key={`${avail.id}-busy-${idx}`} href={`/spotkanie/${meetingToken}`}
+                        className="calendar-week__appointment calendar-week__appointment--clickable"
+                        style={{ top: `${top}px`, height: `${height}px` }}
+                        data-tooltip-id="meeting-tooltip"
+                        data-tooltip-content={`Spotkanie z ${apt.clientUsername || 'klientem'} – Kliknij aby dołączyć`}
+                      >
+                        {showText && 'Zajęty'}
+                      </Link>
+                    );
+                  } else if (aptNow < fiveMinsBefore) {
+                    const timeUntilMins = Math.ceil((fiveMinsBefore.getTime() - aptNow.getTime()) / 60000);
+                    return (
+                      <div key={`${avail.id}-busy-${idx}`}
+                        className="calendar-week__appointment calendar-week__appointment--locked"
+                        style={{ top: `${top}px`, height: `${height}px` }}
+                        data-tooltip-id="meeting-tooltip"
+                        data-tooltip-html={`<div style="text-align:center"><strong>${apt.clientUsername || 'Klient'}</strong><br/>Dostępne 5 min przed<br/>${fmtD(meetingStart)}, ${fmtT(fiveMinsBefore)}<br/><span style="color:#fbbf24">⏰ Za ${formatTimeUntil(timeUntilMins)}</span></div>`}
+                      >
+                        {showText && '🔒 Zajęty'}
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div key={`${avail.id}-busy-${idx}`}
+                        className="calendar-week__appointment calendar-week__appointment--ended"
+                        style={{ top: `${top}px`, height: `${height}px` }}
+                        data-tooltip-id="meeting-tooltip"
+                        data-tooltip-content="Spotkanie zakończone"
+                      >
+                        {showText && 'Zakończone'}
+                      </div>
+                    );
+                  }
                 }
-              } else {
+              }
+
+              if (item.kind === 'guest') {
+                const guest = item.guest;
+                const meetingStart = new Date(guest.scheduledAt);
+                const fiveMinsBefore = new Date(meetingStart.getTime() - 5 * 60 * 1000);
+                const meetingEnd = new Date(meetingStart.getTime() + guest.durationMinutes * 60 * 1000);
+                const aptNow = new Date();
+                const guestLabel = guest.guestName || 'Gość';
+
+                if (guest.status === 'paid') {
+                  const isAvailable = aptNow >= fiveMinsBefore && aptNow <= meetingEnd;
+                  if (isAvailable) {
+                    return (
+                      <Link key={`${avail.id}-busy-${idx}`} href={`/panel/spotkanie-gosc/${guest.id}`}
+                        className="calendar-week__appointment calendar-week__appointment--clickable calendar-week__appointment--guest"
+                        style={{ top: `${top}px`, height: `${height}px` }}
+                        data-tooltip-id="meeting-tooltip"
+                        data-tooltip-content={`Gość: ${guestLabel} – Kliknij aby dołączyć`}
+                      >
+                        {showText && 'Zajęty (gość)'}
+                      </Link>
+                    );
+                  } else if (aptNow < fiveMinsBefore) {
+                    const timeUntilMins = Math.ceil((fiveMinsBefore.getTime() - aptNow.getTime()) / 60000);
+                    return (
+                      <div key={`${avail.id}-busy-${idx}`}
+                        className="calendar-week__appointment calendar-week__appointment--locked calendar-week__appointment--guest"
+                        style={{ top: `${top}px`, height: `${height}px` }}
+                        data-tooltip-id="meeting-tooltip"
+                        data-tooltip-html={`<div style="text-align:center"><strong>Gość: ${guestLabel}</strong><br/>Dostępne 5 min przed<br/>${fmtD(meetingStart)}, ${fmtT(fiveMinsBefore)}<br/><span style="color:#fbbf24">⏰ Za ${formatTimeUntil(timeUntilMins)}</span></div>`}
+                      >
+                        {showText && '🔒 Zajęty (gość)'}
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div key={`${avail.id}-busy-${idx}`}
+                        className="calendar-week__appointment calendar-week__appointment--ended calendar-week__appointment--guest"
+                        style={{ top: `${top}px`, height: `${height}px` }}
+                        data-tooltip-id="meeting-tooltip"
+                        data-tooltip-content="Spotkanie z gościem zakończone"
+                      >
+                        {showText && 'Zakończone'}
+                      </div>
+                    );
+                  }
+                }
                 return (
                   <div key={`${avail.id}-busy-${idx}`}
-                    className="calendar-week__appointment"
+                    className="calendar-week__appointment calendar-week__appointment--guest"
                     style={{ top: `${top}px`, height: `${height}px` }}
-                    title={showText ? undefined : 'Zajęty'}
+                    data-tooltip-id="meeting-tooltip"
+                    data-tooltip-content={`Gość: ${guestLabel}${guest.status === 'pending' ? ' (oczekuje)' : ' (zaakceptowane)'}`}
                   >
-                    {showText && 'Zajęty'}
+                    {showText && 'Zajęty (gość)'}
                   </div>
                 );
               }
+
+              return (
+                <div key={`${avail.id}-busy-${idx}`}
+                  className="calendar-week__appointment"
+                  style={{ top: `${top}px`, height: `${height}px` }}
+                  title={showText ? undefined : 'Zajęty'}
+                >
+                  {showText && 'Zajęty'}
+                </div>
+              );
             }
           });
         })}

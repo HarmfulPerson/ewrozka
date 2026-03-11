@@ -211,3 +211,21 @@ export async function apiGetGuestMeetingRoom(guestToken: string): Promise<{
 }> {
   return fetchApi(`guest-bookings/room/${guestToken}`);
 }
+
+export async function apiGetWizardGuestBookingMeetingRoom(
+  token: string,
+  bookingId: string,
+): Promise<{
+  roomUrl: string;
+  token: string;
+  booking: { guestName: string; scheduledAt: string; durationMinutes: number };
+}> {
+  const res = await fetch(`${getBaseUrl()}/wizard/guest-bookings/${bookingId}/meeting-room`, {
+    headers: { Authorization: `Token ${token}` },
+  });
+  if (!res.ok) {
+    const j = await res.json().catch(() => ({}));
+    throw new Error(j?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
+}

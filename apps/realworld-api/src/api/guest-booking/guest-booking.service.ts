@@ -363,6 +363,27 @@ export class GuestBookingService {
     };
   }
 
+  /** Wróżka: pokój spotkania po ID rezerwacji gościa (do przycisku "Dołącz") */
+  async getWizardMeetingRoom(
+    wizardId: number,
+    bookingId: string,
+  ): Promise<{ roomUrl: string; token: string; booking: { guestName: string; scheduledAt: Date; durationMinutes: number } }> {
+    const booking = await this.findOwned(wizardId, bookingId);
+    if (booking.status !== 'paid' && booking.status !== 'completed') {
+      throw new BadRequestException('Rezerwacja nie jest jeszcze opłacona');
+    }
+    const result = await this.getMeetingRoom(booking.guestToken!);
+    return {
+      roomUrl: result.roomUrl,
+      token: result.token,
+      booking: {
+        guestName: result.booking.guestName,
+        scheduledAt: result.booking.scheduledAt,
+        durationMinutes: result.booking.durationMinutes,
+      },
+    };
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   private async findOwned(

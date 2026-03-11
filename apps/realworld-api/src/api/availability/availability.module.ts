@@ -4,6 +4,7 @@ import {
   AdvertisementEntity,
   AppointmentEntity,
   AvailabilityEntity,
+  GuestBookingEntity,
   MeetingRequestEntity,
 } from '@repo/postgresql-typeorm';
 import { AvailabilityController } from './availability.controller';
@@ -19,6 +20,7 @@ import { AvailabilityCronService } from './availability-cron.service';
       AvailabilityEntity,
       AdvertisementEntity,
       AppointmentEntity,
+      GuestBookingEntity,
       MeetingRequestEntity,
     ]),
   ],

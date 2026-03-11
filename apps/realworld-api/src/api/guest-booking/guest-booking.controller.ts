@@ -81,6 +81,16 @@ export class GuestBookingController {
     await this.service.accept(wizardId, bookingId);
   }
 
+  /** Wróżka: pokój spotkania dla opłaconej rezerwacji gościa */
+  @Get('wizard/guest-bookings/:id/meeting-room')
+  @ApiAuth({ summary: 'Wizard: get meeting room for paid guest booking' })
+  async getWizardMeetingRoom(
+    @CurrentUser('id') wizardId: number,
+    @Param('id') bookingId: string,
+  ) {
+    return this.service.getWizardMeetingRoom(wizardId, bookingId);
+  }
+
   /** Wróżka: odrzucenie wniosku */
   @Post('wizard/guest-bookings/:id/reject')
   @HttpCode(HttpStatus.NO_CONTENT)
