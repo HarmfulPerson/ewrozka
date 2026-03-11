@@ -4,6 +4,8 @@ services:
   db-staging:
     image: postgres:16-alpine
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"  # tylko localhost – dostęp przez SSH tunnel
     env_file: .env.staging
     environment:
       POSTGRES_USER: ${DATABASE_USERNAME}
