@@ -34,7 +34,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
-  /* wyrównaj wysokość wierszy */
   align-items: stretch;
 }
 
@@ -42,6 +41,13 @@
   display: flex;
   text-decoration: none;
   color: inherit;
+  min-width: 0;
+}
+
+.ogloszenia-link .wizard-card {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 /* ── Filtry ──────────────────────────────────────────────────────────────── */

@@ -367,7 +367,11 @@ export class GuestBookingService {
   async getWizardMeetingRoom(
     wizardId: number,
     bookingId: string,
-  ): Promise<{ roomUrl: string; token: string; booking: { guestName: string; scheduledAt: Date; durationMinutes: number } }> {
+  ): Promise<{
+    roomUrl: string;
+    token: string;
+    booking: { guestName: string; scheduledAt: Date; durationMinutes: number };
+  }> {
     const booking = await this.findOwned(wizardId, bookingId);
     if (booking.status !== 'paid' && booking.status !== 'completed') {
       throw new BadRequestException('Rezerwacja nie jest jeszcze opłacona');

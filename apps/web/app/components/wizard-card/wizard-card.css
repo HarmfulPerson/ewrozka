@@ -15,6 +15,7 @@
 }
 
 .wizard-card--featured {
+  width: 100%;
   border-color: #f59e0b;
   box-shadow: 0 0 0 1px #f59e0b40, 0 4px 20px #f59e0b20;
 }
