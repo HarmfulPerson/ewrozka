@@ -1,8 +1,10 @@
 name: Deploy Production
 
 on:
-  push:
-    branches: [main]
+  # Odkomentuj gdy masz VPS i skonfigurowane secrets:
+  # push:
+  #   branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:

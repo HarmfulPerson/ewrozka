@@ -8,7 +8,7 @@ import { MeetingRoomService } from '../meeting-room/meeting-room.service';
 import { PaymentService } from '../payment/payment.service';
 import { StripeService } from '../stripe/stripe.service';
 
-interface ReviewDto {
+export interface ReviewDto {
   id: number;
   rating: number;
   comment: string | null;

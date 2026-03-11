@@ -11,13 +11,10 @@ permissions:
   contents: read
 
 jobs:
-  lint-and-build:
-    name: Lint & Build
+  build-api:
+    name: Build API
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: |
-      !contains(github.event.pull_request.labels.*.name, 'skip-ci') &&
-      !contains(github.event.pull_request.labels.*.name, 'skip-actions')
 
     steps:
       - uses: actions/checkout@v4
@@ -40,8 +37,40 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build
-        run: pnpm build --filter=realworld-api --filter=web
+      - name: Build API
+        run: pnpm --filter=realworld-api build
         env:
+          NODE_ENV: production
+
+  build-web:
+    name: Build Web
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-turbo-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build Web
+        run: pnpm --filter=web build
+        env:
+          NODE_ENV: production
           NEXT_PUBLIC_API_URL: https://api.ewrozka.online/api
           NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
