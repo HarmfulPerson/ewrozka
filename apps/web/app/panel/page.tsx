@@ -4,7 +4,19 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { getStoredUser } from '../lib/auth-mock';
-import { apiGetMyAppointments, AppointmentDto } from '../lib/api-calendar';
+import { apiGetMyAppointments, type AppointmentDto } from '../lib/api-calendar';
+
+type UpcomingMeetingItem =
+  | (AppointmentDto & { isGuest?: false })
+  | {
+      id: string;
+      startsAt: string;
+      durationMinutes: number;
+      clientUsername?: string;
+      meetingToken?: null;
+      isGuest: true;
+      guestBookingId: string;
+    };
 import {
   apiGetMyMeetingRequests,
   apiGetWizardGuestBookings,
@@ -53,7 +65,7 @@ function PanelPage() {
   const isWizard = user?.roles?.includes('wizard');
   const isAdmin  = user?.roles?.includes('admin');
 
-  const [appointments, setAppointments] = useState<AppointmentDto[]>([]);
+  const [appointments, setAppointments] = useState<UpcomingMeetingItem[]>([]);
   const [requests, setRequests] = useState<MeetingRequestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredStatus, setFeaturedStatus] = useState<FeaturedStatusDto>({ isFeatured: false, expiresAt: null });
@@ -82,8 +94,8 @@ function PanelPage() {
               isGuest: true as const,
               guestBookingId: b.id,
             }));
-        const merged = [
-          ...apptRes.appointments.map((a) => ({ ...a, isGuest: false })),
+        const merged: UpcomingMeetingItem[] = [
+          ...apptRes.appointments.map((a) => ({ ...a, isGuest: false as const })),
           ...guestAsAppointments,
         ].sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
         const now = Date.now();
@@ -251,16 +263,16 @@ function PanelPage() {
                         </span>
                       )}
                       {isActive && (
-                        (apt as { meetingToken?: string | null; isGuest?: boolean; guestBookingId?: string }).isGuest ? (
+                        apt.isGuest ? (
                           <Link
-                            href={`/panel/spotkanie-gosc/${(apt as { guestBookingId: string }).guestBookingId}`}
+                            href={`/panel/spotkanie-gosc/${apt.guestBookingId}`}
                             className="dashboard__apt-join"
                           >
                             Dołącz →
                           </Link>
-                        ) : (apt as { meetingToken?: string | null }).meetingToken ? (
+                        ) : !apt.isGuest && apt.meetingToken ? (
                           <Link
-                            href={`/spotkanie/${(apt as { meetingToken: string }).meetingToken}`}
+                            href={`/spotkanie/${apt.meetingToken}`}
                             className="dashboard__apt-join"
                           >
                             Dołącz →
