@@ -1,0 +1,221 @@
+/* ── Overlay ── */
+.pm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0 0 0 / 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+/* ── Modal ── */
+.pm-modal {
+  background: var(--bg-secondary, #1a1625);
+  border: 1px solid rgba(167 139 250 / 0.2);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 24px 60px rgba(0 0 0 / 0.5), 0 0 0 1px rgba(167 139 250 / 0.08);
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.pm-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.375rem 1.5rem 1.25rem;
+  border-bottom: 1px solid rgba(255 255 255 / 0.07);
+  position: relative;
+}
+
+.pm-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary, #e2e0f0);
+  margin: 0 0 0.2rem;
+  line-height: 1.2;
+}
+
+.pm-subtitle {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #a09cb8);
+  margin: 0;
+  line-height: 1.4;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pm-amount {
+  margin-left: auto;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #a78bfa;
+  white-space: nowrap;
+  padding-right: 2.5rem;
+  align-self: center;
+}
+
+.pm-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255 255 255 / 0.06);
+  border: none;
+  border-radius: 8px;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #a09cb8);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.15s, color 0.15s;
+}
+.pm-close:hover {
+  background: rgba(255 255 255 / 0.1);
+  color: var(--text-primary, #e2e0f0);
+}
+
+/* ── Body ── */
+.pm-body {
+  padding: 1.5rem;
+}
+
+/* ── Loading ── */
+.pm-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 2rem 0;
+  color: var(--text-secondary, #a09cb8);
+  font-size: 0.9375rem;
+}
+
+/* ── Spinner ── */
+.pm-spinner {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(167 139 250 / 0.3);
+  border-top-color: #a78bfa;
+  border-radius: 50%;
+  animation: pm-spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+.pm-spinner--lg {
+  width: 2rem;
+  height: 2rem;
+  border-width: 3px;
+}
+
+@keyframes pm-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Form ── */
+.pm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Processing (BLIK / P24 oczekiwanie) ── */
+.pm-processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  text-align: center;
+}
+
+.pm-processing__spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid rgba(167, 139, 250, 0.2);
+  border-top-color: #a78bfa;
+  border-radius: 50%;
+  animation: pm-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.pm-processing__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #e2e0f0);
+  margin: 0;
+}
+
+.pm-processing__desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #a09cb8);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 280px;
+}
+
+/* ── Error ── */
+.pm-error {
+  padding: 0.6rem 0.875rem;
+  background: rgba(239 68 68 / 0.12);
+  border: 1px solid rgba(239 68 68 / 0.3);
+  border-radius: 8px;
+  color: #f87171;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Actions ── */
+.pm-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.pm-btn {
+  flex: 1;
+  padding: 0.7rem 1.25rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s, opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.pm-btn--cancel {
+  background: rgba(255 255 255 / 0.06);
+  color: var(--text-secondary, #a09cb8);
+  flex: 0 0 auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.pm-btn--cancel:hover:not(:disabled) {
+  background: rgba(255 255 255 / 0.1);
+  color: var(--text-primary, #e2e0f0);
+}
+
+.pm-btn--pay {
+  background: var(--accent, #7c3aed);
+  color: #fff;
+}
+.pm-btn--pay:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.pm-btn--pay:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

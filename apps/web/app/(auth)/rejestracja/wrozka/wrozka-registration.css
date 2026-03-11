@@ -1,0 +1,262 @@
+/* Rozszerzony formularz rejestracji wróżki */
+
+/* Szerszy kontener */
+.auth-layout__inner:has(.wrozka-reg__form) {
+  max-width: 520px;
+}
+
+.wrozka-reg__form {
+  gap: 1.25rem;
+}
+
+.wrozka-reg__required {
+  color: #f87171;
+  margin-left: 2px;
+}
+
+/* ---- Upload zdjęcia ---- */
+.wrozka-reg__section-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.wrozka-reg__photo-drop {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px dashed var(--border);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.wrozka-reg__photo-drop:hover,
+.wrozka-reg__photo-drop--over {
+  border-color: var(--accent);
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.wrozka-reg__photo-preview {
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.wrozka-reg__photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.wrozka-reg__photo-icon {
+  font-size: 1.75rem;
+}
+
+.wrozka-reg__photo-hint {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.wrozka-reg__photo-hint small {
+  opacity: 0.65;
+}
+
+.wrozka-reg__photo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wrozka-reg__file-input {
+  display: none;
+}
+
+.wrozka-reg__photo-remove {
+  background: none;
+  border: none;
+  color: #f87171;
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.wrozka-reg__photo-remove:hover {
+  color: #ef4444;
+}
+
+/* ---- Telefon ---- */
+.wrozka-reg__phone-wrap {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 8px);
+  overflow: hidden;
+  transition: border-color 0.2s;
+  background: var(--bg-input, rgba(255, 255, 255, 0.05));
+}
+
+.wrozka-reg__phone-wrap:focus-within {
+  border-color: var(--accent);
+}
+
+.wrozka-reg__phone-prefix {
+  padding: 0.625rem 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  border-right: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.wrozka-reg__phone-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: var(--text-primary);
+  min-width: 0;
+}
+
+.wrozka-reg__phone-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* Usuń strzałki w input[type=number] i tel */
+.wrozka-reg__phone-input::-webkit-inner-spin-button,
+.wrozka-reg__phone-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+.wrozka-reg__field-hint {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* ---- Bio textarea ---- */
+.wrozka-reg__bio {
+  width: 100%;
+  background: var(--bg-input, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  padding: 0.625rem 0.875rem;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s;
+}
+
+.wrozka-reg__bio:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.wrozka-reg__bio::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+/* ---- Tematy / specjalizacje ---- */
+.wrozka-reg__topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.wrozka-reg__topic {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.wrozka-reg__topic:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wrozka-reg__topic--active {
+  border-color: var(--accent);
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---- Ekran sukcesu ---- */
+.wrozka-reg__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.wrozka-reg__success-icon {
+  font-size: 3rem;
+}
+
+.wrozka-reg__success-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.wrozka-reg__success-text {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 360px;
+}
+
+.wrozka-reg__success-text--muted {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.wrozka-reg__success-btn {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.65rem 1.75rem;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius-sm, 8px);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: background 0.2s;
+}
+
+.wrozka-reg__success-btn:hover {
+  background: var(--accent-hover, #7c3aed);
+}

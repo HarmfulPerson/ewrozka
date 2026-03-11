@@ -1,70 +1,50 @@
-##################
-# BUILD BASE IMAGE
-##################
-
-FROM node:20-alpine AS base
-
-# Install and use pnpm
-RUN npm install -g pnpm
-
-#############################
-# BUILD FOR LOCAL DEVELOPMENT
-#############################
-
-FROM base As development
-WORKDIR /app
-RUN chown -R node:node /app
-
-COPY --chown=node:node package*.json pnpm-lock.yaml ./
-
-# Install all dependencies (including devDependencies)
-RUN pnpm install
-
-# Bundle app source
-COPY --chown=node:node . .
-
-# Use the node user from the image (instead of the root user)
-USER node
-
-#####################
-# BUILD BUILDER IMAGE
-#####################
-
-FROM base AS builder
+# ── Stage 1: Prune monorepo do tylko tego co potrzebuje API ──────────────────
+FROM node:20-alpine AS pruner
 WORKDIR /app
 
-COPY --chown=node:node package*.json pnpm-lock.yaml ./
-COPY --chown=node:node --from=development /app/node_modules ./node_modules
-COPY --chown=node:node --from=development /app/src ./src
-COPY --chown=node:node --from=development /app/tsconfig.json ./tsconfig.json
-COPY --chown=node:node --from=development /app/tsconfig.build.json ./tsconfig.build.json
-COPY --chown=node:node --from=development /app/nest-cli.json ./nest-cli.json
+RUN npm install -g pnpm@10 turbo@2
 
-RUN pnpm build
+COPY . .
+RUN turbo prune realworld-api --docker
 
-# Removes unnecessary packages adn re-install only production dependencies
-ENV NODE_ENV production
-RUN pnpm prune --prod
-RUN pnpm install --prod
-
-USER node
-
-######################
-# BUILD FOR PRODUCTION
-######################
-
-FROM node:20-alpine AS production
+# ── Stage 2: Instalacja zależności ───────────────────────────────────────────
+FROM node:20-alpine AS deps
 WORKDIR /app
 
-RUN mkdir -p src/generated && chown -R node:node src
+RUN npm install -g pnpm@10
 
-# Copy the bundled code from the build stage to the production image
-COPY --chown=node:node --from=builder /app/src/generated/i18n.generated.ts ./src/generated/i18n.generated.ts
-COPY --chown=node:node --from=builder /app/node_modules ./node_modules
-COPY --chown=node:node --from=builder /app/dist ./dist
-COPY --chown=node:node --from=builder /app/package.json ./
+# Skopiuj package.json-y (bez kodu źródłowego)
+COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
-USER node
+RUN pnpm install --frozen-lockfile
 
-# Start the server using the production build
-CMD [ "node", "dist/main.js" ]
+# ── Stage 3: Build ────────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+RUN npm install -g pnpm@10
+
+COPY --from=deps /app/ .
+COPY --from=pruner /app/out/full/ .
+
+RUN pnpm build --filter=realworld-api
+
+# ── Stage 4: Runner (minimalny obraz produkcyjny) ─────────────────────────────
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Skopiuj tylko to co jest potrzebne do uruchomienia
+COPY --from=builder /app/apps/realworld-api/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/apps/realworld-api/package.json ./package.json
+
+# Katalog na przesłane pliki (nadpisywany przez volume)
+RUN mkdir -p /app/uploads
+
+EXPOSE 8001
+
+CMD ["node", "dist/main.js"]

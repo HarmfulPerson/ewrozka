@@ -107,12 +107,12 @@ pnpm --filter=realworld-api start:dev
 # Run with hot-reload
 pnpm --filter=realworld-api start:debug
 
-# Database Migrations
-# Run pending migrations
-pnpm --filter=@repo/postgresql-typeorm migration:up
+# Database Migrations (użyj .env z realworld-api)
+# Uruchom oczekujące migracje (env z apps/realworld-api/.env)
+pnpm --filter=@repo/postgresql-typeorm migration:up:api
 
-# Revert last migration
-pnpm --filter=@repo/postgresql-typeorm migration:down
+# Cofnij ostatnią migrację
+pnpm --filter=@repo/postgresql-typeorm migration:down:api
 
 # Generate new migration
 pnpm --filter=@repo/postgresql-typeorm migration:generate src/migrations/<migration-name>

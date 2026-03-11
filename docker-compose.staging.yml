@@ -1,0 +1,72 @@
+services:
+
+  # ── PostgreSQL (staging) ─────────────────────────────────────────────────────
+  db-staging:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: .env.staging
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - postgres_staging_data:/var/lib/postgresql/data
+    networks:
+      - internal_staging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME} -d ${DATABASE_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API (NestJS staging) ─────────────────────────────────────────────────────
+  api-staging:
+    build:
+      context: .
+      dockerfile: apps/realworld-api/Dockerfile
+    restart: unless-stopped
+    env_file: .env.staging
+    environment:
+      DATABASE_HOST: db-staging
+      DATABASE_PORT: 5432
+      NODE_ENV: staging
+    volumes:
+      - uploads_staging:/app/uploads
+    networks:
+      - internal_staging
+      - web
+    depends_on:
+      db-staging:
+        condition: service_healthy
+    labels:
+      caddy: "api-staging.ewrozka.online"
+      caddy.reverse_proxy: "{{upstreams 8001}}"
+
+  # ── Web (Next.js staging) ────────────────────────────────────────────────────
+  web-staging:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://api-staging.ewrozka.online/api
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    networks:
+      - web
+    depends_on:
+      - api-staging
+    labels:
+      caddy: "staging.ewrozka.online"
+      caddy.reverse_proxy: "{{upstreams 3000}}"
+
+networks:
+  internal_staging:
+    driver: bridge
+  web:
+    external: true
+
+volumes:
+  postgres_staging_data:
+  uploads_staging:

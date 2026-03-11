@@ -1,0 +1,122 @@
+.wizard-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.wizard-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.wizard-card--featured {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 1px #f59e0b40, 0 4px 20px #f59e0b20;
+}
+
+.wizard-card--featured:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 1px #fbbf2450, 0 6px 24px #f59e0b30;
+}
+
+.wizard-card__featured-badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  z-index: 1;
+  box-shadow: 0 2px 8px #f59e0b50;
+}
+
+.wizard-card__featured-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.wizard-card__image {
+  width: 100%;
+  height: 200px;
+  flex-shrink: 0;
+  position: relative;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.wizard-card__body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.wizard-card__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.wizard-card__topics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.wizard-card__topic-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.wizard-card__topic {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.wizard-card__rating {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.625rem;
+}
+
+.wizard-card__no-rating {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Opis – max 2 linie, potem wielokropek */
+.wizard-card__desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* wypycha opis na dół cardu, wyrównuje wysokość */
+  margin-top: auto;
+  padding-top: 0.25rem;
+}

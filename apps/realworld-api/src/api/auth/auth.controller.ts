@@ -1,5 +1,5 @@
-import { Body, Controller, Post, SerializeOptions } from '@nestjs/common';
-import { ApiBody, ApiTags, getSchemaPath } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, Query, SerializeOptions } from '@nestjs/common';
+import { ApiBody, ApiQuery, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { ApiPublic } from '@repo/api/decorators/http.decorators';
 import { UserResDto } from '../user/dto/user.dto';
 import { AuthService } from './auth.service';
@@ -31,5 +31,13 @@ export class AuthController {
   @SerializeOptions({ type: UserResDto })
   async login(@Body('user') userData: LoginReqDto): Promise<UserResDto> {
     return this.authService.login(userData);
+  }
+
+  @Get('auth/verify-email')
+  @ApiPublic({ summary: 'Weryfikacja adresu e-mail po kliknięciu w link z maila' })
+  @ApiQuery({ name: 'token', required: true, description: 'Token weryfikacyjny z e-maila' })
+  async verifyEmail(@Query('token') token: string): Promise<{ message: string }> {
+    await this.authService.verifyEmail(token);
+    return { message: 'Adres e-mail został pomyślnie zweryfikowany. Możesz się teraz zalogować.' };
   }
 }

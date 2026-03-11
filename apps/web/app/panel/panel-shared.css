@@ -1,0 +1,267 @@
+/* ── Reużywalny spinner ładowania ── */
+.panel-page-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 55vh;
+  width: 100%;
+}
+
+.panel-spinner {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(139, 92, 246, 0.18);
+  border-top-color: var(--accent, #a78bfa);
+  border-radius: 50%;
+  animation: panel-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.panel-inline-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  width: 100%;
+}
+
+.panel-inline-spinner .panel-spinner {
+  width: 22px;
+  height: 22px;
+  border-width: 2px;
+}
+
+@keyframes panel-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Shared dropdown styles for all panel pages */
+.panel-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.panel-select__label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.panel-select__control {
+  position: relative;
+  display: inline-block;
+}
+
+.panel-select__dropdown {
+  padding: 0.45rem 2.25rem 0.45rem 0.875rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-width: 150px;
+}
+
+.panel-select__dropdown:hover {
+  border-color: var(--accent);
+}
+
+.panel-select__dropdown:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+}
+
+.panel-select__dropdown option {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.panel-select__control::after {
+  content: '';
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--accent);
+  pointer-events: none;
+  transition: transform 0.2s;
+}
+
+.panel-select__control:has(.panel-select__dropdown:focus)::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Pagination controls */
+.panel-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.75rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary));
+  flex-wrap: wrap;
+}
+
+.panel-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.panel-pagination__btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  color: var(--text-primary);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.panel-pagination__btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent) 0%, #9b7ce6 100%);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.3);
+}
+
+.panel-pagination__btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(167, 139, 250, 0.2);
+}
+
+.panel-pagination__btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.panel-pagination__info {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.05));
+  border-radius: 16px;
+  border: 2px solid rgba(167, 139, 250, 0.2);
+}
+
+.panel-pagination__per-page {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.panel-pagination__per-page-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.panel-pagination__per-page-select {
+  padding: 0.75rem 2.75rem 0.75rem 1.125rem;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  color: var(--text-primary);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a78bfa' d='M6 8L2 4h8z' stroke='%23a78bfa' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.panel-pagination__per-page-select:hover {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  box-shadow: 0 4px 12px rgba(167, 139, 250, 0.15);
+  transform: translateY(-1px);
+}
+
+.panel-pagination__per-page-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.15), 0 4px 16px rgba(167, 139, 250, 0.2);
+}
+
+.panel-pagination__per-page-select option {
+  padding: 0.625rem 1rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-radius: 6px;
+  margin: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .panel-pagination {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 1rem;
+  }
+
+  .panel-pagination__controls {
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  /* Strzałki – kwadratowe, kompaktowe */
+  .panel-pagination__btn--arrow {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .panel-pagination__info {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .panel-pagination__per-page {
+    justify-content: center;
+  }
+
+  .panel-select__dropdown {
+    width: 100%;
+  }
+}

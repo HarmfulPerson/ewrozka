@@ -1,0 +1,64 @@
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
+  OnGatewayInit,
+} from '@nestjs/websockets';
+import { Logger } from '@nestjs/common';
+import { Server, Socket } from 'socket.io';
+import { AuthService } from '../auth/auth.service';
+import { NotificationsService } from './notifications.service';
+
+@WebSocketGateway({
+  cors: {
+    origin: ['http://localhost:3000', 'https://ewrozka.dev'],
+    credentials: true,
+  },
+  namespace: '/notifications',
+})
+export class NotificationsGateway implements OnGatewayInit {
+  @WebSocketServer()
+  server: Server;
+
+  private readonly logger = new Logger(NotificationsGateway.name);
+
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly authService: AuthService,
+  ) {}
+
+  afterInit() {
+    this.notificationsService.setGateway({
+      emitPendingCount: (wizardId, count) => {
+        this.server.to(`wizard:${wizardId}`).emit('pending_count', { count });
+      },
+    });
+    this.logger.log('NotificationsGateway initialized');
+  }
+
+  /** Klient uwierzytelnia się po połączeniu, dołącza do swojego pokoju. */
+  @SubscribeMessage('auth')
+  async handleAuth(
+    @MessageBody() data: { token: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const payload = await this.authService.verifyAccessToken(data.token);
+      const userId = parseInt(String(payload.id), 10);
+      if (!userId) throw new Error('brak userId');
+
+      client.join(`wizard:${userId}`);
+      this.logger.debug(`Socket ${client.id} authenticated as wizard ${userId}`);
+
+      const { total } = await this.notificationsService.getPendingCount(userId);
+      client.emit('pending_count', { count: total });
+
+      return { success: true };
+    } catch {
+      client.emit('auth_error', { message: 'Nieprawidłowy token' });
+      return { success: false };
+    }
+  }
+}

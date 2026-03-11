@@ -56,3 +56,10 @@ pnpm-debug.log*
 # Misc
 .DS_Store
 *.pem
+
+# Uploaded files (user content - nie commitujemy)
+apps/realworld-api/uploads/
+uploads/
+
+# Skrypty pomocnicze (jednorazowe)
+fix-passwords.mjs

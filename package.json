@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "turbo clean",
     "build": "turbo build",
-    "dev": "turbo dev",
+    "dev": "turbo dev --concurrency=11",
     "test": "turbo test",
     "test:e2e": "turbo test:e2e",
     "lint": "turbo lint",

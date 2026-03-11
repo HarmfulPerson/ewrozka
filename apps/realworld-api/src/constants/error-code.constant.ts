@@ -16,4 +16,6 @@ export enum ErrorCode {
   E201 = 'app.article.not_found',
   E301 = 'app.comment.not_found',
   E302 = 'app.comment.not_authorized_to_delete',
+  E401 = 'app.advertisement.not_found',
+  E402 = 'app.advertisement.max_per_user',
 }

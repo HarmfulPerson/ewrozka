@@ -1,0 +1,22 @@
+.vanta-background {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  width: 100%;
+}
+
+.vanta-background__canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0;
+  background: linear-gradient(to bottom, #0a0a1a 0%, #1a0a2e 50%, #0a0a1a 100%);
+  display: block;
+}
+
+.vanta-background__content {
+  position: relative;
+  z-index: 1;
+}

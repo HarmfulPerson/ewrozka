@@ -1,0 +1,120 @@
+.announcements {
+  padding: 4rem 1.5rem;
+  background: var(--bg-primary);
+}
+
+.announcements__inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.announcements__title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+
+.announcements__subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 3rem;
+}
+
+.announcements__loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+}
+
+.announcements__list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.announcements__list li {
+  display: flex;
+}
+
+.announcements__card-link {
+  display: flex;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.announcement-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.announcement-card:hover {
+  border-color: var(--accent);
+}
+
+.announcement-card__image {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+.announcement-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.announcement-card__body {
+  padding: 1.25rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.announcement-card__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.announcement-card__topics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.announcement-card__topic-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.announcement-card__topic {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.announcement-card__description {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}

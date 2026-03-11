@@ -1,0 +1,241 @@
+.gp-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  padding-top: 80px;
+}
+
+.gp-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
+/* ── Stan (loading / błąd / sukces) ─────────────────────────────────────── */
+
+.gp-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  max-width: 420px;
+  width: 100%;
+  padding: 3rem 2rem;
+}
+
+.gp-state__icon {
+  font-size: 2.5rem;
+}
+
+.gp-state h2 {
+  font-size: 1.4rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.gp-state p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Layout 2-kolumnowy ──────────────────────────────────────────────────── */
+
+.gp-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  max-width: 900px;
+  width: 100%;
+  align-items: start;
+}
+
+@media (max-width: 700px) {
+  .gp-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* ── Kolumna lewa – szczegóły ────────────────────────────────────────────── */
+
+.gp-details {
+  background: var(--bg-card, #1a1030);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gp-details__icon {
+  font-size: 2rem;
+}
+
+.gp-details__title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.gp-details__welcome {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem;
+}
+
+.gp-details__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: var(--bg-secondary, #0d0a1a);
+  border-radius: 10px;
+  padding: 0.25rem 1rem;
+  margin-top: 0.5rem;
+}
+
+.gp-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(167, 139, 250, 0.07);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  gap: 1rem;
+}
+
+.gp-detail-row:last-child {
+  border-bottom: none;
+}
+
+.gp-detail-row strong {
+  color: var(--text-primary);
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+.gp-detail-row--price {
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(167, 139, 250, 0.15);
+  border-bottom: none;
+}
+
+.gp-price {
+  color: #a78bfa !important;
+  font-size: 1.2rem !important;
+  font-weight: 700;
+}
+
+/* ── Kolumna prawa – formularz ───────────────────────────────────────────── */
+
+.gp-form-col {
+  background: var(--bg-card, #1a1030);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gp-form-col__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.gp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.gp-submit-btn {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.875rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: opacity 0.15s;
+  margin-top: 0.25rem;
+}
+
+.gp-submit-btn:hover:not(:disabled) { opacity: 0.9; }
+.gp-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.gp-secure {
+  font-size: 0.75rem;
+  color: var(--text-muted, #6b7280);
+  text-align: center;
+  margin: 0;
+}
+
+.gp-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* ── Processing ──────────────────────────────────────────────────────────── */
+
+.gp-processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
+
+.gp-processing__title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.gp-processing__desc {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+
+.gp-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(167, 139, 250, 0.2);
+  border-top-color: #a78bfa;
+  border-radius: 50%;
+  animation: gp-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+.gp-spinner--sm {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}
+
+@keyframes gp-spin {
+  to { transform: rotate(360deg); }
+}

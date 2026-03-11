@@ -1,0 +1,118 @@
+.spotkanie-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--bg-primary, #0d0a1a);
+}
+
+.spotkanie-card {
+  background: var(--bg-card, #1a1030);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  max-width: 460px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  box-shadow: 0 0 60px rgba(109, 40, 217, 0.12);
+}
+
+.spotkanie-card__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #e2d9f3);
+  margin: 0;
+}
+
+.spotkanie-call-wrapper {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.guest-spotkanie__hint {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-top: 0.75rem;
+}
+
+.spotkanie-card__guest {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+
+.spotkanie-card__icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.spotkanie-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.spotkanie-info-row:last-child {
+  border-bottom: none;
+}
+
+.spotkanie-card__info {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.guest-spotkanie__privacy {
+  font-size: 0.78rem;
+  color: var(--text-muted, #6b7280);
+  margin-top: 1.5rem;
+}
+
+.spotkanie-join-btn {
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: opacity 0.15s;
+}
+
+.spotkanie-join-btn:hover {
+  opacity: 0.9;
+}
+
+.spotkanie-tooearly {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.spotkanie-countdown {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  margin: 0.5rem 0;
+}
+
+.spotkanie-tooearly__hint {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}

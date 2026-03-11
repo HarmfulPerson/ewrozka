@@ -1,0 +1,42 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy na serwer (produkcja)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/ewrozka
+
+            # Pobierz najnowszy kod
+            git fetch origin
+            git checkout main
+            git pull origin main
+
+            # Zbuduj i uruchom produkcję
+            docker compose -f docker-compose.prod.yml \
+              --env-file .env.production \
+              up -d --build --remove-orphans
+
+            # Uruchom migracje
+            docker compose -f docker-compose.prod.yml \
+              --env-file .env.production \
+              exec -T api \
+              sh -c "cd /app && node -e \"require('./dist/migration-runner').runMigrations()\"" || true
+
+            # Usuń stare obrazy
+            docker image prune -f
+
+            echo "✅ Production deployed successfully"

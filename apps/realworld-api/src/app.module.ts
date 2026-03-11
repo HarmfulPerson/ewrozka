@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { appConfig } from '@repo/api';
 import {
   AsyncContextProvider,
@@ -19,6 +20,11 @@ import path from 'path';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { ApiModule } from './api/api.module';
 import authConfig from './api/auth/config/auth.config';
+import paymentConfig from './config/payment.config';
+import stripeConfig from './config/stripe.config';
+import emailConfig from './config/email.config';
+import featuredConfig from './config/featured.config';
+import dailyConfig from './config/daily.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AllConfigType } from './config/config.type';
@@ -27,7 +33,7 @@ import { TypeOrmConfigService } from './database/typeorm-config.service';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
-  load: [appConfig, databaseConfig, authConfig],
+  load: [appConfig, databaseConfig, authConfig, paymentConfig, stripeConfig, emailConfig, featuredConfig, dailyConfig],
   envFilePath: ['.env'],
 });
 
@@ -71,7 +77,7 @@ const i18nModule = I18nModule.forRootAsync({
 });
 
 @Module({
-  imports: [configModule, dbModule, i18nModule, ApiModule],
+  imports: [configModule, dbModule, i18nModule, ScheduleModule.forRoot(), ApiModule],
   controllers: [AppController],
   providers: [AppService, AsyncContextProvider, FastifyPinoLogger],
   exports: [AsyncContextProvider],

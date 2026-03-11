@@ -1,7 +1,7 @@
 import { EmailFieldOptional, StringFieldOptional } from '@repo/api';
 import { lowerCaseTransformer } from '@repo/nest-common';
 import { Transform } from 'class-transformer';
-import { IsUrl } from 'class-validator';
+import { IsArray, IsInt, IsOptional } from 'class-validator';
 
 export class UpdateUserReqDto {
   @StringFieldOptional()
@@ -15,6 +15,17 @@ export class UpdateUserReqDto {
   readonly bio: string;
 
   @StringFieldOptional({ minLength: 0 })
-  @IsUrl()
   readonly image: string;
+
+  @StringFieldOptional({ minLength: 0 })
+  readonly image2: string;
+
+  @StringFieldOptional({ minLength: 0 })
+  readonly image3: string;
+
+  /** ID specjalizacji (topics) dla wróżek */
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  readonly topicIds?: number[];
 }

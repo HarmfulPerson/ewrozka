@@ -1,11 +1,18 @@
-import { ClassField, EmailField, StringField } from '@repo/api';
+import { ClassField, EmailField, NumberField, StringField } from '@repo/api';
+import { Expose } from 'class-transformer';
 
 export class UserDto {
+  @NumberField({ expose: true })
+  id: number;
+
   @EmailField({ expose: true })
   email: string;
 
-  @StringField({ expose: true })
-  token: string;
+  @StringField({ expose: true, nullable: true })
+  token: string | null;
+
+  @Expose()
+  emailVerified?: boolean;
 
   @StringField({ expose: true })
   username: string;
@@ -15,6 +22,22 @@ export class UserDto {
 
   @StringField({ expose: true })
   image: string;
+
+  @StringField({ expose: true, nullable: true })
+  image2?: string;
+
+  @StringField({ expose: true, nullable: true })
+  image3?: string;
+
+  /** Nazwy ról użytkownika (np. ['wizard'], ['client']) */
+  @Expose()
+  roles: string[];
+
+  @Expose()
+  topicIds?: number[];
+
+  @Expose()
+  topicNames?: string[];
 }
 
 export class UserResDto {

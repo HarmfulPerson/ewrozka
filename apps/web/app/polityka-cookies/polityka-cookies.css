@@ -1,0 +1,151 @@
+.cookies-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 0.5rem;
+}
+
+.cookies-section h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.cookies-section p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 0 0.75rem;
+}
+
+.cookies-section p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Tabela ── */
+.cookies-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-top: 0.5rem;
+}
+
+.cookies-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.cookies-table th {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.cookies-table td {
+  padding: 0.875rem 1rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.55;
+}
+
+/* ── Odznaki kategorii ── */
+.cookies-badge {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cookies-badge--required {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+}
+
+.cookies-badge--analytics {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+}
+
+.cookies-badge--marketing {
+  background: rgba(249, 115, 22, 0.12);
+  color: #fdba74;
+}
+
+/* ── Przycisk ustawień ── */
+.cookies-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+  font-family: inherit;
+}
+
+.cookies-settings-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ── Lista przeglądarek ── */
+.cookies-browser-list {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cookies-browser-list li {
+  font-size: 0.9rem;
+}
+
+.cookies-browser-list a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+
+.cookies-browser-list a:hover {
+  color: var(--accent-hover);
+}
+
+/* ── Lista praw ── */
+.cookies-rights-list {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ── Data aktualizacji ── */
+.cookies-updated {
+  font-size: 0.8rem !important;
+  color: var(--text-muted) !important;
+  margin-top: 0.5rem !important;
+}
