@@ -130,7 +130,11 @@ export default function AdvertisementPage() {
       const fromDate = today.toISOString().split('T')[0] ?? '';
       const toDate = threeMonthsLater.toISOString().split('T')[0] ?? '';
       const response = await apiGetAvailableSlots(advertisement!.id, fromDate, toDate);
-      const uniqueDates = [...new Set(response.slots.map(slot => slot.date))];
+      const toLocalDateStr = (iso: string) => {
+        const d = new Date(iso);
+        return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+      };
+      const uniqueDates = [...new Set(response.slots.map(slot => toLocalDateStr(slot.startsAt)))];
       setAvailableDates(uniqueDates);
     } catch (error) {
       console.error('Error fetching available dates:', error);
@@ -247,6 +251,10 @@ export default function AdvertisementPage() {
     const date = new Date(parseInt(year ?? '0'), parseInt(month ?? '1') - 1, 1);
     return date.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
   };
+
+  /** Formatuje godzinę slotu w lokalnej strefie (zamiast UTC z backendu). */
+  const formatSlotTime = (startsAt: string) =>
+    new Date(startsAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
 
   if (loading) {
     return (
@@ -538,7 +546,7 @@ export default function AdvertisementPage() {
                                 className={`booking-slot ${selectedSlot?.startsAt === slot.startsAt ? 'booking-slot--selected' : ''}`}
                                 onClick={() => handleSlotSelect(slot)}
                               >
-                                {slot.startTime}
+                                {formatSlotTime(slot.startsAt)}
                               </button>
                             ))}
                           </div>
@@ -589,7 +597,7 @@ export default function AdvertisementPage() {
                                 <button key={i}
                                   className="booking-slot"
                                   onClick={() => handleSlotSelect(slot)}>
-                                  {slot.startTime}
+                                  {formatSlotTime(slot.startsAt)}
                                 </button>
                               ))}
                             </div>
