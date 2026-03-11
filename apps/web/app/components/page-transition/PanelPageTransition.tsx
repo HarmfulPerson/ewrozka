@@ -98,8 +98,8 @@ export default function PanelPageTransition() {
       if (href.startsWith('http') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
       if (href.startsWith('#')) return;
 
-      const targetPath = href.split('?')[0].split('#')[0];
-      const currentPath = pathname.split('?')[0].split('#')[0];
+      const targetPath = (href.split('?')[0] ?? href).split('#')[0] ?? href;
+      const currentPath = (pathname.split('?')[0] ?? pathname).split('#')[0] ?? pathname;
       if (targetPath === currentPath) return;
 
       // Tylko przejścia wewnątrz panelu

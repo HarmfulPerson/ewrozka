@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Standalone mode: Next.js generuje minimalny bundle z własnym serwerem node
   output: 'standalone',
   images: {
     remotePatterns: [
