@@ -61,6 +61,22 @@ services:
       caddy: "staging.ewrozka.online"
       caddy.reverse_proxy: "{{upstreams 3000}}"
 
+  # ── Caddy (reverse proxy + auto HTTPS) ─────────────────────────────────────
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - caddy_staging_data:/data
+      - caddy_staging_config:/config
+    networks:
+      - web
+    environment:
+      - CADDY_INGRESS_NETWORKS=web
+
 networks:
   internal_staging:
     driver: bridge
@@ -70,3 +86,5 @@ networks:
 volumes:
   postgres_staging_data:
   uploads_staging:
+  caddy_staging_data:
+  caddy_staging_config:
