@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { AuthFormShell } from '../../components/auth/auth-form-shell';
-import { apiLogin, getUploadsBaseUrl } from '../../lib/api';
+import { apiLogin, getApiBaseUrl } from '../../lib/api';
 import { setStoredUser, userFromApi } from '../../lib/auth-mock';
 
 function GoogleIcon() {
@@ -19,11 +19,22 @@ function GoogleIcon() {
   );
 }
 
+const ERROR_MESSAGES: Record<string, string> = {
+  google_auth_failed: 'Logowanie przez Google nie powiodło się. Spróbuj ponownie.',
+  WIZARD_PENDING:
+    'Twoje konto oczekuje na zatwierdzenie przez administratora. Poinformujemy Cię, gdy zostanie aktywowane.',
+  WIZARD_REJECTED:
+    'Niestety Twój wniosek o konto wróżki został odrzucony. Skontaktuj się z nami, aby uzyskać więcej informacji.',
+};
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get('returnUrl');
-  const [error, setError] = useState<string | null>(null);
+  const errorParam = searchParams.get('error');
+  const [error, setError] = useState<string | null>(
+    errorParam ? ERROR_MESSAGES[errorParam] ?? errorParam : null
+  );
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -93,29 +104,16 @@ function LoginForm() {
         <span>lub</span>
       </div>
 
-      <p className="auth-form__google-label">Kontynuuj z Google jako:</p>
-      <div className="auth-form__google-row">
-        <button
-          type="button"
-          className="auth-form__google-btn"
-          onClick={() => {
-            window.location.href = `${getUploadsBaseUrl()}/auth/google?role=client`;
-          }}
-        >
-          <GoogleIcon />
-          <span>Klient</span>
-        </button>
-        <button
-          type="button"
-          className="auth-form__google-btn"
-          onClick={() => {
-            window.location.href = `${getUploadsBaseUrl()}/auth/google?role=wizard`;
-          }}
-        >
-          <GoogleIcon />
-          <span>Wróżka</span>
-        </button>
-      </div>
+      <button
+        type="button"
+        className="auth-form__google"
+        onClick={() => {
+          window.location.href = `${getApiBaseUrl()}/auth/google`;
+        }}
+      >
+        <GoogleIcon />
+        Kontynuuj z Google
+      </button>
 
       <p className="auth-form__footer">
         Nie masz konta?{' '}

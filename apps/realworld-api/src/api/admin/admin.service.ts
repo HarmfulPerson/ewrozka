@@ -432,6 +432,10 @@ export class AdminService {
 
       roles: [wizardRole],
 
+      wizardApplicationStatus: 'approved',
+
+      googleId: app.googleId ?? undefined,
+
     });
 
 

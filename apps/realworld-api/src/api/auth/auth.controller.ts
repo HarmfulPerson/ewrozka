@@ -1,9 +1,24 @@
-import { Body, Controller, Get, Post, Query, SerializeOptions } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  Res,
+  SerializeOptions,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBody, ApiQuery, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { ApiPublic } from '@repo/api/decorators/http.decorators';
+import { AuthGuard } from '@nestjs/passport';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { UserResDto } from '../user/dto/user.dto';
 import { AuthService } from './auth.service';
+import { CompleteGoogleRegistrationDto } from './dto/complete-google-registration.dto';
 import { LoginReqDto } from './dto/login.dto';
+import { GoogleEnabledGuard } from './guards/google-enabled.guard';
+import type { GoogleProfile } from './strategies/google.strategy';
 
 @ApiTags('Auth')
 @Controller()
@@ -39,5 +54,79 @@ export class AuthController {
   async verifyEmail(@Query('token') token: string): Promise<{ message: string }> {
     await this.authService.verifyEmail(token);
     return { message: 'Adres e-mail został pomyślnie zweryfikowany. Możesz się teraz zalogować.' };
+  }
+
+  @Get('auth/google')
+  @ApiPublic({ summary: 'Logowanie/rejestracja przez Google – przekierowanie do Google' })
+  @UseGuards(GoogleEnabledGuard, AuthGuard('google'))
+  async googleAuth() {
+    // Passport przekierowuje do Google
+  }
+
+  @Get('auth/google/callback')
+  @ApiPublic({ summary: 'Callback Google OAuth' })
+  @UseGuards(GoogleEnabledGuard, AuthGuard('google'))
+  async googleAuthCallback(
+    @Req() req: FastifyRequest & { user?: GoogleProfile },
+    @Res() reply: FastifyReply,
+  ): Promise<void> {
+    const profile = req.user;
+    if (!profile) {
+      return reply.redirect(302, this.getFrontendUrl() + '/login?error=google_auth_failed');
+    }
+
+    const user = await this.authService.findUserByGoogle(profile);
+    const frontendUrl = this.getFrontendUrl();
+
+    if (user) {
+      if (user.wizardApplicationStatus === 'pending') {
+        return reply.redirect(302, frontendUrl + '/login?error=WIZARD_PENDING');
+      }
+      if (user.wizardApplicationStatus === 'rejected') {
+        return reply.redirect(302, frontendUrl + '/login?error=WIZARD_REJECTED');
+      }
+      const roleNames = user.roles?.map((r) => r.name) ?? [];
+      const token = await this.authService.createToken({
+        id: user.id,
+        roles: roleNames,
+      });
+      return reply.redirect(
+        302,
+        frontendUrl + `/login/success?token=${encodeURIComponent(token)}`,
+      );
+    }
+
+    const tempToken = await this.authService.createGoogleTempToken(profile);
+    return reply.redirect(
+      302,
+      frontendUrl + `/rejestracja/google/dokoncz?temp=${encodeURIComponent(tempToken)}`,
+    );
+  }
+
+  @Get('auth/google-temp')
+  @ApiPublic({ summary: 'Weryfikacja tokena tymczasowego Google (dane do wyświetlenia)' })
+  @ApiQuery({ name: 'temp', required: true })
+  async getGoogleTempProfile(@Query('temp') temp: string) {
+    const profile = await this.authService.verifyGoogleTempToken(temp);
+    return { email: profile.email, displayName: profile.displayName, picture: profile.picture };
+  }
+
+  @Post('auth/register-google')
+  @ApiPublic({
+    summary: 'Dokończenie rejestracji po Google (wybór: klient lub wróżka)',
+  })
+  async completeGoogleRegistration(@Body() dto: CompleteGoogleRegistrationDto) {
+    return this.authService.completeGoogleRegistration({
+      tempToken: dto.tempToken,
+      role: dto.role as 'client' | 'wizard',
+      username: dto.username,
+      bio: dto.bio,
+      phone: dto.phone?.replace(/\D/g, '').slice(0, 9),
+      topicIds: dto.topicIds,
+    });
+  }
+
+  private getFrontendUrl(): string {
+    return this.authService.getGoogleFrontendUrl();
   }
 }

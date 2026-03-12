@@ -37,6 +37,9 @@ export class WizardApplicationEntity {
   @Column({ name: 'rejection_reason', type: 'text', nullable: true, default: null })
   rejectionReason!: string | null;
 
+  @Column({ name: 'google_id', length: 64, nullable: true, default: null })
+  googleId!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

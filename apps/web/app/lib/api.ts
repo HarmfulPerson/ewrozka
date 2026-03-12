@@ -129,6 +129,30 @@ export async function apiVerifyEmail(token: string): Promise<{ message: string }
   return fetchApi(`auth/verify-email?token=${encodeURIComponent(token)}`);
 }
 
+/** Pobiera dane profilu Google z tokena tymczasowego (dla dokończenia rejestracji). */
+export async function apiGetGoogleTempProfile(temp: string): Promise<{
+  email: string;
+  displayName: string;
+  picture?: string;
+}> {
+  return fetchApi(`auth/google-temp?temp=${encodeURIComponent(temp)}`);
+}
+
+/** Dokończenie rejestracji po Google – klient lub wróżka. */
+export async function apiCompleteGoogleRegistration(data: {
+  tempToken: string;
+  role: 'client' | 'wizard';
+  username?: string;
+  bio?: string;
+  phone?: string;
+  topicIds?: number[];
+}): Promise<{ user: ApiUser } | { id: string }> {
+  return fetchApi('auth/register-google', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 export async function apiGetCurrentUser(token: string): Promise<{ user: ApiUser }> {
   return fetchApi('user', {
     headers: {

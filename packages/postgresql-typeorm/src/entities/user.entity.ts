@@ -93,6 +93,17 @@ export class UserEntity extends AbstractEntity {
   @Column({ type: 'varchar', length: 64, nullable: true, default: null })
   emailVerificationToken!: string | null;
 
+  /** Google OAuth ID – użytkownicy zarejestrowani przez Google */
+  @Column({
+    name: 'google_id',
+    type: 'varchar',
+    length: 64,
+    nullable: true,
+    default: null,
+  })
+  @Index('UQ_user_google_id', { unique: true, where: '"google_id" IS NOT NULL' })
+  googleId!: string | null;
+
   /**
    * Prowizja platformy w % (tylko wróżki, 0–100). Null = domyślnie 20%.
    * Ustawiane przez admina.

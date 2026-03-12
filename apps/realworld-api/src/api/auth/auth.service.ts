@@ -1,5 +1,7 @@
 import { AllConfigType } from '@/config/config.type';
 import {
+  BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   UnauthorizedException,
@@ -7,12 +9,13 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { verifyPassword } from '@repo/nest-common';
-import { UserEntity } from '@repo/postgresql-typeorm';
-import { Repository } from 'typeorm';
+import { hashPassword, verifyPassword } from '@repo/nest-common';
+import { RoleEntity, UserEntity, WizardApplicationEntity } from '@repo/postgresql-typeorm';
+import { In, Repository } from 'typeorm';
 import { UserResDto } from '../user/dto/user.dto';
 import { LoginReqDto } from './dto/login.dto';
 import { JwtPayloadType } from './types/jwt-payload.type';
+import type { GoogleProfile } from './strategies/google.strategy';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +24,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(RoleEntity)
+    private readonly roleRepository: Repository<RoleEntity>,
+    @InjectRepository(WizardApplicationEntity)
+    private readonly appRepo: Repository<WizardApplicationEntity>,
   ) {}
 
   async login(dto: LoginReqDto): Promise<UserResDto> {
@@ -158,5 +165,169 @@ export class AuthService {
     );
 
     return accessToken;
+  }
+
+  getGoogleFrontendUrl(): string {
+    const google = this.configService.get('auth.google', { infer: true });
+    return google?.frontendUrl ?? 'http://localhost:3000';
+  }
+
+  /** Znajduje użytkownika po googleId lub email (Google). Zwraca null jeśli nowy. */
+  async findUserByGoogle(profile: GoogleProfile): Promise<UserEntity | null> {
+    const user = await this.userRepository.findOne({
+      where: [{ googleId: profile.id }, { email: profile.email }],
+      relations: ['roles'],
+    });
+    return user ?? null;
+  }
+
+  /** Tworzy tymczasowy JWT dla nowej rejestracji Google (ważny 15 min). */
+  async createGoogleTempToken(profile: GoogleProfile): Promise<string> {
+    return this.jwtService.signAsync(
+      {
+        purpose: 'google-registration',
+        googleId: profile.id,
+        email: profile.email,
+        displayName: profile.displayName,
+        picture: profile.picture,
+      },
+      {
+        secret: this.configService.getOrThrow('auth.secret', { infer: true }),
+        expiresIn: '15m',
+      },
+    );
+  }
+
+  /** Weryfikuje token tymczasowy Google i zwraca dane. */
+  async verifyGoogleTempToken(token: string): Promise<GoogleProfile> {
+    let payload: { purpose?: string; googleId?: string; email?: string; displayName?: string; picture?: string };
+    try {
+      payload = this.jwtService.verify(token, {
+        secret: this.configService.getOrThrow('auth.secret', { infer: true }),
+      });
+    } catch {
+      throw new UnauthorizedException('Link rejestracji wygasł. Spróbuj ponownie zalogować się przez Google.');
+    }
+    if (payload.purpose !== 'google-registration' || !payload.googleId || !payload.email) {
+      throw new UnauthorizedException('Nieprawidłowy token rejestracji.');
+    }
+    return {
+      id: payload.googleId,
+      email: payload.email,
+      displayName: payload.displayName ?? payload.email.split('@')[0],
+      picture: payload.picture,
+    };
+  }
+
+  /** Dokończenie rejestracji Google: klient lub wniosek wróżki. */
+  async completeGoogleRegistration(dto: {
+    tempToken: string;
+    role: 'client' | 'wizard';
+    username?: string;
+    bio?: string;
+    phone?: string;
+    topicIds?: number[];
+  }): Promise<UserResDto | { id: string }> {
+    const profile = await this.verifyGoogleTempToken(dto.tempToken);
+
+    const existing = await this.userRepository.findOne({
+      where: [{ googleId: profile.id }, { email: profile.email }],
+    });
+    if (existing) {
+      throw new ConflictException('Konto z tym adresem e-mail już istnieje.');
+    }
+
+    if (dto.role === 'client') {
+      const username =
+        (dto.username ?? profile.displayName ?? profile.email.split('@')[0])
+          .trim()
+          .replace(/\s+/g, '_')
+          .slice(0, 60) || `user_${Date.now()}`;
+      const uniqueUsername = await this.ensureUniqueUsername(username);
+      const clientRole = await this.roleRepository.findOne({ where: { name: 'client' } });
+      if (!clientRole) throw new BadRequestException('Rola client nie istnieje.');
+
+      const newUser = this.userRepository.create({
+        username: uniqueUsername,
+        email: profile.email,
+        password: await hashPassword(`google_${profile.id}_${Date.now()}`),
+        googleId: profile.id,
+        image: profile.picture ?? '',
+        bio: '',
+        emailVerified: true,
+        roles: [clientRole],
+      });
+      const saved = await this.userRepository.save(newUser);
+      const savedWithRoles = await this.userRepository.findOneOrFail({
+        where: { id: saved.id },
+        relations: ['roles'],
+      });
+      const roleNames = savedWithRoles.roles?.map((r) => r.name) ?? [];
+      const token = await this.createToken({ id: saved.id, roles: roleNames });
+      return {
+        user: {
+          id: saved.id,
+          email: saved.email,
+          username: saved.username,
+          bio: saved.bio,
+          image: saved.image,
+          image2: saved.image2 || '',
+          image3: saved.image3 || '',
+          roles: roleNames,
+          topicIds: [],
+          topicNames: [],
+          token,
+        },
+      };
+    }
+
+    if (dto.role === 'wizard') {
+      if (!dto.bio || dto.bio.length < 20) {
+        throw new BadRequestException('Opis musi mieć co najmniej 20 znaków.');
+      }
+      if (!dto.phone || !/^\d{9}$/.test(dto.phone.replace(/\D/g, ''))) {
+        throw new BadRequestException('Numer telefonu musi składać się z 9 cyfr.');
+      }
+
+      const username =
+        (dto.username ?? profile.displayName ?? profile.email.split('@')[0])
+          .trim()
+          .replace(/\s+/g, '_')
+          .slice(0, 60) || `wizard_${Date.now()}`;
+      const uniqueUsername = await this.ensureUniqueUsername(username, true);
+
+      const app = this.appRepo.create({
+        email: profile.email,
+        username: uniqueUsername,
+        passwordHash: await hashPassword(`google_${profile.id}_${Date.now()}`),
+        bio: dto.bio.trim(),
+        phone: `+48${dto.phone.replace(/\D/g, '').slice(0, 9)}`,
+        topicIds: dto.topicIds ?? [],
+        status: 'pending',
+        googleId: profile.id,
+      });
+      await this.appRepo.save(app);
+      return { id: app.id };
+    }
+
+    throw new BadRequestException('Nieprawidłowa rola.');
+  }
+
+  private async ensureUniqueUsername(base: string, checkWizardApp = false): Promise<string> {
+    let username = base.slice(0, 60).replace(/[^a-zA-Z0-9_-]/g, '_');
+    let suffix = 0;
+    const exists = async () => {
+      const inUser = await this.userRepository.findOne({ where: { username } });
+      if (inUser) return true;
+      if (checkWizardApp) {
+        const inApp = await this.appRepo.findOne({ where: { username } });
+        if (inApp) return true;
+      }
+      return false;
+    };
+    while (await exists()) {
+      username = `${base.slice(0, 50)}_${++suffix}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+    return username;
   }
 }

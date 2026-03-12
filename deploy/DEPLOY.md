@@ -33,4 +33,4 @@
 
 ### Ścieżka projektu na serwerze
 
-Skrypt zakłada katalog `/opt/ewrozka`. Jeśli używasz innej ścieżki (np. `/opt/ewrozka/ewrozka`), zmień ją w workflowach w `.github/workflows/deploy-staging.yml` i `deploy-prod.yml`.
+Skrypt zakłada katalog `/opt/ewrozka/ewrozka`. Jeśli używasz innej ścieżki, zmień `cd /opt/ewrozka/ewrozka` w `.github/workflows/deploy-staging.yml` i `deploy-prod.yml`.
