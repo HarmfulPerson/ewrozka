@@ -29,6 +29,8 @@ import {
   type FeaturedConfigDto,
 } from '../lib/api-payment';
 import { PaymentModal } from '../components/payment/PaymentModal';
+import { ClientUpcomingMeetings } from './components/ClientUpcomingMeetings';
+import { ClientPastMeetings } from './components/ClientPastMeetings';
 import './panel-dashboard.css';
 
 function apiUrl(path: string) {
@@ -146,13 +148,18 @@ function PanelPage() {
     );
   }
 
-  // Panel klienta — prosta strona powitalna
+  // Panel klienta — nadchodzące i odbyte spotkania (one page, max 100vh)
   if (!isWizard) {
     return (
-      <div className="dashboard">
+      <div className="dashboard dashboard--client">
         <div className="dashboard__welcome">
           <h1 className="dashboard__title">Witaj, {user.username}!</h1>
-          <p className="dashboard__subtitle">Wybierz sekcję z menu po lewej stronie.</p>
+          <p className="dashboard__subtitle">Oto podsumowanie Twoich spotkań</p>
+        </div>
+
+        <div className="dashboard__grid">
+          <ClientUpcomingMeetings token={user.token} />
+          <ClientPastMeetings token={user.token} />
         </div>
       </div>
     );

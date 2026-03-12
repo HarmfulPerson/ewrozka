@@ -141,3 +141,33 @@ export async function apiGetMyAppointments(
     },
   });
 }
+
+export async function apiGetUpcomingAppointments(
+  token: string,
+  options?: { limit?: number },
+): Promise<{ appointments: AppointmentDto[] }> {
+  const params = new URLSearchParams();
+  if (options?.limit) params.append('limit', String(options.limit));
+
+  return fetchApi(`appointments/upcoming?${params.toString()}`, {
+    headers: {
+      Authorization: `Token ${token}`,
+    },
+  });
+}
+
+export async function apiGetCompletedAppointments(
+  token: string,
+  options?: { limit?: number; offset?: number; unratedOnly?: boolean },
+): Promise<{ appointments: AppointmentDto[]; total: number }> {
+  const params = new URLSearchParams();
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset) params.append('offset', String(options.offset));
+  if (options?.unratedOnly) params.append('unratedOnly', 'true');
+
+  return fetchApi(`appointments/completed?${params.toString()}`, {
+    headers: {
+      Authorization: `Token ${token}`,
+    },
+  });
+}

@@ -94,6 +94,73 @@ export class AppointmentService {
     };
   }
 
+  async listMyUpcoming(userId: number, options?: { limit?: number }) {
+    const now = new Date();
+    const queryBuilder = this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.advertisement', 'advertisement')
+      .leftJoinAndSelect('appointment.wrozka', 'wrozka')
+      .where('appointment.clientId = :userId', { userId })
+      .andWhere('appointment.status = :status', { status: 'paid' })
+      .andWhere('appointment.startsAt >= :now', { now });
+
+    queryBuilder.orderBy('appointment.startsAt', 'ASC');
+    queryBuilder.take(options?.limit ?? 20);
+
+    const appointments = await queryBuilder.getMany();
+
+    const paidIds = appointments.map((a) => a.id);
+    const tokenByAppointmentId =
+      paidIds.length > 0
+        ? await this.meetingRoomService.getTokensByAppointmentIds(paidIds)
+        : {};
+
+    return {
+      appointments: appointments.map((a) => ({
+        id: a.id,
+        startsAt: a.startsAt.toISOString(),
+        durationMinutes: a.durationMinutes,
+        advertisementTitle: a.advertisement?.title,
+        wrozkaUsername: a.wrozka?.username,
+        meetingToken: tokenByAppointmentId[a.id] ?? null,
+      })),
+    };
+  }
+
+  async listMyCompleted(
+    userId: number,
+    options?: { limit?: number; offset?: number; unratedOnly?: boolean },
+  ) {
+    const queryBuilder = this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.advertisement', 'advertisement')
+      .leftJoinAndSelect('appointment.wrozka', 'wrozka')
+      .where('appointment.clientId = :userId', { userId })
+      .andWhere('appointment.status = :status', { status: 'completed' });
+
+    if (options?.unratedOnly) {
+      queryBuilder.andWhere('appointment.rating IS NULL');
+    }
+
+    queryBuilder.orderBy('appointment.startsAt', 'DESC');
+    queryBuilder.take(options?.limit ?? 5);
+    queryBuilder.skip(options?.offset ?? 0);
+
+    const [appointments, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      appointments: appointments.map((a) => ({
+        id: a.id,
+        startsAt: a.startsAt.toISOString(),
+        durationMinutes: a.durationMinutes,
+        advertisementTitle: a.advertisement?.title,
+        wrozkaUsername: a.wrozka?.username,
+        rating: a.rating ?? null,
+      })),
+      total,
+    };
+  }
+
   async rateAppointment(
     clientId: number,
     appointmentId: number,

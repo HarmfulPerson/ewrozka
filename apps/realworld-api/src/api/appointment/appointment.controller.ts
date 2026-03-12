@@ -27,6 +27,32 @@ export class AppointmentController {
     });
   }
 
+  @Get('upcoming')
+  @ApiAuth({ summary: 'Nadchodzące spotkania klienta – opłacone, w przyszłości' })
+  async listMyUpcoming(
+    @CurrentUser('id') userId: number,
+    @Query('limit') limit?: string,
+  ) {
+    return this.appointmentService.listMyUpcoming(userId, {
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
+  }
+
+  @Get('completed')
+  @ApiAuth({ summary: 'Odbyte spotkania klienta – paginacja i filtr nieocenionych' })
+  async listMyCompleted(
+    @CurrentUser('id') userId: number,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+    @Query('unratedOnly') unratedOnly?: string,
+  ) {
+    return this.appointmentService.listMyCompleted(userId, {
+      limit: limit ? parseInt(limit, 10) : 5,
+      offset: offset ? parseInt(offset, 10) : 0,
+      unratedOnly: unratedOnly === 'true' || unratedOnly === '1',
+    });
+  }
+
   @Post(':id/rate')
   @HttpCode(HttpStatus.OK)
   @ApiAuth({ summary: 'Oceń zakończone spotkanie (klient, 0–5)' })

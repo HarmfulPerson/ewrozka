@@ -3,6 +3,14 @@
   max-width: 1100px;
 }
 
+/* Panel klienta – ograniczenie do 100vh, przewijanie wewnętrzne */
+.dashboard--client {
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Admin welcome */
 
 .dashboard__admin-welcome {
@@ -195,6 +203,11 @@
 .dashboard__list {
   display: flex;
   flex-direction: column;
+}
+
+.dashboard__list--scroll {
+  max-height: 280px;
+  overflow-y: auto;
 }
 
 .dashboard__loading,
@@ -430,4 +443,230 @@
   color: var(--text-secondary);
   text-align: center;
   white-space: nowrap;
+}
+
+/* Odbyte spotkania – ocena */
+
+.dashboard__appointment-card--past {
+  flex-wrap: wrap;
+}
+
+.dashboard__appointment-card--past .dashboard__apt-info {
+  flex: 1 1 100%;
+}
+
+.dashboard__apt-rating {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.dashboard__apt-rating-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.dashboard__apt-rating-stars {
+  display: flex;
+  gap: 0.125rem;
+  align-items: center;
+}
+
+.dashboard__apt-star {
+  font-size: 1.125rem;
+  color: var(--border);
+  line-height: 1;
+}
+
+.dashboard__apt-star--filled {
+  color: #fbbf24;
+}
+
+.dashboard__apt-star--btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.125rem;
+  transition: color 0.15s;
+}
+
+.dashboard__apt-star--btn:hover {
+  color: #fbbf24;
+}
+
+.dashboard__apt-rating-form {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard__apt-rating-comment {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 48px;
+}
+
+.dashboard__apt-rating-comment:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.dashboard__apt-rating-submit {
+  align-self: flex-start;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.dashboard__apt-rating-submit:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.dashboard__apt-rating-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Odbyte spotkania – mini-tabela */
+
+.dashboard__past-toolbar {
+  padding: 0.5rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.dashboard__past-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.dashboard__past-filter input {
+  accent-color: var(--primary);
+}
+
+.dashboard__table-wrap {
+  overflow-x: auto;
+}
+
+.dashboard__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.dashboard__table th,
+.dashboard__table td {
+  padding: 0.625rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.dashboard__table th {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dashboard__table td {
+  color: var(--text-primary);
+}
+
+.dashboard__table-date {
+  display: block;
+  font-weight: 500;
+}
+
+.dashboard__table-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dashboard__apt-rating-stars--inline {
+  display: inline-flex;
+  gap: 0.0625rem;
+}
+
+.dashboard__apt-rating-stars--inline .dashboard__apt-star {
+  font-size: 1rem;
+}
+
+.dashboard__table-rating {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.dashboard__table-rating-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dashboard__table-rating-actions .dashboard__apt-rating-comment {
+  flex: 1;
+  min-width: 100px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.dashboard__table-rating-actions .dashboard__apt-rating-submit {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.dashboard__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.dashboard__pagination-btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dashboard__pagination-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.dashboard__pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dashboard__pagination-info {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
 }
