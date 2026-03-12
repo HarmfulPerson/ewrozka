@@ -72,7 +72,7 @@ export class AuthController {
   ): Promise<void> {
     const profile = req.user;
     if (!profile) {
-      return reply.redirect(302, this.getFrontendUrl() + '/login?error=google_auth_failed');
+      return reply.redirect(this.getFrontendUrl() + '/login?error=google_auth_failed', 302);
     }
 
     const user = await this.authService.findUserByGoogle(profile);
@@ -80,10 +80,10 @@ export class AuthController {
 
     if (user) {
       if (user.wizardApplicationStatus === 'pending') {
-        return reply.redirect(302, frontendUrl + '/login?error=WIZARD_PENDING');
+        return reply.redirect(frontendUrl + '/login?error=WIZARD_PENDING', 302);
       }
       if (user.wizardApplicationStatus === 'rejected') {
-        return reply.redirect(302, frontendUrl + '/login?error=WIZARD_REJECTED');
+        return reply.redirect(frontendUrl + '/login?error=WIZARD_REJECTED', 302);
       }
       const roleNames = user.roles?.map((r) => r.name) ?? [];
       const token = await this.authService.createToken({
@@ -91,15 +91,15 @@ export class AuthController {
         roles: roleNames,
       });
       return reply.redirect(
-        302,
         frontendUrl + `/login/success?token=${encodeURIComponent(token)}`,
+        302,
       );
     }
 
     const tempToken = await this.authService.createGoogleTempToken(profile);
     return reply.redirect(
-      302,
       frontendUrl + `/rejestracja/google/dokoncz?temp=${encodeURIComponent(tempToken)}`,
+      302,
     );
   }
 

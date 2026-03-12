@@ -32,17 +32,18 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     );
   }
 
-  async validate(
+  validate(
     accessToken: string,
     refreshToken: string,
     profile: Profile,
     done: VerifyCallback,
-  ): Promise<GoogleProfile> {
+  ): void {
     const email = profile.emails?.[0]?.value;
     if (!email) {
-      return done(new Error('Google nie zwrócił adresu e-mail.'), undefined);
+      done(new Error('Google nie zwrócił adresu e-mail.'), undefined);
+      return;
     }
-    return done(null, {
+    done(null, {
       id: profile.id,
       email: email.toLowerCase(),
       displayName: profile.displayName ?? email.split('@')[0],
