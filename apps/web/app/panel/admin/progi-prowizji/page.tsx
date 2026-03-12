@@ -123,10 +123,19 @@ export default function ProgiProwizjiPage() {
 
   const updateTier = (i: number, field: keyof TierRow, value: number | null) => {
     const next = [...tiers];
+    const current = next[i];
     if (field === 'maxMeetings') {
-      next[i] = { ...next[i], maxMeetings: value === 0 || value == null ? null : value };
+      next[i] = {
+        minMeetings: current.minMeetings,
+        maxMeetings: value === 0 || value == null ? null : value,
+        feePercent: current.feePercent,
+      };
     } else {
-      next[i] = { ...next[i], [field]: value ?? 0 };
+      next[i] = {
+        minMeetings: field === 'minMeetings' ? (value ?? 0) : current.minMeetings,
+        maxMeetings: current.maxMeetings,
+        feePercent: field === 'feePercent' ? (value ?? 0) : current.feePercent,
+      };
     }
     setTiers(next);
   };
