@@ -59,6 +59,7 @@ function DokonczGoogleRejestracjaForm() {
     const form = e.currentTarget;
     const username = (form.querySelector('#username') as HTMLInputElement)?.value?.trim();
     const bio = (form.querySelector('#bio') as HTMLTextAreaElement)?.value?.trim();
+    const gender = (form.querySelector('#gender') as HTMLSelectElement)?.value as '' | 'female' | 'male';
 
     if (role === 'wizard') {
       if (!bio || bio.length < 20) {
@@ -81,6 +82,7 @@ function DokonczGoogleRejestracjaForm() {
         bio: role === 'wizard' ? bio : undefined,
         phone: role === 'wizard' ? phone.replace(/\D/g, '').slice(0, 9) : undefined,
         topicIds: role === 'wizard' && selectedTopics.length > 0 ? selectedTopics : undefined,
+        ...(gender && { gender }),
       });
 
       if ('user' in res) {
@@ -213,6 +215,14 @@ function DokonczGoogleRejestracjaForm() {
             {error}
           </p>
         )}
+        <div className="auth-form__field">
+          <label htmlFor="gender">Płeć</label>
+          <select id="gender" className="auth-form__select">
+            <option value="">— Wybierz —</option>
+            <option value="female">Kobieta</option>
+            <option value="male">Mężczyzna</option>
+          </select>
+        </div>
         <div className="auth-form__field">
           <label htmlFor="username">Pseudonim</label>
           <input

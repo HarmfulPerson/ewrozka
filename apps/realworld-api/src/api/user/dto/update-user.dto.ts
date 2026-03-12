@@ -23,6 +23,10 @@ export class UpdateUserReqDto {
   @StringFieldOptional({ minLength: 0 })
   readonly image3: string;
 
+  /** Płeć: 'female' | 'male' */
+  @IsOptional()
+  readonly gender?: 'female' | 'male';
+
   /** ID specjalizacji (topics) dla wróżek */
   @IsOptional()
   @IsArray()

@@ -3,24 +3,32 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   GuestBookingEntity,
   MeetingRequestEntity,
+  UserEntity,
 } from '@repo/postgresql-typeorm';
 import { Repository } from 'typeorm';
+
+export interface NotificationsGatewayApi {
+  emitPendingCount: (wizardId: number, count: number) => void;
+  emitAdminPendingVideoCount: (count: number) => void;
+}
 
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
   /** Przechowuje referencję do gateway – ustawiana przez sam gateway po starcie. */
-  private gateway: { emitPendingCount: (wizardId: number, count: number) => void } | null = null;
+  private gateway: NotificationsGatewayApi | null = null;
 
   constructor(
     @InjectRepository(MeetingRequestEntity)
     private readonly meetingRequestRepo: Repository<MeetingRequestEntity>,
     @InjectRepository(GuestBookingEntity)
     private readonly guestBookingRepo: Repository<GuestBookingEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
   ) {}
 
-  setGateway(gw: { emitPendingCount: (wizardId: number, count: number) => void }) {
+  setGateway(gw: NotificationsGatewayApi) {
     this.gateway = gw;
   }
 
@@ -53,6 +61,27 @@ export class NotificationsService {
       this.logger.debug(`Powiadomiono wróżkę ${wizardId}: ${total} oczekujących`);
     } catch (err) {
       this.logger.error(`Nie udało się powiadomić wróżki ${wizardId}`, err);
+    }
+  }
+
+  /** Liczba wróżek z filmikiem do akceptacji (dla admina). */
+  async getAdminPendingVideoCount(): Promise<number> {
+    return this.userRepo
+      .createQueryBuilder('u')
+      .innerJoin('u.roles', 'r', "r.name = 'wizard'")
+      .where('u.video_pending IS NOT NULL')
+      .getCount();
+  }
+
+  /** Wywołaj po uploadzie/approve/reject filmiku – emituje licznik do pokoju admin. */
+  async notifyAdminVideoPending(): Promise<void> {
+    if (!this.gateway) return;
+    try {
+      const count = await this.getAdminPendingVideoCount();
+      this.gateway.emitAdminPendingVideoCount(count);
+      this.logger.debug(`Powiadomiono adminów: ${count} filmików do akceptacji`);
+    } catch (err) {
+      this.logger.error('Nie udało się powiadomić adminów o filmikach', err);
     }
   }
 }

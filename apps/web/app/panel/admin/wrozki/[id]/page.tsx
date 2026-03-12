@@ -12,6 +12,8 @@ import {
   apiSetAdminWizardFeatured,
   apiUpdateAdminWizardPlatformFee,
   apiResetWizardPlatformFeeToTier,
+  apiApproveWizardVideo,
+  apiRejectWizardVideo,
 } from '../../../../lib/api-admin';
 import '../../../panel-shared.css';
 import '../wrozki.css';
@@ -27,6 +29,8 @@ export default function AdminWizardProfilePage() {
   const [feePercent, setFeePercent] = useState<string>('');
   const [feeSaving, setFeeSaving] = useState(false);
   const [resetToTierLoading, setResetToTierLoading] = useState(false);
+  const [videoApproveLoading, setVideoApproveLoading] = useState(false);
+  const [videoRejectLoading, setVideoRejectLoading] = useState(false);
 
   useEffect(() => {
     if (!user?.roles?.includes('admin')) {
@@ -92,6 +96,36 @@ export default function AdminWizardProfilePage() {
       toast.error(err instanceof Error ? err.message : 'Błąd resetu');
     } finally {
       setResetToTierLoading(false);
+    }
+  };
+
+  const handleApproveVideo = async () => {
+    if (!user || !wizard) return;
+    setVideoApproveLoading(true);
+    try {
+      await apiApproveWizardVideo(user.token, wizard.id);
+      toast.success('Filmik zatwierdzony.');
+      const updated = await apiGetAdminWizard(user.token, wizard.id);
+      setWizard(updated);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Błąd zatwierdzenia');
+    } finally {
+      setVideoApproveLoading(false);
+    }
+  };
+
+  const handleRejectVideo = async () => {
+    if (!user || !wizard) return;
+    setVideoRejectLoading(true);
+    try {
+      await apiRejectWizardVideo(user.token, wizard.id);
+      toast.success('Filmik odrzucony.');
+      const updated = await apiGetAdminWizard(user.token, wizard.id);
+      setWizard(updated);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Błąd odrzucenia');
+    } finally {
+      setVideoRejectLoading(false);
     }
   };
 
@@ -208,6 +242,52 @@ export default function AdminWizardProfilePage() {
             <p className="aw-profile__card-row">
               <span className="aw-profile__label">Wyróżnienie do:</span>{' '}
               {formatDate(wizard.featuredExpiresAt)}
+            </p>
+          )}
+        </section>
+
+        <section className="aw-profile__card">
+          <h2 className="aw-profile__card-title">Filmik profilowy</h2>
+          {wizard.videoPending ? (
+            <div className="aw-profile__video-pending">
+              <p className="aw-profile__card-row aw-profile__card-row--muted">
+                <span className="aw-profile__label">Nowy filmik do akceptacji:</span>
+              </p>
+              <video
+                src={getUploadUrl(wizard.videoPending)}
+                controls
+                className="aw-profile__video"
+              />
+              <div className="aw-profile__video-actions">
+                <button
+                  type="button"
+                  className="aw-profile__btn aw-profile__btn--primary"
+                  onClick={handleApproveVideo}
+                  disabled={videoApproveLoading}
+                >
+                  {videoApproveLoading ? '…' : '✓ Zatwierdź'}
+                </button>
+                <button
+                  type="button"
+                  className="aw-profile__btn aw-profile__btn--secondary"
+                  onClick={handleRejectVideo}
+                  disabled={videoRejectLoading}
+                >
+                  {videoRejectLoading ? '…' : '✕ Odrzuć'}
+                </button>
+              </div>
+            </div>
+          ) : wizard.video ? (
+            <div className="aw-profile__video-wrap">
+              <video
+                src={getUploadUrl(wizard.video)}
+                controls
+                className="aw-profile__video"
+              />
+            </div>
+          ) : (
+            <p className="aw-profile__card-row" style={{ color: 'var(--text-muted)' }}>
+              Brak filmiku
             </p>
           )}
         </section>

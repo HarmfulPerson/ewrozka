@@ -38,6 +38,9 @@ export class UserDto {
 
   @Expose()
   topicNames?: string[];
+
+  @Expose()
+  gender?: 'female' | 'male' | null;
 }
 
 export class UserResDto {

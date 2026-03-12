@@ -118,7 +118,8 @@ export type AdminWizardsSortBy =
   | 'joinDate'
   | 'earnedGrosze'
   | 'meetingsCount'
-  | 'announcementsCount';
+  | 'announcementsCount'
+  | 'pendingVideo';
 
 export interface AdminWizardRow {
   id: number;
@@ -131,6 +132,7 @@ export interface AdminWizardRow {
   announcementsCount: number;
   isAvailableNow: boolean;
   isFeatured: boolean;
+  hasPendingVideo?: boolean;
 }
 
 export interface AdminWizardsPage {
@@ -186,6 +188,8 @@ export interface AdminWizardDetail {
   topicNames: string[];
   platformFeePercent: number | null;
   tierBasedFee?: { meetingsInWindow: number; windowDays: number; feePercent: number };
+  video: string | null;
+  videoPending: string | null;
 }
 
 export async function apiGetAdminWizard(
@@ -225,6 +229,28 @@ export async function apiResetWizardPlatformFeeToTier(
 ): Promise<void> {
   await fetchAdmin<unknown>(
     `admin/wizards/${wizardId}/platform-fee/reset-to-tier`,
+    token,
+    { method: 'POST' },
+  );
+}
+
+export async function apiApproveWizardVideo(
+  token: string,
+  wizardId: number,
+): Promise<void> {
+  await fetchAdmin<unknown>(
+    `admin/wizards/${wizardId}/video/approve`,
+    token,
+    { method: 'POST' },
+  );
+}
+
+export async function apiRejectWizardVideo(
+  token: string,
+  wizardId: number,
+): Promise<void> {
+  await fetchAdmin<unknown>(
+    `admin/wizards/${wizardId}/video/reject`,
     token,
     { method: 'POST' },
   );

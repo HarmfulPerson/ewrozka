@@ -80,6 +80,7 @@ import { getUploadUrl } from '../lib/api';
 import { apiGetWallet, apiCheckConnectReady, apiGetMyFeaturedStatus, type FeaturedStatusDto, type CommissionTierDto } from '../lib/api-payment';
 import { apiGetMyAdvertisements } from '../lib/api-advertisements';
 import { useNotifications } from '../hooks/useNotifications';
+import { useAdminPendingVideoCount } from '../hooks/useAdminPendingVideoCount';
 import { Toaster } from 'react-hot-toast';
 import 'react-tooltip/dist/react-tooltip.css';
 import './panel.css';
@@ -104,6 +105,7 @@ export default function PanelLayout({
   const isWizardRole = user?.roles?.includes('wizard') ?? false;
   const isAdminRole  = user?.roles?.includes('admin') ?? false;
   const pendingCount = useNotifications(isWizardRole && !isAdminRole ? user?.token : null);
+  const pendingVideoCount = useAdminPendingVideoCount(isAdminRole ? user?.token : null);
 
   useEffect(() => {
     const storedUser = getStoredUser();
@@ -383,10 +385,15 @@ export default function PanelLayout({
                 href="/panel/admin/wrozki"
                 className={`panel-sidebar__link ${pathname?.startsWith('/panel/admin/wrozki') ? 'panel-sidebar__link--active' : ''}`}
               >
-                <span className="panel-sidebar__link-icon">
+                <span className="panel-sidebar__link-icon panel-sidebar__link-icon--badgeable">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
                     <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
                   </svg>
+                  {pendingVideoCount > 0 && (
+                    <span className="panel-sidebar__badge">
+                      {pendingVideoCount > 99 ? '99+' : pendingVideoCount}
+                    </span>
+                  )}
                 </span>
                 Wróżki
               </Link>

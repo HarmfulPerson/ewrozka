@@ -38,6 +38,7 @@ export interface ApiUser {
   topicNames?: string[];
   id: number;
   emailVerified?: boolean;
+  gender?: 'female' | 'male' | null;
 }
 
 export interface WizardDto {
@@ -73,6 +74,8 @@ export interface RegisterData {
   bio?: string;
   /** 9 cyfr – backend doda prefix +48 */
   phone?: string;
+  /** Płeć: 'female' | 'male' */
+  gender?: 'female' | 'male';
   topicIds?: number[];
   roleNames?: string[];
 }
@@ -145,6 +148,7 @@ export async function apiCompleteGoogleRegistration(data: {
   username?: string;
   bio?: string;
   phone?: string;
+  gender?: 'female' | 'male';
   topicIds?: number[];
 }): Promise<{ user: ApiUser } | { id: string }> {
   return fetchApi('auth/register-google', {
@@ -256,6 +260,7 @@ export async function apiSubmitWizardApplication(data: {
   password: string;
   bio: string;
   phone?: string;
+  gender?: 'female' | 'male';
   topicIds?: number[];
 }): Promise<{ id: string }> {
   const url = `${getBaseUrl()}/wizard-applications`;

@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppointmentEntity, RoleEntity, TopicEntity, UserEntity } from '@repo/postgresql-typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { FeaturedModule } from '../featured/featured.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 
@@ -11,6 +12,7 @@ import { UserService } from './user.service';
     TypeOrmModule.forFeature([UserEntity, RoleEntity, TopicEntity, AppointmentEntity]),
     AuthModule,
     FeaturedModule,
+    NotificationsModule,
   ],
   controllers: [UserController],
   providers: [UserService],

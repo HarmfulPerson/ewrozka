@@ -31,6 +31,9 @@ export class WizardApplicationEntity {
   @Column({ name: 'topic_ids', type: 'jsonb', default: '[]' })
   topicIds!: number[];
 
+  @Column({ length: 10, nullable: true, default: null })
+  gender!: 'female' | 'male' | null;
+
   @Column({ length: 20, default: 'pending' })
   status!: 'pending' | 'approved' | 'rejected';
 

@@ -19,6 +19,7 @@ export default function RejestracjaKlientPage() {
     const password = (form.querySelector('#password') as HTMLInputElement)?.value;
     const firstName = (form.querySelector('#firstName') as HTMLInputElement)?.value?.trim();
     const lastName = (form.querySelector('#lastName') as HTMLInputElement)?.value?.trim();
+    const gender = (form.querySelector('#gender') as HTMLSelectElement)?.value as '' | 'female' | 'male';
     if (!email || !password) {
       setError('Wypełnij e-mail i hasło.');
       return;
@@ -34,6 +35,7 @@ export default function RejestracjaKlientPage() {
         email,
         password,
         roleNames: ['client'],
+        ...(gender && { gender }),
       });
       router.push(`/sprawdz-email?email=${encodeURIComponent(email)}`);
     } catch (err) {
@@ -63,6 +65,14 @@ export default function RejestracjaKlientPage() {
             <label htmlFor="lastName">Nazwisko</label>
             <input id="lastName" type="text" placeholder="Nowak" />
           </div>
+        </div>
+        <div className="auth-form__field">
+          <label htmlFor="gender">Płeć</label>
+          <select id="gender" className="auth-form__select">
+            <option value="">— Wybierz —</option>
+            <option value="female">Kobieta</option>
+            <option value="male">Mężczyzna</option>
+          </select>
         </div>
         <div className="auth-form__field">
           <label htmlFor="email">E-mail</label>

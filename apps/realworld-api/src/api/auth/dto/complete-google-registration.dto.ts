@@ -26,4 +26,8 @@ export class CompleteGoogleRegistrationDto {
   @IsArray()
   @IsInt({ each: true })
   topicIds?: number[];
+
+  @IsOptional()
+  @IsString()
+  gender?: 'female' | 'male';
 }

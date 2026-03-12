@@ -547,6 +547,34 @@
   color: #f87171;
 }
 
+.aw-profile__video-wrap,
+.aw-profile__video-pending {
+  margin-top: 0.5rem;
+}
+
+.aw-profile__video {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 8px;
+  background: #000;
+}
+
+.aw-profile__video-pending .aw-profile__card-row--muted {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.aw-profile__video-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.aw-table__pending-video {
+  font-size: 1.125rem;
+  cursor: help;
+}
+
 .aw-profile__msg--success {
   background: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.3);

@@ -51,6 +51,18 @@ export class UserEntity extends AbstractEntity {
   @Column({ default: false })
   emailVerified!: boolean;
 
+  /**
+   * Płeć użytkownika: 'female' | 'male'. Używane do filtrowania (np. wróżki).
+   */
+  @Column({
+    name: 'gender',
+    type: 'varchar',
+    length: 10,
+    nullable: true,
+    default: null,
+  })
+  gender!: 'female' | 'male' | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 
@@ -70,7 +82,7 @@ export class UserEntity extends AbstractEntity {
    * Status wniosku wróżki: null = klient/admin, 'pending' = oczekuje, 'approved' = zatwierdzony, 'rejected' = odrzucony.
    */
   /**
-   * URL do filmiku-wizytówki wróżki (max 30s, sterowalne z env).
+   * URL do zatwierdzonego filmiku-wizytówki wróżki (max 30s). Widoczny publicznie.
    */
   @Column({
     name: 'video',
@@ -80,6 +92,18 @@ export class UserEntity extends AbstractEntity {
     default: null,
   })
   video!: string | null;
+
+  /**
+   * URL do filmiku oczekującego na zatwierdzenie przez admina. Nie jest widoczny publicznie.
+   */
+  @Column({
+    name: 'video_pending',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    default: null,
+  })
+  videoPending!: string | null;
 
   @Column({
     name: 'wizard_application_status',

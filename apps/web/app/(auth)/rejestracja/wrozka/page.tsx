@@ -64,6 +64,7 @@ export default function RejestracjaWrozkaPage() {
     const email     = (form.querySelector('#email')    as HTMLInputElement)?.value?.trim();
     const password  = (form.querySelector('#password') as HTMLInputElement)?.value;
     const bio       = (form.querySelector('#bio')      as HTMLTextAreaElement)?.value?.trim();
+    const gender    = (form.querySelector('#gender')   as HTMLSelectElement)?.value as '' | 'female' | 'male';
 
     if (!username || username.length < 3) {
       setError('Pseudonim musi mieć co najmniej 3 znaki.');
@@ -100,6 +101,7 @@ export default function RejestracjaWrozkaPage() {
         bio,
         phone,
         topicIds: selectedTopics,
+        ...(gender && { gender }),
       });
 
       // 2. Prześlij zdjęcie do wniosku
@@ -226,6 +228,14 @@ export default function RejestracjaWrozkaPage() {
           </small>
         </div>
 
+        <div className="auth-form__field">
+          <label htmlFor="gender">Płeć</label>
+          <select id="gender" className="auth-form__select">
+            <option value="">— Wybierz —</option>
+            <option value="female">Kobieta</option>
+            <option value="male">Mężczyzna</option>
+          </select>
+        </div>
         <div className="auth-form__field">
           <label htmlFor="email">E-mail <span className="wrozka-reg__required">*</span></label>
           <input id="email" type="email" placeholder="twoj@email.pl" autoComplete="email" required />

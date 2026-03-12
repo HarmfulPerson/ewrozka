@@ -22,6 +22,7 @@ import { ApiAuth, ApiPublic } from '@repo/api/decorators/http.decorators';
 import { CreateUserReqDto } from './dto/create-user.dto';
 import { UpdateUserReqDto } from './dto/update-user.dto';
 import { UserResDto } from './dto/user.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 import { UserService } from './user.service';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -29,7 +30,10 @@ import * as fs from 'fs';
 @ApiTags('User')
 @Controller()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   @Get('user')
   @SerializeOptions({ type: UserResDto })
@@ -178,6 +182,7 @@ export class UserController {
   ): Promise<{ videoUrl: string }> {
     const videoUrl = `/uploads/users/${currentUser.id}/${file.filename}`;
     await this.userService.updateUserVideo(currentUser.id, videoUrl);
+    this.notificationsService.notifyAdminVideoPending().catch(() => {});
     return { videoUrl };
   }
 

@@ -14,6 +14,11 @@ export class CreateUserReqDto {
   @PasswordField()
   readonly password: string;
 
+  /** Płeć: 'female' | 'male' */
+  @IsOptional()
+  @IsString()
+  readonly gender?: 'female' | 'male';
+
   /** Nazwy ról (np. ['wizard'], ['client']). Dla eWróżka: wizard | client. */
   @IsOptional()
   @IsArray()

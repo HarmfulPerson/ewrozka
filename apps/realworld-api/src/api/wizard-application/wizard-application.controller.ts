@@ -43,6 +43,10 @@ class SubmitWizardApplicationDto {
   @IsArray()
   @IsInt({ each: true })
   topicIds?: number[];
+
+  @IsOptional()
+  @IsString()
+  gender?: 'female' | 'male';
 }
 
 @ApiTags('WizardApplication')

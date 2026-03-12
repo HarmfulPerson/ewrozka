@@ -59,6 +59,12 @@ export class AdminController {
     return this.adminService.rejectWizardApplication(id, reason);
   }
 
+  @Get('pending-video-count')
+  @ApiAuth({ summary: 'Liczba wróżek z filmikiem do akceptacji (tylko admin)' })
+  getPendingVideoCount() {
+    return this.adminService.getPendingVideoCount();
+  }
+
   @Get('wizards')
   @ApiAuth({ summary: 'Lista wróżek z filtrami i sortowaniem (tylko admin)' })
   getWizards(
@@ -85,7 +91,7 @@ export class AdminController {
     };
     return this.adminService.getWizards(
       filters,
-      sortBy ?? 'joinDate',
+      sortBy ?? 'pendingVideo',
       sortOrder ?? 'desc',
       page ?? 1,
       limit ?? 10,
@@ -125,6 +131,20 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   setWizardFeatured(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.setWizardFeatured(id);
+  }
+
+  @Post('wizards/:id/video/approve')
+  @ApiAuth({ summary: 'Zatwierdź filmik wróżki (tylko admin)' })
+  @HttpCode(HttpStatus.OK)
+  approveWizardVideo(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.approveWizardVideo(id);
+  }
+
+  @Post('wizards/:id/video/reject')
+  @ApiAuth({ summary: 'Odrzuć filmik wróżki (tylko admin)' })
+  @HttpCode(HttpStatus.OK)
+  rejectWizardVideo(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.rejectWizardVideo(id);
   }
 
   @Get('commission-tier-config')

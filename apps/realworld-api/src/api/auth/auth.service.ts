@@ -256,6 +256,7 @@ export class AuthService {
         bio: '',
         emailVerified: true,
         roles: [clientRole],
+        gender: dto.gender ?? null,
       });
       const saved = await this.userRepository.save(newUser);
       const savedWithRoles = await this.userRepository.findOneOrFail({
@@ -303,6 +304,7 @@ export class AuthService {
         bio: dto.bio.trim(),
         phone: `+48${dto.phone.replace(/\D/g, '').slice(0, 9)}`,
         topicIds: dto.topicIds ?? [],
+        gender: dto.gender ?? null,
         status: 'pending',
         googleId: profile.id,
       });

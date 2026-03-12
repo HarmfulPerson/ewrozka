@@ -25,6 +25,7 @@ export class WizardApplicationService {
     bio: string;
     phone?: string;
     topicIds?: number[];
+    gender?: 'female' | 'male';
   }): Promise<{ id: string }> {
     const emailLower = dto.email.toLowerCase().trim();
 
@@ -58,6 +59,7 @@ export class WizardApplicationService {
       bio: dto.bio.trim(),
       phone: dto.phone ? `+48${dto.phone}` : null,
       topicIds: dto.topicIds ?? [],
+      gender: dto.gender ?? null,
       status: 'pending',
     });
 

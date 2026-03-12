@@ -34,11 +34,14 @@ export class NotificationsGateway implements OnGatewayInit {
       emitPendingCount: (wizardId, count) => {
         this.server.to(`wizard:${wizardId}`).emit('pending_count', { count });
       },
+      emitAdminPendingVideoCount: (count) => {
+        this.server.to('admin').emit('pending_video_count', { count });
+      },
     });
     this.logger.log('NotificationsGateway initialized');
   }
 
-  /** Klient uwierzytelnia się po połączeniu, dołącza do swojego pokoju. */
+  /** Klient uwierzytelnia się po połączeniu, dołącza do swojego pokoju (wizard lub admin). */
   @SubscribeMessage('auth')
   async handleAuth(
     @MessageBody() data: { token: string },
@@ -49,11 +52,23 @@ export class NotificationsGateway implements OnGatewayInit {
       const userId = parseInt(String(payload.id), 10);
       if (!userId) throw new Error('brak userId');
 
-      client.join(`wizard:${userId}`);
-      this.logger.debug(`Socket ${client.id} authenticated as wizard ${userId}`);
+      const roles = (payload as { roles?: string[] }).roles ?? [];
 
-      const { total } = await this.notificationsService.getPendingCount(userId);
-      client.emit('pending_count', { count: total });
+      // Wróżka – pokój wizard:X, licznik wniosków
+      if (roles.includes('wizard')) {
+        client.join(`wizard:${userId}`);
+        this.logger.debug(`Socket ${client.id} authenticated as wizard ${userId}`);
+        const { total } = await this.notificationsService.getPendingCount(userId);
+        client.emit('pending_count', { count: total });
+      }
+
+      // Admin – pokój admin, licznik filmików do akceptacji
+      if (roles.includes('admin')) {
+        client.join('admin');
+        this.logger.debug(`Socket ${client.id} authenticated as admin`);
+        const videoCount = await this.notificationsService.getAdminPendingVideoCount();
+        client.emit('pending_video_count', { count: videoCount });
+      }
 
       return { success: true };
     } catch {

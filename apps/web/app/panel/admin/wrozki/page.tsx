@@ -16,6 +16,7 @@ import '../../panel-shared.css';
 import './wrozki.css';
 
 const SORT_OPTIONS: { value: AdminWizardsSortBy; label: string }[] = [
+  { value: 'pendingVideo', label: 'Filmik do akceptacji' },
   { value: 'name', label: 'Nazwa' },
   { value: 'joinDate', label: 'Data dołączenia' },
   { value: 'earnedGrosze', label: 'Zarobione' },
@@ -38,7 +39,7 @@ export default function AdminWrozkiPage() {
   const [earnedMinZl, setEarnedMinZl] = useState('');
   const [earnedMaxZl, setEarnedMaxZl] = useState('');
   const [availableNow, setAvailableNow] = useState(false);
-  const [sortBy, setSortBy] = useState<AdminWizardsSortBy>('joinDate');
+  const [sortBy, setSortBy] = useState<AdminWizardsSortBy>('pendingVideo');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const fetchWizards = useCallback(async (targetPage: number) => {
@@ -208,6 +209,7 @@ export default function AdminWrozkiPage() {
                   <th>Spotkania</th>
                   <th>Zarobione</th>
                   <th>Ogłoszenia</th>
+                  <th>Filmik</th>
                   <th>Dostępna</th>
                   <th>Wyróżniona</th>
                 </tr>
@@ -245,6 +247,13 @@ export default function AdminWrozkiPage() {
                     <td>{row.meetingsCount}</td>
                     <td>{formatGrosze(row.earnedGrosze)}</td>
                     <td>{row.announcementsCount}</td>
+                    <td>
+                      {row.hasPendingVideo ? (
+                        <span className="aw-table__pending-video" title="Filmik do akceptacji">🎬</span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td>{row.isAvailableNow ? '✓' : '—'}</td>
                     <td>{row.isFeatured ? '✦' : '—'}</td>
                   </tr>

@@ -208,6 +208,8 @@ export class UserService {
 
         token: currentUser.token,
 
+        gender: user.gender ?? null,
+
       },
 
     };
@@ -218,7 +220,7 @@ export class UserService {
 
   async create(dto: CreateUserReqDto): Promise<UserResDto> {
 
-    const { username, email, password, roleNames, topicIds, bio, phone } = dto;
+    const { username, email, password, roleNames, topicIds, bio, phone, gender } = dto;
 
 
 
@@ -339,6 +341,8 @@ export class UserService {
 
       wizardApplicationStatus: wizardReg ? 'pending' : null,
 
+      gender: gender ?? null,
+
     });
 
 
@@ -441,6 +445,8 @@ export class UserService {
 
 
         emailVerified: wizardReg,
+
+        gender: savedWithRoles.gender ?? null,
 
       },
 
@@ -598,6 +604,8 @@ export class UserService {
 
         }),
 
+        gender: updatedUser?.gender ?? null,
+
       },
 
     };
@@ -606,10 +614,19 @@ export class UserService {
 
 
 
+  /** Wróżka wgrywa filmik – trafia do video_pending (wymaga akceptacji admina). */
   async updateUserVideo(userId: number, videoUrl: string | null): Promise<void> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['roles'] });
     if (!user) throw new BadRequestException('Użytkownik nie istnieje');
-    user.video = videoUrl;
+    const isWizard = user.roles?.some((r) => r.name === 'wizard');
+    if (!isWizard) throw new BadRequestException('Tylko wróżki mogą wgrywać filmiki');
+
+    if (videoUrl) {
+      user.videoPending = videoUrl;
+    } else {
+      user.video = null;
+      user.videoPending = null;
+    }
     await this.userRepository.save(user);
   }
 
@@ -764,6 +781,8 @@ export class UserService {
 
 
         token: currentUser.token,
+
+        gender: user.gender ?? null,
 
       },
 

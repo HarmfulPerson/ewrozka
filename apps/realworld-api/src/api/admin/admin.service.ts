@@ -46,7 +46,7 @@ import { In, Repository } from 'typeorm';
 import { EmailService } from '../email/email.service';
 
 import { FeaturedService } from '../featured/featured.service';
-
+import { NotificationsService } from '../notifications/notifications.service';
 import { CommissionTierService } from '../payment/commission-tier.service';
 
 
@@ -121,7 +121,9 @@ export type AdminWizardsSortBy =
 
   | 'meetingsCount'
 
-  | 'announcementsCount';
+  | 'announcementsCount'
+
+  | 'pendingVideo';
 
 
 
@@ -146,6 +148,8 @@ export interface AdminWizardRowDto {
   isAvailableNow: boolean;
 
   isFeatured: boolean;
+
+  hasPendingVideo: boolean;
 
 }
 
@@ -204,7 +208,8 @@ export interface AdminWizardDetailDto {
     windowDays: number;
     feePercent: number;
   };
-
+  video: string | null;
+  videoPending: string | null;
 }
 
 
@@ -266,6 +271,8 @@ export class AdminService {
     private readonly emailService: EmailService,
 
     private readonly featuredService: FeaturedService,
+
+    private readonly notificationsService: NotificationsService,
 
   ) {}
 
@@ -436,6 +443,8 @@ export class AdminService {
 
       googleId: app.googleId ?? undefined,
 
+      gender: app.gender ?? null,
+
     });
 
 
@@ -552,6 +561,8 @@ export class AdminService {
 
       .addSelect('u.created_at', 'createdAt')
 
+      .addSelect('u.video_pending', 'videoPending')
+
       .addSelect(
 
         `(SELECT COUNT(*)::int FROM appointment a WHERE a.wrozka_id = u.id)`,
@@ -652,7 +663,13 @@ export class AdminService {
 
     const orderDir = sortOrder.toUpperCase() as 'ASC' | 'DESC';
 
-    if (sortBy === 'name') {
+    if (sortBy === 'pendingVideo') {
+
+      qb.orderBy('CASE WHEN u.video_pending IS NOT NULL THEN 1 ELSE 0 END', 'DESC');
+
+      qb.addOrderBy('u.created_at', orderDir);
+
+    } else if (sortBy === 'name') {
 
       qb.orderBy('u.username', orderDir);
 
@@ -736,6 +753,8 @@ export class AdminService {
         isAvailableNow: Number(r.isAvailableNow ?? 0) === 1,
 
         isFeatured: featuredIds.has(Number(r.id)),
+
+        hasPendingVideo: !!r.videoPending,
 
       }),
     );
@@ -881,7 +900,93 @@ export class AdminService {
 
       },
 
+      video: user.video ?? null,
+
+      videoPending: user.videoPending ?? null,
+
     };
+
+  }
+
+
+
+  async getPendingVideoCount(): Promise<number> {
+
+    return this.userRepo
+
+      .createQueryBuilder('u')
+
+      .innerJoin('u.roles', 'r', "r.name = 'wizard'")
+
+      .where('u.video_pending IS NOT NULL')
+
+      .getCount();
+
+  }
+
+
+
+  async approveWizardVideo(wizardId: number): Promise<void> {
+
+    const user = await this.userRepo.findOne({ where: { id: wizardId }, relations: ['roles'] });
+
+    if (!user) throw new NotFoundException('Wróżka nie istnieje.');
+
+    if (!user.roles?.some((r) => r.name === 'wizard')) {
+
+      throw new NotFoundException('Użytkownik nie jest wróżką.');
+
+    }
+
+    if (!user.videoPending) {
+
+      throw new BadRequestException('Brak filmiku do zatwierdzenia.');
+
+    }
+
+    user.video = user.videoPending;
+
+    user.videoPending = null;
+
+    await this.userRepo.save(user);
+
+    this.notificationsService.notifyAdminVideoPending().catch((err) =>
+
+      this.logger.warn('notifyAdminVideoPending failed', err),
+
+    );
+
+  }
+
+
+
+  async rejectWizardVideo(wizardId: number): Promise<void> {
+
+    const user = await this.userRepo.findOne({ where: { id: wizardId }, relations: ['roles'] });
+
+    if (!user) throw new NotFoundException('Wróżka nie istnieje.');
+
+    if (!user.roles?.some((r) => r.name === 'wizard')) {
+
+      throw new NotFoundException('Użytkownik nie jest wróżką.');
+
+    }
+
+    if (!user.videoPending) {
+
+      throw new BadRequestException('Brak filmiku do odrzucenia.');
+
+    }
+
+    user.videoPending = null;
+
+    await this.userRepo.save(user);
+
+    this.notificationsService.notifyAdminVideoPending().catch((err) =>
+
+      this.logger.warn('notifyAdminVideoPending failed', err),
+
+    );
 
   }
 

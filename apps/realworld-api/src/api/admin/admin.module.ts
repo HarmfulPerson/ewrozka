@@ -14,6 +14,7 @@ import {
   WizardApplicationEntity,
 } from '@repo/postgresql-typeorm';
 import { FeaturedModule } from '../featured/featured.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PaymentModule } from '../payment/payment.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
@@ -34,6 +35,7 @@ import { AdminService } from './admin.service';
       PlatformFeeTierEntity,
     ]),
     FeaturedModule,
+    NotificationsModule,
     PaymentModule,
   ],
   controllers: [AdminController],
