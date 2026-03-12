@@ -1246,6 +1246,32 @@ export class AdminService {
 
       }
 
+      for (let i = 0; i < body.tiers.length; i++) {
+
+        for (let j = i + 1; j < body.tiers.length; j++) {
+
+          const a = body.tiers[i];
+
+          const b = body.tiers[j];
+
+          const maxA = a.maxMeetings ?? Infinity;
+
+          const maxB = b.maxMeetings ?? Infinity;
+
+          if (a.minMeetings <= maxB && maxA >= b.minMeetings) {
+
+            throw new BadRequestException(
+
+              'Progi nie mogą na siebie zachodzić – każdy zakres musi być osobny.',
+
+            );
+
+          }
+
+        }
+
+      }
+
       await this.platformFeeTierRepo.delete({ configId: config.id });
 
       for (let i = 0; i < body.tiers.length; i++) {

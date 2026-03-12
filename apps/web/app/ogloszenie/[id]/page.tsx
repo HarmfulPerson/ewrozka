@@ -320,6 +320,7 @@ export default function AdvertisementPage() {
                   width={600}
                   height={400}
                   style={{ objectFit: 'cover' }}
+                  unoptimized
                 />
               </div>
             )}
@@ -336,6 +337,7 @@ export default function AdvertisementPage() {
                       width={48}
                       height={48}
                       style={{ borderRadius: '50%', objectFit: 'cover' }}
+                      unoptimized
                     />
                   )}
                   <span>{advertisement.wizard.username}</span>

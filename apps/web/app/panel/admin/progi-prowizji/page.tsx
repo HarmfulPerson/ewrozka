@@ -12,6 +12,19 @@ import '../wrozki/wrozki.css';
 
 type TierRow = { minMeetings: number; maxMeetings: number | null; feePercent: number };
 
+function tiersOverlap(tiers: TierRow[]): boolean {
+  for (let i = 0; i < tiers.length; i++) {
+    for (let j = i + 1; j < tiers.length; j++) {
+      const a = tiers[i];
+      const b = tiers[j];
+      const maxA = a.maxMeetings ?? Infinity;
+      const maxB = b.maxMeetings ?? Infinity;
+      if (a.minMeetings <= maxB && maxA >= b.minMeetings) return true;
+    }
+  }
+  return false;
+}
+
 export default function ProgiProwizjiPage() {
   const router = useRouter();
   const [user, setUser] = useState<ReturnType<typeof getStoredUser>>(null);
@@ -86,9 +99,13 @@ export default function ProgiProwizjiPage() {
         return;
       }
       if (t.maxMeetings != null && t.maxMeetings < t.minMeetings) {
-        setError('maxMeetings nie może być mniejsze od minMeetings.');
+        setError('Maks. spotkań nie może być mniejsze od min. w tym samym progu.');
         return;
       }
+    }
+    if (tiersOverlap(tiers)) {
+      setError('Progi nie mogą na siebie zachodzić – każdy zakres musi być osobny.');
+      return;
     }
     setSaving(true);
     setError(null);
@@ -173,7 +190,7 @@ export default function ProgiProwizjiPage() {
             max={365}
             value={windowDays}
             onChange={(e) => setWindowDays(parseInt(e.target.value, 10) || 90)}
-            className="aw-profile__fee-input"
+            className="aw-profile__fee-input aw-profile__input-number"
           />
         </p>
         <p className="aw-profile__card-row" style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
@@ -191,6 +208,7 @@ export default function ProgiProwizjiPage() {
                 min={0}
                 value={t.minMeetings}
                 onChange={(e) => updateTier(i, 'minMeetings', parseInt(e.target.value, 10) || 0)}
+                className="aw-profile__input-number"
                 style={{ width: 70 }}
               />
               <span>–</span>
@@ -204,6 +222,7 @@ export default function ProgiProwizjiPage() {
                   const v = raw === '' ? null : parseInt(raw, 10);
                   updateTier(i, 'maxMeetings', v);
                 }}
+                className="aw-profile__input-number"
                 style={{ width: 70 }}
               />
               <span>spotkań →</span>
@@ -213,6 +232,7 @@ export default function ProgiProwizjiPage() {
                 max={100}
                 value={t.feePercent}
                 onChange={(e) => updateTier(i, 'feePercent', parseInt(e.target.value, 10) || 0)}
+                className="aw-profile__input-number"
                 style={{ width: 60 }}
               />
               <span>%</span>

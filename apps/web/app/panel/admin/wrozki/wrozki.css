@@ -426,6 +426,33 @@
   font-size: 0.875rem;
 }
 
+/* Ukryj strzałki góra/dół w inputach number (progi prowizji itp.) */
+.aw-profile__fee-input::-webkit-outer-spin-button,
+.aw-profile__fee-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.aw-profile__fee-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.aw-profile__input-number {
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.aw-profile__input-number::-webkit-outer-spin-button,
+.aw-profile__input-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .aw-profile__fee-btn {
   padding: 0.35rem 0.75rem;
   border-radius: 6px;
