@@ -227,6 +227,7 @@ export class AuthService {
     bio?: string;
     phone?: string;
     topicIds?: number[];
+    gender?: 'female' | 'male';
   }): Promise<UserResDto | { id: string }> {
     const profile = await this.verifyGoogleTempToken(dto.tempToken);
 
