@@ -13,7 +13,7 @@ export default function HomePage() {
         <section className="landing__hero">
           <span className="landing__badge">Portal wróżb i konsultacji</span>
           <h1 className="landing__title">
-            PołONZ się z <span>wróżką</span> lub przyjmuj klientów online
+            Połącz się z <span>wróżką</span> lub przyjmuj klientów online
           </h1>
           <p className="landing__subtitle">
             eWróżka to miejsce dla wróżek oferujących tarot, horoskopy i runy oraz
