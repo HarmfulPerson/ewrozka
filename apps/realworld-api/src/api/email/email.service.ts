@@ -73,12 +73,36 @@ export class EmailService implements OnModuleInit {
 
   async sendWizardApplicationApproved(to: string, username: string): Promise<void> {
     const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
-    const loginUrl = `${frontendUrl}/logowanie`;
+    const loginUrl = `${frontendUrl}/login`;
 
     await this.send({
       type: EmailType.WIZARD_APPLICATION_APPROVED,
       to,
       subject: '🎉 Twoje konto wróżki zostało zatwierdzone – eWróżka',
+      context: { username, loginUrl },
+    });
+  }
+
+  async sendWelcomeClient(to: string, username: string): Promise<void> {
+    const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
+    const loginUrl = `${frontendUrl}/login`;
+
+    await this.send({
+      type: EmailType.WELCOME_CLIENT,
+      to,
+      subject: 'Witaj w eWróżce! 👋',
+      context: { username, loginUrl },
+    });
+  }
+
+  async sendWelcomeWizard(to: string, username: string): Promise<void> {
+    const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
+    const loginUrl = `${frontendUrl}/login`;
+
+    await this.send({
+      type: EmailType.WELCOME_WIZARD,
+      to,
+      subject: 'Witaj na platformie eWróżka! ✨',
       context: { username, loginUrl },
     });
   }

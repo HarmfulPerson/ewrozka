@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   Injectable,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -12,6 +13,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { hashPassword, verifyPassword } from '@repo/nest-common';
 import { RoleEntity, UserEntity, WizardApplicationEntity } from '@repo/postgresql-typeorm';
 import { In, Repository } from 'typeorm';
+import { EmailService } from '../email/email.service';
 import { UserResDto } from '../user/dto/user.dto';
 import { LoginReqDto } from './dto/login.dto';
 import { JwtPayloadType } from './types/jwt-payload.type';
@@ -19,9 +21,12 @@ import type { GoogleProfile } from './strategies/google.strategy';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly configService: ConfigService<AllConfigType>,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(RoleEntity)
@@ -128,6 +133,10 @@ export class AuthService {
     user.emailVerified = true;
     user.emailVerificationToken = null;
     await this.userRepository.save(user);
+
+    this.emailService
+      .sendWelcomeClient(user.email, user.username)
+      .catch((err) => this.logger.error('Failed to send welcome email', err));
   }
 
   async verifyAccessToken(token: string): Promise<JwtPayloadType> {
@@ -260,6 +269,11 @@ export class AuthService {
         gender: dto.gender ?? null,
       });
       const saved = await this.userRepository.save(newUser);
+
+      this.emailService
+        .sendWelcomeClient(saved.email, saved.username)
+        .catch((err) => this.logger.error('Failed to send welcome email', err));
+
       const savedWithRoles = await this.userRepository.findOneOrFail({
         where: { id: saved.id },
         relations: ['roles'],

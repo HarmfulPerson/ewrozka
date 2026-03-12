@@ -7,6 +7,7 @@ import {
   UserEntity,
   WizardApplicationEntity,
 } from '@repo/postgresql-typeorm';
+import { EmailModule } from '../email/email.module';
 import { AuthController } from './auth.controller';
 import { GoogleEnabledGuard } from './guards/google-enabled.guard';
 import { AuthService } from './auth.service';
@@ -17,6 +18,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
     JwtModule.register({}),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     TypeOrmModule.forFeature([UserEntity, RoleEntity, WizardApplicationEntity]),
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, GoogleStrategy, GoogleEnabledGuard],

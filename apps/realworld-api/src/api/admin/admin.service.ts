@@ -469,14 +469,13 @@ export class AdminService {
 
 
 
-    // Wyślij email z powiadomieniem o zatwierdzeniu (nie blokuj odpowiedzi)
-
+    // Wyślij emaile z powiadomieniem o zatwierdzeniu i powitaniem (nie blokuj odpowiedzi)
     this.emailService
-
       .sendWizardApplicationApproved(app.email, app.username)
-
       .catch((err) => this.logger.error('Failed to send approval email', err));
-
+    this.emailService
+      .sendWelcomeWizard(app.email, app.username)
+      .catch((err) => this.logger.error('Failed to send welcome wizard email', err));
   }
 
 

@@ -56,11 +56,32 @@
 }
 
 @media (max-width: 800px) {
+  .ustawienia-page {
+    overflow: visible;
+    min-height: auto;
+  }
+
   .ustawienia-grid {
     flex-direction: column;
-    overflow-y: auto;
+    flex: none;
+    min-height: auto;
+    overflow: visible;
+    gap: 1.25rem;
   }
-  /* Na mobilnym karty mają naturalną wysokość */
+
+  .ustawienia-col {
+    flex: none;
+    min-width: auto;
+    min-height: auto;
+    width: 100%;
+  }
+
+  /* Na mobilnym karty mają naturalną wysokość, jedno pod drugim */
+  .ustawienia-col > .ustawienia-section {
+    flex: none;
+    min-height: auto;
+  }
+
   .ustawienia-col > .ustawienia-section:last-child {
     flex: none;
     min-height: auto;
