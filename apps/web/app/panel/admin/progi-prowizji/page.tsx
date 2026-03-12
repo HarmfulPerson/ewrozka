@@ -17,9 +17,9 @@ function tiersOverlap(tiers: TierRow[]): boolean {
     for (let j = i + 1; j < tiers.length; j++) {
       const a = tiers[i];
       const b = tiers[j];
-      const maxA = a.maxMeetings ?? Infinity;
-      const maxB = b.maxMeetings ?? Infinity;
-      if (a.minMeetings <= maxB && maxA >= b.minMeetings) return true;
+      const maxA = a?.maxMeetings ?? Infinity;
+      const maxB = b?.maxMeetings ?? Infinity;
+      if ((a?.minMeetings ?? 0) <= maxB && maxA >= (b?.minMeetings ?? 0)) return true;
     }
   }
   return false;
