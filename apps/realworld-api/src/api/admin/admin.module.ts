@@ -5,6 +5,8 @@ import {
   AppointmentEntity,
   AvailabilityEntity,
   FeaturedWizardEntity,
+  PlatformFeeConfigEntity,
+  PlatformFeeTierEntity,
   RoleEntity,
   TopicEntity,
   TransactionEntity,
@@ -12,6 +14,7 @@ import {
   WizardApplicationEntity,
 } from '@repo/postgresql-typeorm';
 import { FeaturedModule } from '../featured/featured.module';
+import { PaymentModule } from '../payment/payment.module';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
@@ -27,8 +30,11 @@ import { AdminService } from './admin.service';
       AvailabilityEntity,
       AdvertisementEntity,
       FeaturedWizardEntity,
+      PlatformFeeConfigEntity,
+      PlatformFeeTierEntity,
     ]),
     FeaturedModule,
+    PaymentModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

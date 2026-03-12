@@ -23,7 +23,7 @@ export class ProfileController {
   @Get(':username')
   @SerializeOptions({ type: ProfileResDto })
   @ApiAuth({
-    summary: 'Get Profile',
+    summary: 'Pobierz profil',
     type: ProfileResDto,
     isAuthOptional: true,
   })
@@ -37,7 +37,7 @@ export class ProfileController {
   @Post(':username/follow')
   @SerializeOptions({ type: ProfileResDto })
   @ApiAuth({
-    summary: 'Follow User',
+    summary: 'Obserwuj użytkownika',
     type: ProfileResDto,
   })
   follow(
@@ -50,7 +50,7 @@ export class ProfileController {
   @Delete(':username/follow')
   @SerializeOptions({ type: ProfileResDto })
   @ApiAuth({
-    summary: 'Unfollow User',
+    summary: 'Przestań obserwować użytkownika',
     type: ProfileResDto,
   })
   unfollow(

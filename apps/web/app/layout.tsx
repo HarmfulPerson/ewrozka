@@ -25,6 +25,11 @@ export const metadata: Metadata = {
   title: 'eWróżka.pl — Portal wróżb i konsultacji',
   description:
     'Połącz się z wróżkami lub oferuj konsultacje. Tarot, horoskopy, runy — jeden portal dla wróżek i klientów.',
+  icons: {
+    icon: '/icon-purple.svg',
+    shortcut: '/icon-purple.svg',
+    apple: '/icon-purple.svg',
+  },
 };
 
 export default function RootLayout({

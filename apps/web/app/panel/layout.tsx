@@ -77,7 +77,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { clearStoredUser, getStoredUser } from '../lib/auth-mock';
 import { getUploadUrl } from '../lib/api';
-import { apiGetWallet, apiCheckConnectReady, apiGetMyFeaturedStatus, type FeaturedStatusDto } from '../lib/api-payment';
+import { apiGetWallet, apiCheckConnectReady, apiGetMyFeaturedStatus, type FeaturedStatusDto, type CommissionTierDto } from '../lib/api-payment';
 import { apiGetMyAdvertisements } from '../lib/api-advertisements';
 import { useNotifications } from '../hooks/useNotifications';
 import { Toaster } from 'react-hot-toast';
@@ -94,6 +94,8 @@ export default function PanelLayout({
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<ReturnType<typeof getStoredUser>>(null);
   const [walletBalance, setWalletBalance] = useState<string>('');
+  const [platformFeePercent, setPlatformFeePercent] = useState<number | null>(null);
+  const [commissionTier, setCommissionTier] = useState<CommissionTierDto | null>(null);
   const [connectConfigured, setConnectConfigured] = useState<boolean | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [featuredStatus, setFeaturedStatus] = useState<FeaturedStatusDto | null>(null);
@@ -155,8 +157,10 @@ export default function PanelLayout({
       ]);
       const configured = connectData.connected && connectData.onboardingCompleted;
       setConnectConfigured(configured);
-      if (configured && walletData) {
+      if (walletData) {
         setWalletBalance(walletData.balanceFormatted);
+        setPlatformFeePercent(walletData.platformFeePercent ?? null);
+        setCommissionTier(walletData.commissionTier ?? null);
       }
     } catch {
       setConnectConfigured(false);
@@ -213,11 +217,35 @@ export default function PanelLayout({
                     <>
                       <span className="panel-balance-bar__label">Saldo:</span>
                       <span className="panel-balance-bar__amount">{walletBalance || '...'}</span>
+                      {platformFeePercent != null && (
+                        <span className="panel-balance-bar__fee">prowizja {platformFeePercent}%</span>
+                      )}
+                      {commissionTier && (
+                        <span className="panel-balance-bar__tier">
+                          {commissionTier.isSetByAdmin ? (
+                            'ustawiona przez admina'
+                          ) : (
+                            <>
+                              próg: {commissionTier.meetingsInWindow} spotkań / {commissionTier.windowDays} dni
+                              {commissionTier.nextTier && (
+                                <> · {commissionTier.nextTier.minMeetings - commissionTier.meetingsInWindow} do {commissionTier.nextTier.feePercent}%</>
+                              )}
+                            </>
+                          )}
+                        </span>
+                      )}
                     </>
                   ) : (
-                    <Link href="/panel/portfel" className="panel-balance-bar__setup-link">
-                      ⚠️ Skonfiguruj konto →
-                    </Link>
+                    <>
+                      <Link href="/panel/portfel" className="panel-balance-bar__setup-link">
+                        ⚠️ Skonfiguruj konto →
+                      </Link>
+                      {commissionTier && !commissionTier.isSetByAdmin && (
+                        <span className="panel-balance-bar__tier">
+                          próg: {commissionTier.meetingsInWindow}/{commissionTier.windowDays} dni
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -362,6 +390,17 @@ export default function PanelLayout({
                 </span>
                 Wróżki
               </Link>
+              <Link
+                href="/panel/admin/progi-prowizji"
+                className={`panel-sidebar__link ${pathname?.startsWith('/panel/admin/progi-prowizji') ? 'panel-sidebar__link--active' : ''}`}
+              >
+                <span className="panel-sidebar__link-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+                    <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
+                  </svg>
+                </span>
+                Progi prowizji
+              </Link>
             </>
           )}
 
@@ -403,6 +442,23 @@ export default function PanelLayout({
                 <>
                   <span className="panel-balance-bar__label">Saldo portfela:</span>
                   <span className="panel-balance-bar__amount">{walletBalance || '...'}</span>
+                  {platformFeePercent != null && (
+                    <span className="panel-balance-bar__fee">prowizja {platformFeePercent}%</span>
+                  )}
+                  {commissionTier && (
+                    <span className="panel-balance-bar__tier">
+                      {commissionTier.isSetByAdmin ? (
+                        'ustawiona przez admina'
+                      ) : (
+                        <>
+                          próg: {commissionTier.meetingsInWindow} spotkań / {commissionTier.windowDays} dni
+                          {commissionTier.nextTier && (
+                            <> · <Link href="/panel/portfel">{commissionTier.nextTier.minMeetings - commissionTier.meetingsInWindow} do {commissionTier.nextTier.feePercent}%</Link></>
+                          )}
+                        </>
+                      )}
+                    </span>
+                  )}
                 </>
               ) : (
                 <>

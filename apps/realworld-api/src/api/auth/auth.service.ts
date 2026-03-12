@@ -1,5 +1,9 @@
 import { AllConfigType } from '@/config/config.type';
-import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -31,19 +35,25 @@ export class AuthService {
       user && (await verifyPassword(password, user.password));
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Nieprawidłowy e-mail lub hasło.');
     }
 
     if (user.wizardApplicationStatus === 'pending') {
-      throw new ForbiddenException('WIZARD_PENDING');
+      throw new ForbiddenException(
+        'Twoja aplikacja jako wróżka jest w trakcie rozpatrywania.',
+      );
     }
 
     if (user.wizardApplicationStatus === 'rejected') {
-      throw new ForbiddenException('WIZARD_REJECTED');
+      throw new ForbiddenException(
+        'Twoja aplikacja jako wróżka została odrzucona.',
+      );
     }
 
     if (!user.emailVerified) {
-      throw new ForbiddenException('Konto nie zostało jeszcze aktywowane. Sprawdź skrzynkę e-mail i kliknij link weryfikacyjny.');
+      throw new ForbiddenException(
+        'Konto nie zostało jeszcze aktywowane. Sprawdź skrzynkę e-mail i kliknij link weryfikacyjny.',
+      );
     }
 
     const roleNames = user.roles?.map((r) => r.name) ?? [];
@@ -120,7 +130,9 @@ export class AuthService {
         secret: this.configService.getOrThrow('auth.secret', { infer: true }),
       });
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(
+        'Sesja wygasła lub token jest nieprawidłowy.',
+      );
     }
 
     return payload;

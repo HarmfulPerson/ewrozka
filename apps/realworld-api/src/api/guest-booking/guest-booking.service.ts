@@ -397,7 +397,7 @@ export class GuestBookingService {
     const booking = await this.bookingRepo.findOne({
       where: { id: bookingId },
     });
-    if (!booking) throw new NotFoundException('Rezerwacja nie znaleziona');
+    if (!booking) throw new NotFoundException('Rezerwacja nie istnieje');
     if (booking.wizardId !== wizardId)
       throw new BadRequestException('Brak uprawnień');
     return booking;

@@ -24,7 +24,7 @@ export function handleUnprocessableEntityException(
     timestamp: new Date().toISOString(),
     statusCode,
     error: STATUS_CODES[statusCode],
-    message: 'Validation failed',
+    message: 'Błąd walidacji',
     details: extractValidationErrorDetails(r.message),
   };
 
@@ -59,7 +59,7 @@ export function handleError(error: Error): ErrorDto {
     timestamp: new Date().toISOString(),
     statusCode,
     error: STATUS_CODES[statusCode],
-    message: error?.message || 'An unexpected error occurred',
+    message: error?.message || 'Wystąpił nieoczekiwany błąd',
   };
 
   return errorRes;

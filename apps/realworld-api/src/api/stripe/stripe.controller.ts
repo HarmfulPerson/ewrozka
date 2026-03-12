@@ -35,7 +35,7 @@ export class StripeController {
   }
 
   @Post('payment-intent')
-  @ApiAuth({ summary: 'Create Stripe PaymentIntent for inline payment' })
+  @ApiAuth({ summary: 'Utwórz Stripe PaymentIntent do płatności wbudowanej' })
   @HttpCode(HttpStatus.OK)
   async createPaymentIntent(
     @CurrentUser('id') userId: number,
@@ -54,13 +54,13 @@ export class StripeController {
   // ── Stripe Connect ──
 
   @Get('connect/quick-check')
-  @ApiAuth({ summary: 'Quick check if wizard has active Stripe Connect (no Stripe API calls)' })
+  @ApiAuth({ summary: 'Szybkie sprawdzenie czy wróżka ma aktywne Stripe Connect' })
   async connectQuickCheck(@CurrentUser('id') userId: number) {
     return this.stripeService.quickCheckConnect(userId);
   }
 
   @Post('connect/account-session')
-  @ApiAuth({ summary: 'Create AccountSession for embedded Connect onboarding' })
+  @ApiAuth({ summary: 'Utwórz AccountSession do wbudowanego onboardingu Connect' })
   @HttpCode(HttpStatus.OK)
   async createAccountSession(
     @CurrentUser('id') userId: number,
@@ -70,7 +70,7 @@ export class StripeController {
   }
 
   @Post('connect/refresh-status')
-  @ApiAuth({ summary: 'Refresh Stripe Connect account status from Stripe API' })
+  @ApiAuth({ summary: 'Odśwież status konta Stripe Connect z API Stripe' })
   @HttpCode(HttpStatus.OK)
   async refreshStatus(@CurrentUser('id') userId: number) {
     await this.stripeService.refreshConnectStatus(userId);
@@ -82,7 +82,7 @@ export class StripeController {
   }
 
   @Post('connect/onboard')
-  @ApiAuth({ summary: 'Start Stripe Connect onboarding for wizard' })
+  @ApiAuth({ summary: 'Rozpocznij onboarding Stripe Connect dla wróżki' })
   async connectOnboard(
     @CurrentUser('id') userId: number,
     @CurrentUser('email') email: string,
@@ -91,7 +91,7 @@ export class StripeController {
   }
 
   @Get('connect/status')
-  @ApiAuth({ summary: 'Get Stripe Connect account status' })
+  @ApiAuth({ summary: 'Status konta Stripe Connect' })
   async connectStatus(@CurrentUser('id') userId: number) {
     const status = await this.stripeService.getConnectAccountStatus(userId);
     const walletBalance = await this.stripeService.getWalletBalance(userId);
@@ -104,7 +104,7 @@ export class StripeController {
   }
 
   @Post('connect/withdraw')
-  @ApiAuth({ summary: 'Request a withdrawal to connected Stripe account' })
+  @ApiAuth({ summary: 'Wystąp o wypłatę na połączone konto Stripe' })
   @HttpCode(HttpStatus.OK)
   async withdraw(
     @CurrentUser('id') userId: number,
@@ -125,7 +125,7 @@ export class StripeController {
   }
 
   @Get('connect/withdrawals')
-  @ApiAuth({ summary: 'List my withdrawals' })
+  @ApiAuth({ summary: 'Lista moich wypłat' })
   async getWithdrawals(
     @CurrentUser('id') userId: number,
     @Query('limit') limit?: string,

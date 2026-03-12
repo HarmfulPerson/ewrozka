@@ -10,6 +10,8 @@ import { getUploadUrl } from '../../../../lib/api';
 import {
   apiGetAdminWizard,
   apiSetAdminWizardFeatured,
+  apiUpdateAdminWizardPlatformFee,
+  apiResetWizardPlatformFeeToTier,
 } from '../../../../lib/api-admin';
 import '../../../panel-shared.css';
 import '../wrozki.css';
@@ -22,6 +24,9 @@ export default function AdminWizardProfilePage() {
   const [wizard, setWizard] = useState<Awaited<ReturnType<typeof apiGetAdminWizard>> | null>(null);
   const [loading, setLoading] = useState(true);
   const [featuredLoading, setFeaturedLoading] = useState(false);
+  const [feePercent, setFeePercent] = useState<string>('');
+  const [feeSaving, setFeeSaving] = useState(false);
+  const [resetToTierLoading, setResetToTierLoading] = useState(false);
 
   useEffect(() => {
     if (!user?.roles?.includes('admin')) {
@@ -40,6 +45,14 @@ export default function AdminWizardProfilePage() {
       })
       .finally(() => setLoading(false));
   }, [user, id, router]);
+
+  useEffect(() => {
+    if (wizard?.platformFeePercent != null) {
+      setFeePercent(String(wizard.platformFeePercent));
+    } else {
+      setFeePercent(String(wizard?.tierBasedFee?.feePercent ?? 20));
+    }
+  }, [wizard?.platformFeePercent, wizard?.tierBasedFee?.feePercent]);
 
   const handleSetFeatured = async () => {
     if (!user || !wizard) return;
@@ -63,6 +76,41 @@ export default function AdminWizardProfilePage() {
       toast.error(err instanceof Error ? err.message : 'Wystąpił błąd.');
     } finally {
       setFeaturedLoading(false);
+    }
+  };
+
+  const handleResetToTier = async () => {
+    if (!user || !wizard) return;
+    setResetToTierLoading(true);
+    try {
+      await apiResetWizardPlatformFeeToTier(user.token, wizard.id);
+      toast.success('Prowizja z progów. Wróżka używa teraz naliczania z liczby spotkań.');
+      const updated = await apiGetAdminWizard(user.token, wizard.id);
+      setWizard(updated);
+      setFeePercent(String(updated.tierBasedFee?.feePercent ?? 20));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Błąd resetu');
+    } finally {
+      setResetToTierLoading(false);
+    }
+  };
+
+  const handleSaveFee = async () => {
+    if (!user || !wizard) return;
+    const val = parseInt(feePercent, 10);
+    if (Number.isNaN(val) || val < 0 || val > 100) {
+      toast.error('Prowizja musi być liczbą 0–100');
+      return;
+    }
+    setFeeSaving(true);
+    try {
+      await apiUpdateAdminWizardPlatformFee(user.token, wizard.id, val);
+      toast.success(`Prowizja ustawiona na ${val}%`);
+      setWizard((prev) => (prev ? { ...prev, platformFeePercent: val } : null));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Błąd zapisu');
+    } finally {
+      setFeeSaving(false);
     }
   };
 
@@ -162,6 +210,53 @@ export default function AdminWizardProfilePage() {
               {formatDate(wizard.featuredExpiresAt)}
             </p>
           )}
+        </section>
+
+        <section className="aw-profile__card">
+          <h2 className="aw-profile__card-title">Prowizja platformy</h2>
+          <p className="aw-profile__card-row">
+            <span className="aw-profile__label">Obecna prowizja:</span>{' '}
+            {wizard.platformFeePercent != null ? (
+              <>{wizard.platformFeePercent}% (ustawiona ręcznie)</>
+            ) : (
+              <>{wizard.tierBasedFee?.feePercent ?? 20}% (z progów)</>
+            )}
+          </p>
+          {wizard.tierBasedFee && (
+            <p className="aw-profile__card-row" style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+              Z progów: {wizard.tierBasedFee.meetingsInWindow} spotkań w ostatnich {wizard.tierBasedFee.windowDays} dniach → {wizard.tierBasedFee.feePercent}%
+            </p>
+          )}
+          <div className="aw-profile__card-row aw-profile__card-row--inline">
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={feePercent}
+              onChange={(e) => setFeePercent(e.target.value)}
+              className="aw-profile__fee-input"
+            />
+            <span>%</span>
+            <button
+              type="button"
+              className="aw-profile__fee-btn"
+              onClick={handleSaveFee}
+              disabled={feeSaving}
+            >
+              {feeSaving ? 'Zapisywanie…' : 'Zapisz (override)'}
+            </button>
+          </div>
+          <div className="aw-profile__card-row" style={{ marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              className="aw-profile__btn aw-profile__btn--secondary"
+              onClick={handleResetToTier}
+              disabled={resetToTierLoading || wizard.platformFeePercent == null}
+              title={wizard.platformFeePercent == null ? 'Wróżka już używa progów' : 'Usuń override, oblicz prowizję z progów'}
+            >
+              {resetToTierLoading ? '…' : 'Oblicz z progów'}
+            </button>
+          </div>
         </section>
       </div>
 

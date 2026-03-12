@@ -184,6 +184,8 @@ export interface AdminWizardDetail {
   isFeatured: boolean;
   featuredExpiresAt: string | null;
   topicNames: string[];
+  platformFeePercent: number | null;
+  tierBasedFee?: { meetingsInWindow: number; windowDays: number; feePercent: number };
 }
 
 export async function apiGetAdminWizard(
@@ -199,5 +201,53 @@ export async function apiSetAdminWizardFeatured(
 ): Promise<void> {
   await fetchAdmin<unknown>(`admin/wizards/${wizardId}/featured`, token, {
     method: 'POST',
+  });
+}
+
+export async function apiUpdateAdminWizardPlatformFee(
+  token: string,
+  wizardId: number,
+  platformFeePercent: number,
+): Promise<void> {
+  await fetchAdmin<unknown>(
+    `admin/wizards/${wizardId}/platform-fee`,
+    token,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ platformFeePercent }),
+    },
+  );
+}
+
+export async function apiResetWizardPlatformFeeToTier(
+  token: string,
+  wizardId: number,
+): Promise<void> {
+  await fetchAdmin<unknown>(
+    `admin/wizards/${wizardId}/platform-fee/reset-to-tier`,
+    token,
+    { method: 'POST' },
+  );
+}
+
+/** Konfiguracja progów prowizji (okno + progi). */
+export interface CommissionTierConfig {
+  windowDays: number;
+  tiers: { minMeetings: number; maxMeetings: number | null; feePercent: number }[];
+}
+
+export async function apiGetCommissionTierConfig(
+  token: string,
+): Promise<CommissionTierConfig> {
+  return fetchAdmin<CommissionTierConfig>('admin/commission-tier-config', token);
+}
+
+export async function apiUpdateCommissionTierConfig(
+  token: string,
+  body: { windowDays?: number; tiers?: { minMeetings: number; maxMeetings: number | null; feePercent: number }[] },
+): Promise<void> {
+  await fetchAdmin<unknown>('admin/commission-tier-config', token, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
   });
 }

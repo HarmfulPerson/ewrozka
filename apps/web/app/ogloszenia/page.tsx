@@ -338,8 +338,18 @@ export default function OgloszeniaPage() {
             <div ref={sentinelRef} className="ogl-sentinel" />
 
             {loadingMore && (
-              <div className="ogl-spinner-wrap ogl-spinner-wrap--more">
-                <span className="panel-spinner" />
+              <div className="ogl-loading-cards">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="ogl-loading-card">
+                    <div className="ogl-loading-card__eye">
+                      <div className="pt-logo">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo-white.svg" alt="" className="pt-logo__img ogl-loading-card__img" />
+                      </div>
+                    </div>
+                    <div className="ogl-loading-card__body" />
+                  </div>
+                ))}
               </div>
             )}
             {!hasMore && wizards.length > 0 && (

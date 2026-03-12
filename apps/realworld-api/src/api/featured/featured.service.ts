@@ -66,7 +66,7 @@ export class FeaturedService {
   }
 
   /**
-   * Sprawdza czy wróżka jest aktualnie wyróżniona (ma aktywny, niewyg asły rekord).
+   * Sprawdza czy wróżka jest aktualnie wyróżniona (ma aktywny, niewygasły rekord).
    */
   async getWizardFeaturedStatus(userId: number): Promise<{
     isFeatured: boolean;

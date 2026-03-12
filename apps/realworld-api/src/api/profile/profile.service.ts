@@ -1,7 +1,10 @@
-import { ErrorCode } from '@/constants/error-code.constant';
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ValidationException } from '@repo/api';
 import { UserEntity, UserFollowsEntity } from '@repo/postgresql-typeorm';
 import { Repository } from 'typeorm';
 import { ProfileDto, ProfileResDto } from './dto/profile.dto';
@@ -22,7 +25,7 @@ export class ProfileService {
     const targetProfile = await this.userRepository.findOneBy({ username });
 
     if (!targetProfile) {
-      throw new ValidationException(ErrorCode.E101);
+      throw new NotFoundException('Profil nie istnieje');
     }
 
     const profile: ProfileDto = {
@@ -80,7 +83,7 @@ export class ProfileService {
     });
 
     if (user && user.following.length > 0) {
-      throw new ValidationException(ErrorCode.E103);
+      throw new BadRequestException('Obserwujesz już tego użytkownika');
     }
 
     // Find the user to follow
@@ -89,7 +92,7 @@ export class ProfileService {
     });
 
     if (!followingUser) {
-      throw new ValidationException(ErrorCode.E101);
+      throw new NotFoundException('Profil nie istnieje');
     }
 
     // Add the user to follow to the following list
@@ -119,7 +122,7 @@ export class ProfileService {
     });
 
     if (!user) {
-      throw new ValidationException(ErrorCode.E002);
+      throw new NotFoundException('Użytkownik nie istnieje');
     }
 
     // Find the user to unfollow
@@ -128,7 +131,7 @@ export class ProfileService {
     });
 
     if (!followUser) {
-      throw new ValidationException(ErrorCode.E101);
+      throw new NotFoundException('Profil nie istnieje');
     }
 
     // Find relationship between the user and the user to unfollow
@@ -137,7 +140,7 @@ export class ProfileService {
     });
 
     if (!userFollow) {
-      throw new ValidationException(ErrorCode.E104);
+      throw new BadRequestException('Nie obserwujesz tego użytkownika');
     }
 
     await this.userFollowRepository.delete(userFollow.id);

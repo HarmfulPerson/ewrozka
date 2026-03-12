@@ -10,7 +10,7 @@ export class NotificationsController {
   constructor(private readonly service: NotificationsService) {}
 
   @Get('notifications/pending-count')
-  @ApiAuth({ summary: 'Get pending requests count for wizard' })
+  @ApiAuth({ summary: 'Liczba oczekujących wniosków (wróżka)' })
   async getPendingCount(
     @CurrentUser('id') wizardId: number,
   ) {

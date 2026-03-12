@@ -12,7 +12,6 @@ import {
   MeetingRoomEntity,
 } from '@repo/postgresql-typeorm';
 import { randomBytes } from 'crypto';
-import { I18nService } from 'nestjs-i18n';
 import { In, Repository } from 'typeorm';
 import { DailyCoService } from './daily-co.service';
 
@@ -29,7 +28,6 @@ export class MeetingRoomService {
     private readonly meetingEventRepository: Repository<MeetingEventEntity>,
     @InjectRepository(AppointmentEntity)
     private readonly appointmentRepository: Repository<AppointmentEntity>,
-    private readonly i18n: I18nService,
     private readonly dailyCo: DailyCoService,
   ) {}
 
@@ -50,7 +48,7 @@ export class MeetingRoomService {
       await this.dailyCo.ensureRoom(roomName);
     } catch (err) {
       this.logger.warn(
-        `Could not create Daily.co room for appointment ${appointmentId}: ${err}`,
+        `Nie udało się utworzyć pokoju Daily.co dla wizyty ${appointmentId}: ${err}`,
       );
     }
 
@@ -118,13 +116,13 @@ export class MeetingRoomService {
     );
 
     if (now < fiveMinutesBeforeStart) {
-      throw new BadRequestException(
-        JSON.stringify({
-          code: 'TOO_EARLY',
-          startsAt: appointment.startsAt.toISOString(),
-          availableAt: fiveMinutesBeforeStart.toISOString(),
-        }),
-      );
+      throw new BadRequestException({
+        message:
+          'Spotkanie nie rozpoczęło się jeszcze. Możesz dołączyć 5 minut przed rozpoczęciem.',
+        code: 'TOO_EARLY',
+        startsAt: appointment.startsAt.toISOString(),
+        availableAt: fiveMinutesBeforeStart.toISOString(),
+      });
     }
 
     const otherUser =

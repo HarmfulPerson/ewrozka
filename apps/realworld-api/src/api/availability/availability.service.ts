@@ -7,10 +7,7 @@ import {
   GuestBookingEntity,
   MeetingRequestEntity,
 } from '@repo/postgresql-typeorm';
-import { I18nService } from 'nestjs-i18n';
-import { In, LessThan, MoreThan, Repository } from 'typeorm';
-import { ErrorCode } from '@/constants/error-code.constant';
-
+import { LessThan, MoreThan, Repository } from 'typeorm';
 export interface SlotDto {
   startsAt: string;
   endsAt: string;
@@ -31,7 +28,6 @@ export class AvailabilityService {
     private readonly meetingRequestRepository: Repository<MeetingRequestEntity>,
     @InjectRepository(GuestBookingEntity)
     private readonly guestBookingRepository: Repository<GuestBookingEntity>,
-    private readonly i18n: I18nService,
   ) {}
 
   async addBlock(
@@ -171,7 +167,7 @@ export class AvailabilityService {
       relations: ['user'],
     });
     if (!ad) {
-      throw new NotFoundException(this.i18n.t(ErrorCode.E401));
+      throw new NotFoundException('Ogłoszenie nie istnieje');
     }
     const wrozkaId = ad.userId;
     const durationMinutes = ad.durationMinutes;

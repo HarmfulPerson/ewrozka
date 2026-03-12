@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,18 +13,16 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@repo/api';
 import { ApiAuth, ApiPublic } from '@repo/api/decorators/http.decorators';
-import { AdvertisementService } from './advertisement.service';
-import * as path from 'path';
-import * as fs from 'fs';
 import type { FastifyRequest } from 'fastify';
+import * as fs from 'fs';
+import * as path from 'path';
 import { pipeline } from 'stream/promises';
+import { AdvertisementService } from './advertisement.service';
 
 @ApiTags('Advertisement')
 @Controller('advertisements')
 export class AdvertisementController {
-  constructor(
-    private readonly advertisementService: AdvertisementService,
-  ) {}
+  constructor(private readonly advertisementService: AdvertisementService) {}
 
   @Get('mine')
   @ApiAuth({ summary: 'Get my advertisements (wizard)' })
@@ -45,12 +44,9 @@ export class AdvertisementController {
 
   @Post()
   @ApiAuth({ summary: 'Create advertisement (wizard only)' })
-  async create(
-    @CurrentUser('id') userId: number,
-    @Req() req: FastifyRequest,
-  ) {
+  async create(@CurrentUser('id') userId: number, @Req() req: FastifyRequest) {
     const parts = await (req as any).parts();
-    
+
     let title: string | undefined;
     let description: string | undefined;
     let priceGrosze: number | undefined;
@@ -62,23 +58,32 @@ export class AdvertisementController {
         const fieldValue = (part as any).value;
         if (part.fieldname === 'title') title = fieldValue;
         if (part.fieldname === 'description') description = fieldValue;
-        if (part.fieldname === 'priceGrosze') priceGrosze = parseInt(fieldValue);
-        if (part.fieldname === 'durationMinutes') durationMinutes = parseInt(fieldValue);
+        if (part.fieldname === 'priceGrosze')
+          priceGrosze = parseInt(fieldValue);
+        if (part.fieldname === 'durationMinutes')
+          durationMinutes = parseInt(fieldValue);
       } else if (part.type === 'file' && part.fieldname === 'image') {
         const ext = path.extname(part.filename);
         const timestamp = Date.now();
         const filename = `ad_${timestamp}${ext}`;
-        const uploadPath = path.join(process.cwd(), 'uploads', 'advertisements', 'temp');
+        const uploadPath = path.join(
+          process.cwd(),
+          'uploads',
+          'advertisements',
+          'temp',
+        );
         fs.mkdirSync(uploadPath, { recursive: true });
         const filepath = path.join(uploadPath, filename);
-        
+
         await pipeline(part.file, fs.createWriteStream(filepath));
         imageFile = { filename, filepath };
       }
     }
 
     if (!title || !description || !priceGrosze || !durationMinutes) {
-      throw new Error('Missing required fields');
+      throw new BadRequestException(
+        'Brak wymaganych pól: tytuł, opis, cena i czas trwania.',
+      );
     }
 
     const result = await this.advertisementService.createAdvertisement(userId, {
@@ -87,23 +92,28 @@ export class AdvertisementController {
       priceGrosze,
       durationMinutes,
     });
-    
+
     // Przenieś plik do właściwego folderu
     if (imageFile) {
       const adId = result.advertisement.id;
-      const finalPath = path.join(process.cwd(), 'uploads', 'advertisements', String(adId));
+      const finalPath = path.join(
+        process.cwd(),
+        'uploads',
+        'advertisements',
+        String(adId),
+      );
       fs.mkdirSync(finalPath, { recursive: true });
-      
+
       const newFilePath = path.join(finalPath, imageFile.filename);
       fs.renameSync(imageFile.filepath, newFilePath);
-      
+
       const imageUrl = `/uploads/advertisements/${adId}/${imageFile.filename}`;
-      
+
       // Aktualizuj imageUrl w bazie
       await this.advertisementService.updateAdvertisementImage(adId, imageUrl);
       result.advertisement.imageUrl = imageUrl;
     }
-    
+
     return result;
   }
 
@@ -112,7 +122,8 @@ export class AdvertisementController {
   async update(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: {
+    @Body()
+    body: {
       title?: string;
       description?: string;
       priceGrosze?: number;

@@ -34,7 +34,7 @@ export class UserController {
   @Get('user')
   @SerializeOptions({ type: UserResDto })
   @ApiAuth({
-    summary: 'Get Current User',
+    summary: 'Aktualny użytkownik',
     type: UserResDto,
   })
   getCurrent(
@@ -46,7 +46,7 @@ export class UserController {
   @Post('users')
   @ApiPublic({
     type: UserResDto,
-    summary: 'Registration',
+    summary: 'Rejestracja',
   })
   @ApiBody({
     description: 'User register request',
@@ -69,7 +69,7 @@ export class UserController {
   @Put('user')
   @SerializeOptions({ type: UserResDto })
   @ApiAuth({
-    summary: 'Update User',
+    summary: 'Aktualizuj użytkownika',
     type: UserResDto,
   })
   @ApiBody({
@@ -94,7 +94,7 @@ export class UserController {
 
   @Post('user/change-password')
   @HttpCode(HttpStatus.OK)
-  @ApiAuth({ summary: 'Change user password' })
+  @ApiAuth({ summary: 'Zmień hasło' })
   async changePassword(
     @CurrentUser('id') userId: number,
     @Body('currentPassword') currentPassword: string,
@@ -105,7 +105,7 @@ export class UserController {
   }
 
   @Put('user/photos')
-  @ApiAuth({ summary: 'Upload user avatar photo' })
+  @ApiAuth({ summary: 'Wgraj zdjęcie profilowe' })
   @UseInterceptors(
     FileFastifyInterceptor('image', {
       storage: diskStorage({
@@ -144,7 +144,7 @@ export class UserController {
   }
 
   @Post('user/video')
-  @ApiAuth({ summary: 'Upload wizard intro video' })
+  @ApiAuth({ summary: 'Wgraj film prezentacyjny wróżki' })
   @UseInterceptors(
     FileFastifyInterceptor('video', {
       storage: diskStorage({
@@ -183,13 +183,13 @@ export class UserController {
 
   @Delete('user/video')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiAuth({ summary: 'Delete wizard intro video' })
+  @ApiAuth({ summary: 'Usuń film prezentacyjny wróżki' })
   async deleteVideo(@CurrentUser('id') userId: number): Promise<void> {
     await this.userService.updateUserVideo(userId, null as any);
   }
 
   @Get('wizards')
-  @ApiPublic({ summary: 'Get list of wizards (fortune tellers)' })
+  @ApiPublic({ summary: 'Lista wróżek' })
   async getWizards(
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -213,13 +213,13 @@ export class UserController {
   }
 
   @Get('wizards/:id')
-  @ApiPublic({ summary: 'Get wizard profile by ID' })
+  @ApiPublic({ summary: 'Profil wróżki po ID' })
   async getWizard(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getWizardById(id);
   }
 
   @Get('topics')
-  @ApiPublic({ summary: 'Get all available topics/specializations' })
+  @ApiPublic({ summary: 'Wszystkie dostępne tematy/specjalizacje' })
   async getTopics() {
     return this.userService.getAllTopics();
   }

@@ -10,18 +10,25 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Get('wallet')
-  @ApiAuth({ summary: 'Get my wallet balance' })
+  @ApiAuth({ summary: 'Moje saldo portfela' })
   async getWalletBalance(@CurrentUser('id') userId: number) {
-    const balance = await this.paymentService.getWalletBalance(userId);
+    const [balance, platformFeePercent, commissionTierStatus] =
+      await Promise.all([
+        this.paymentService.getWalletBalance(userId),
+        this.paymentService.getPlatformFeePercentForUser(userId),
+        this.paymentService.getCommissionTierStatus(userId),
+      ]);
     return {
       balance,
       currency: 'PLN',
       balanceFormatted: `${(balance / 100).toFixed(2)} zł`,
+      platformFeePercent,
+      commissionTier: commissionTierStatus,
     };
   }
 
   @Get('transactions')
-  @ApiAuth({ summary: 'Get my transaction history' })
+  @ApiAuth({ summary: 'Historia moich transakcji' })
   async getTransactions(
     @CurrentUser('id') userId: number,
     @Query('limit') limit?: string,

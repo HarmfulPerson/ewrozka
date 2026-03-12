@@ -110,6 +110,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
+  color: var(--text-primary);
 }
 
 .header__link--ghost:hover {

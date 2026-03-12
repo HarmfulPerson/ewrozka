@@ -93,6 +93,18 @@ export class UserEntity extends AbstractEntity {
   @Column({ type: 'varchar', length: 64, nullable: true, default: null })
   emailVerificationToken!: string | null;
 
+  /**
+   * Prowizja platformy w % (tylko wróżki, 0–100). Null = domyślnie 20%.
+   * Ustawiane przez admina.
+   */
+  @Column({
+    name: 'platform_fee_percent',
+    type: 'smallint',
+    nullable: true,
+    default: null,
+  })
+  platformFeePercent!: number | null;
+
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {

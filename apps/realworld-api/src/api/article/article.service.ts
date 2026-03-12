@@ -1,9 +1,7 @@
-import { ErrorCode } from '@/constants/error-code.constant';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { paginate } from '@repo/api/utils/offset-pagination';
 import { ArticleEntity, TagEntity, UserEntity } from '@repo/postgresql-typeorm';
-import { I18nService } from 'nestjs-i18n';
 import slugify from 'slugify';
 import { In, Repository } from 'typeorm';
 import { toArticleDto } from './article.util';
@@ -23,7 +21,6 @@ export class ArticleService {
     private readonly tagRepository: Repository<TagEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-    private readonly i18n: I18nService,
   ) {}
 
   async list(
@@ -156,7 +153,7 @@ export class ArticleService {
     });
 
     if (!article) {
-      throw new NotFoundException(this.i18n.t(ErrorCode.E201));
+      throw new NotFoundException('Artykuł nie istnieje');
     }
 
     return {
@@ -234,7 +231,7 @@ export class ArticleService {
     });
 
     if (!article) {
-      throw new NotFoundException(this.i18n.t(ErrorCode.E201));
+      throw new NotFoundException('Artykuł nie istnieje');
     }
 
     const { title, description, body, tagList = [] } = articleData;

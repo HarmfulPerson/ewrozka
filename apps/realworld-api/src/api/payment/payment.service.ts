@@ -5,7 +5,12 @@ import {
   WalletEntity,
   TransactionEntity,
   PlatformRevenueEntity,
+  UserEntity,
 } from '@repo/postgresql-typeorm';
+import {
+  CommissionTierService,
+  type CommissionTierStatus,
+} from './commission-tier.service';
 import { DataSource, Repository } from 'typeorm';
 import { AllConfigType } from '@/config/config.type';
 
@@ -20,25 +25,31 @@ export class PaymentService {
     private readonly transactionRepository: Repository<TransactionEntity>,
     @InjectRepository(PlatformRevenueEntity)
     private readonly platformRevenueRepository: Repository<PlatformRevenueEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService<AllConfigType>,
+    private readonly commissionTierService: CommissionTierService,
   ) {}
 
   async processPayment(
     wrozkaId: number,
     appointmentId: number,
     totalAmountGrosze: number,
+    platformFeePercentOverride?: number,
   ): Promise<{ transaction: TransactionEntity; wizardBalance: number }> {
     this.logger.log(
-      `Processing payment for wizard ${wrozkaId}, appointment ${appointmentId}, amount ${totalAmountGrosze}gr`,
+      `Przetwarzanie płatności dla wróżki ${wrozkaId}, wizyta ${appointmentId}, kwota ${totalAmountGrosze}gr`,
     );
 
-    const platformFeePercentage = this.configService.get(
-      'payment.platformFeePercentage',
-      { infer: true },
-    );
+    const platformFeePercentage =
+      platformFeePercentOverride ??
+      this.configService.get('payment.platformFeePercentage', {
+        infer: true,
+      }) ??
+      20;
 
-    this.logger.log(`Platform fee percentage: ${platformFeePercentage}%`);
+    this.logger.log(`Procent prowizji platformy: ${platformFeePercentage}%`);
 
     // Calculate amounts
     const platformFeeGrosze = Math.floor(
@@ -47,7 +58,7 @@ export class PaymentService {
     const wizardAmountGrosze = totalAmountGrosze - platformFeeGrosze;
 
     this.logger.log(
-      `Calculated: Platform fee: ${platformFeeGrosze}gr, Wizard amount: ${wizardAmountGrosze}gr`,
+      `Obliczono: Prowizja platformy: ${platformFeeGrosze}gr, Kwota wróżki: ${wizardAmountGrosze}gr`,
     );
 
     // Use transaction to ensure atomicity
@@ -57,10 +68,10 @@ export class PaymentService {
         where: { userId: wrozkaId },
       });
 
-      this.logger.log(`Wallet found: ${!!wallet}`);
+      this.logger.log(`Portfel znaleziony: ${!!wallet}`);
 
       if (!wallet) {
-        this.logger.log(`Creating new wallet for wizard ${wrozkaId}`);
+        this.logger.log(`Tworzenie nowego portfela dla wróżki ${wrozkaId}`);
         wallet = manager.create(WalletEntity, {
           userId: wrozkaId,
           balance: 0,
@@ -74,7 +85,7 @@ export class PaymentService {
       await manager.save(WalletEntity, wallet);
 
       this.logger.log(
-        `Wallet balance updated: ${oldBalance}gr -> ${wallet.balance}gr`,
+        `Saldo portfela zaktualizowane: ${oldBalance}gr -> ${wallet.balance}gr`,
       );
 
       // Create transaction record
@@ -89,7 +100,7 @@ export class PaymentService {
       });
       await manager.save(TransactionEntity, transaction);
 
-      this.logger.log(`Transaction created with ID: ${transaction.id}`);
+      this.logger.log(`Transakcja utworzona, ID: ${transaction.id}`);
 
       // Update platform revenue for today
       const today = new Date().toISOString().split('T')[0];
@@ -115,7 +126,7 @@ export class PaymentService {
       await manager.save(PlatformRevenueEntity, revenue);
 
       this.logger.log(
-        `Payment processed: ${totalAmountGrosze}gr, Platform: ${platformFeeGrosze}gr (${platformFeePercentage}%), Wizard: ${wizardAmountGrosze}gr`,
+        `Płatność przetworzona: ${totalAmountGrosze}gr, Platforma: ${platformFeeGrosze}gr (${platformFeePercentage}%), Wróżka: ${wizardAmountGrosze}gr`,
       );
 
       return {
@@ -129,11 +140,14 @@ export class PaymentService {
     wrozkaId: number,
     appointmentId: number,
     totalAmountGrosze: number,
+    platformFeePercentOverride?: number,
   ): Promise<void> {
-    const platformFeePercentage = this.configService.get(
-      'payment.platformFeePercentage',
-      { infer: true },
-    );
+    const platformFeePercentage =
+      platformFeePercentOverride ??
+      this.configService.get('payment.platformFeePercentage', {
+        infer: true,
+      }) ??
+      20;
     const platformFeeGrosze = Math.floor(
       (totalAmountGrosze * platformFeePercentage) / 100,
     );
@@ -174,16 +188,45 @@ export class PaymentService {
     });
 
     this.logger.log(
-      `Destination charge recorded: ${totalAmountGrosze}gr, Platform: ${platformFeeGrosze}gr, Wizard via Stripe: ${wizardAmountGrosze}gr`,
+      `Zarejestrowano płatność (destination charge): ${totalAmountGrosze}gr, Platforma: ${platformFeeGrosze}gr, Wróżka przez Stripe: ${wizardAmountGrosze}gr`,
     );
   }
 
+  async getPlatformFeePercentForUser(userId: number): Promise<number> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['platformFeePercent'],
+    });
+    if (user?.platformFeePercent != null) {
+      return user.platformFeePercent;
+    }
+    return this.commissionTierService.getEffectiveFeePercent(userId);
+  }
+
+  async getCommissionTierStatus(userId: number): Promise<CommissionTierStatus> {
+    const [user, tierStatus] = await Promise.all([
+      this.userRepository.findOne({
+        where: { id: userId },
+        select: ['platformFeePercent'],
+      }),
+      this.commissionTierService.getTierStatus(userId),
+    ]);
+    const isSetByAdmin = user?.platformFeePercent != null;
+    return {
+      ...tierStatus,
+      platformFeePercent: isSetByAdmin ? user!.platformFeePercent! : tierStatus.platformFeePercent,
+      isSetByAdmin,
+    };
+  }
+
   async getWalletBalance(userId: number): Promise<number> {
-    this.logger.log(`Fetching wallet balance for user ${userId}`);
+    this.logger.log(`Pobieranie salda portfela dla użytkownika ${userId}`);
     const wallet = await this.walletRepository.findOne({
       where: { userId },
     });
-    this.logger.log(`Wallet found: ${!!wallet}, balance: ${wallet ? wallet.balance : 0}gr`);
+    this.logger.log(
+      `Portfel: ${!!wallet ? 'znaleziony' : 'brak'}, saldo: ${wallet ? wallet.balance : 0}gr`,
+    );
     return wallet ? Number(wallet.balance) : 0;
   }
 

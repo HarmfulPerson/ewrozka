@@ -179,6 +179,51 @@
   flex-shrink: 0;
 }
 
+.auth-form__google-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.625rem;
+  text-align: center;
+}
+
+.auth-form__google-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.auth-form__google-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.auth-form__google-btn:hover {
+  background: var(--bg-card);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.auth-form__google-btn svg {
+  flex-shrink: 0;
+}
+
+@media (max-width: 360px) {
+  .auth-form__google-row {
+    flex-direction: column;
+  }
+}
+
 .auth-form__footer {
   margin-top: 1.5rem;
   font-size: 0.9375rem;

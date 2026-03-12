@@ -65,6 +65,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
   min-height: 20px;
 }
@@ -89,6 +90,33 @@
   padding: 0.1rem 0.45rem;
   border-radius: 6px;
   line-height: 1.2;
+}
+
+.panel-balance-bar__fee {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.panel-balance-bar--sidebar .panel-balance-bar__fee {
+  color: var(--text-muted);
+}
+
+.panel-balance-bar__tier {
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.panel-balance-bar--sidebar .panel-balance-bar__tier {
+  color: var(--text-muted);
+}
+
+.panel-balance-bar__tier a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.panel-balance-bar__tier a:hover {
+  text-decoration: underline;
 }
 
 .panel-balance-bar--sidebar .panel-balance-bar__setup-link {

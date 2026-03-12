@@ -1,16 +1,8 @@
-import { ErrorCode } from '@/constants/error-code.constant';
-
-
-
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 
 
 import { InjectRepository } from '@nestjs/typeorm';
-
-
-
-import { ValidationException } from '@repo/api';
 
 
 
@@ -240,7 +232,7 @@ export class UserService {
 
     if (user) {
 
-      throw new ValidationException(ErrorCode.E001);
+      throw new BadRequestException('Użytkownik o tej nazwie lub adresie e-mail już istnieje');
 
     }
 
@@ -482,7 +474,7 @@ export class UserService {
 
     if (!user) {
 
-      throw new ValidationException(ErrorCode.E002);
+      throw new NotFoundException('Użytkownik nie istnieje');
 
     }
 
@@ -701,7 +693,7 @@ export class UserService {
 
     if (!user) {
 
-      throw new ValidationException(ErrorCode.E002);
+      throw new NotFoundException('Użytkownik nie istnieje');
 
     }
 
@@ -1026,7 +1018,7 @@ export class UserService {
 
     if (!wizard) {
 
-      throw new ValidationException(ErrorCode.E002);
+      throw new NotFoundException('Wróżka nie istnieje');
 
     }
 
@@ -1038,7 +1030,7 @@ export class UserService {
 
     if (!isWizard) {
 
-      throw new ValidationException(ErrorCode.E002);
+      throw new NotFoundException('Wróżka nie istnieje');
 
     }
 

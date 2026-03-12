@@ -1,9 +1,21 @@
 import { getApiBaseUrl } from './api';
 
+export interface CommissionTierDto {
+  meetingsInWindow: number;
+  windowDays: number;
+  currentTier: { feePercent: number; minMeetings: number; maxMeetings: number | null };
+  nextTier: { feePercent: number; minMeetings: number; maxMeetings: number | null } | null;
+  platformFeePercent: number;
+  /** true gdy admin ustawił prowizję ręcznie */
+  isSetByAdmin?: boolean;
+}
+
 export interface WalletDto {
   balance: number;
   currency: string;
   balanceFormatted: string;
+  platformFeePercent?: number;
+  commissionTier?: CommissionTierDto;
 }
 
 export interface TransactionDto {

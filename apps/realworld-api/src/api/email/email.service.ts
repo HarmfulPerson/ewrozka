@@ -22,10 +22,12 @@ export class EmailService implements OnModuleInit {
     this.transporter = nodemailer.createTransport({
       host: emailCfg.host,
       port: emailCfg.port,
+      secure: emailCfg.port === 465, // true dla 465, false dla 587 (STARTTLS)
       auth: {
         user: emailCfg.user,
         pass: emailCfg.pass,
       },
+      ...(emailCfg.port === 587 && { requireTLS: true }),
     });
   }
 
@@ -48,7 +50,9 @@ export class EmailService implements OnModuleInit {
       this.logger.log(`Email [${job.type}] sent to ${job.to}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      this.logger.error(`Failed to send email [${job.type}] to ${job.to}: ${msg}`);
+      const code = err && typeof err === 'object' && 'code' in err ? (err as { code?: string }).code : undefined;
+      const response = err && typeof err === 'object' && 'response' in err ? (err as { response?: string }).response : undefined;
+      this.logger.error(`Failed to send email [${job.type}] to ${job.to}: ${msg}${code ? ` (code: ${code})` : ''}${response ? ` response: ${response}` : ''}`);
       throw err;
     }
   }

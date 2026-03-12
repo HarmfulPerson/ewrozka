@@ -15,6 +15,8 @@ export * from './user.entity';
 export * from './wallet.entity';
 export * from './transaction.entity';
 export * from './platform-revenue.entity';
+export * from './platform-fee-config.entity';
+export * from './platform-fee-tier.entity';
 export * from './stripe-connect-account.entity';
 export * from './withdrawal.entity';
 export * from './wizard-application.entity';

@@ -5,18 +5,18 @@ export class CreateTopicAndUserTopic1730193000000 implements MigrationInterface 
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      CREATE TABLE "topic" (
+      CREATE TABLE IF NOT EXISTS "topic" (
         "id" SERIAL NOT NULL,
         "name" character varying NOT NULL,
         CONSTRAINT "PK_topic_id" PRIMARY KEY ("id")
       )
     `);
     await queryRunner.query(`
-      CREATE UNIQUE INDEX "UQ_topic_name" ON "topic" ("name")
+      CREATE UNIQUE INDEX IF NOT EXISTS "UQ_topic_name" ON "topic" ("name")
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "user_topic" (
+      CREATE TABLE IF NOT EXISTS "user_topic" (
         "user_id" integer NOT NULL,
         "topic_id" integer NOT NULL,
         CONSTRAINT "PK_user_topic" PRIMARY KEY ("user_id", "topic_id"),
@@ -25,10 +25,10 @@ export class CreateTopicAndUserTopic1730193000000 implements MigrationInterface 
       )
     `);
     await queryRunner.query(`
-      CREATE INDEX "IDX_user_topic_user_id" ON "user_topic" ("user_id")
+      CREATE INDEX IF NOT EXISTS "IDX_user_topic_user_id" ON "user_topic" ("user_id")
     `);
     await queryRunner.query(`
-      CREATE INDEX "IDX_user_topic_topic_id" ON "user_topic" ("topic_id")
+      CREATE INDEX IF NOT EXISTS "IDX_user_topic_topic_id" ON "user_topic" ("topic_id")
     `);
   }
 

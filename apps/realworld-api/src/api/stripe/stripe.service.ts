@@ -75,9 +75,9 @@ export class StripeService {
       connectAccount?.onboardingCompleted && connectAccount?.payoutsEnabled;
 
     const platformFeePercentage =
-      this.configService.get('payment.platformFeePercentage', {
-        infer: true,
-      }) ?? 20;
+      await this.paymentService.getPlatformFeePercentForUser(
+        appointment.wrozkaId,
+      );
     const platformFeeGrosze = Math.floor(
       (priceGrosze * platformFeePercentage) / 100,
     );
@@ -104,6 +104,7 @@ export class StripeService {
         clientUserId: String(clientUserId),
         wrozkaId: String(appointment.wrozkaId),
         priceGrosze: String(priceGrosze),
+        platformFeePercent: String(platformFeePercentage),
         isDestinationCharge: hasActiveConnect ? 'true' : 'false',
       },
       success_url: `${appUrl}/platnosc/sukces?session_id={CHECKOUT_SESSION_ID}&appointment_id=${appointmentId}`,
@@ -119,17 +120,17 @@ export class StripeService {
         },
       };
       this.logger.log(
-        `Destination charge: ${priceGrosze}gr → ${connectAccount!.stripeAccountId}, fee: ${platformFeeGrosze}gr (${platformFeePercentage}%)`,
+        `Destination charge: ${priceGrosze}gr → ${connectAccount!.stripeAccountId}, prowizja: ${platformFeeGrosze}gr (${platformFeePercentage}%)`,
       );
     } else {
       this.logger.log(
-        `Standard charge (no active Connect): ${priceGrosze}gr → platform account`,
+        `Standard charge (brak aktywnego Connect): ${priceGrosze}gr → konto platformy`,
       );
     }
 
     const session = await this.stripe.checkout.sessions.create(sessionParams);
     this.logger.log(
-      `Stripe session created: ${session.id} for appointment ${appointmentId}`,
+      `Sesja Stripe utworzona: ${session.id} dla wizyty ${appointmentId}`,
     );
 
     return { url: session.url! };
@@ -161,9 +162,9 @@ export class StripeService {
     );
 
     const platformFeePercentage =
-      this.configService.get('payment.platformFeePercentage', {
-        infer: true,
-      }) ?? 20;
+      await this.paymentService.getPlatformFeePercentForUser(
+        appointment.wrozkaId,
+      );
     const platformFeeGrosze = Math.floor(
       (priceGrosze * platformFeePercentage) / 100,
     );
@@ -177,6 +178,7 @@ export class StripeService {
         clientUserId: String(clientUserId),
         wrozkaId: String(appointment.wrozkaId),
         priceGrosze: String(priceGrosze),
+        platformFeePercent: String(platformFeePercentage),
         isDestinationCharge: hasActiveConnect ? 'true' : 'false',
       },
     };
@@ -187,13 +189,13 @@ export class StripeService {
         destination: connectAccount!.stripeAccountId,
       };
       this.logger.log(
-        `PaymentIntent (destination): ${priceGrosze}gr → ${connectAccount!.stripeAccountId}, fee: ${platformFeeGrosze}gr`,
+        `PaymentIntent (destination): ${priceGrosze}gr → ${connectAccount!.stripeAccountId}, prowizja: ${platformFeeGrosze}gr`,
       );
     }
 
     const intent = await this.stripe.paymentIntents.create(intentParams);
     this.logger.log(
-      `PaymentIntent created: ${intent.id} for appointment ${appointmentId}`,
+      `PaymentIntent utworzony: ${intent.id} dla wizyty ${appointmentId}`,
     );
 
     return { clientSecret: intent.client_secret! };
@@ -210,7 +212,7 @@ export class StripeService {
 
     if (!intent || intent.status !== 'succeeded') {
       this.logger.log(
-        `verifyPaymentIntent: not yet succeeded (status=${intent?.status})`,
+        `verifyPaymentIntent: płatność jeszcze nie zakończona (status=${intent?.status})`,
       );
       return { success: false };
     }
@@ -223,7 +225,7 @@ export class StripeService {
     const appointmentId = parseInt(intent.metadata?.appointmentId || '0', 10);
     if (!appointmentId) {
       this.logger.error(
-        `verifyPaymentIntent: missing appointmentId in metadata for ${paymentIntentId}`,
+        `verifyPaymentIntent: brak appointmentId w metadanych dla ${paymentIntentId}`,
       );
       return { success: false };
     }
@@ -233,27 +235,27 @@ export class StripeService {
     });
     if (!appointment) {
       this.logger.error(
-        `verifyPaymentIntent: appointment ${appointmentId} not found`,
+        `verifyPaymentIntent: wizyta ${appointmentId} nie znaleziona`,
       );
       return { success: false };
     }
 
     if (appointment.status === 'paid') {
       this.logger.log(
-        `verifyPaymentIntent: appointment ${appointmentId} already paid`,
+        `verifyPaymentIntent: wizyta ${appointmentId} już opłacona`,
       );
       return { success: true, appointmentId };
     }
 
     this.logger.log(
-      `verifyPaymentIntent: marking appointment ${appointmentId} as paid`,
+      `verifyPaymentIntent: oznaczanie wizyty ${appointmentId} jako opłaconej`,
     );
 
     try {
       await this.handlePaymentIntentSucceeded(intent);
     } catch (err) {
       this.logger.error(
-        `verifyPaymentIntent: handlePaymentIntentSucceeded failed for ${appointmentId}`,
+        `verifyPaymentIntent: handlePaymentIntentSucceeded nie powiodło się dla ${appointmentId}`,
         err,
       );
       // Fallback — zaktualizuj status bezpośrednio nawet jeśli processPayment zawiedzie
@@ -291,7 +293,7 @@ export class StripeService {
 
     if (appointment.status === 'paid') {
       this.logger.log(
-        `Appointment ${appointmentId} already marked as paid (verify-session)`,
+        `Wizyta ${appointmentId} już oznaczona jako opłacona (verify-session)`,
       );
       return { success: true, appointmentId };
     }
@@ -300,21 +302,26 @@ export class StripeService {
     const priceGrosze = parseInt(session.metadata?.priceGrosze || '0', 10);
     const isDestinationCharge =
       session.metadata?.isDestinationCharge === 'true';
+    const feePercent = session.metadata?.platformFeePercent
+      ? parseInt(session.metadata.platformFeePercent, 10)
+      : undefined;
 
     if (isDestinationCharge) {
       await this.paymentService.recordDestinationCharge(
         wrozkaId,
         appointmentId,
         priceGrosze,
+        feePercent,
       );
       this.logger.log(
-        `Destination charge recorded for appointment ${appointmentId} (verify-session)`,
+        `Destination charge zarejestrowane dla wizyty ${appointmentId} (verify-session)`,
       );
     } else {
       await this.paymentService.processPayment(
         wrozkaId,
         appointmentId,
         priceGrosze,
+        feePercent,
       );
     }
 
@@ -324,7 +331,7 @@ export class StripeService {
     await this.meetingRoomService.createForAppointment(appointmentId);
 
     this.logger.log(
-      `Appointment ${appointmentId} paid successfully via verify-session`,
+      `Wizyta ${appointmentId} opłacona pomyślnie przez verify-session`,
     );
     return { success: true, appointmentId };
   }
@@ -345,12 +352,12 @@ export class StripeService {
       event = this.stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
     } catch (err: any) {
       this.logger.error(
-        `Webhook signature verification failed: ${err.message}`,
+        `Weryfikacja sygnatury webhooka nie powiodła się: ${err.message}`,
       );
-      throw new BadRequestException(`Webhook Error: ${err.message}`);
+      throw new BadRequestException(`Błąd webhooka: ${err.message}`);
     }
 
-    this.logger.log(`Stripe webhook received: ${event.type}`);
+    this.logger.log(`Odebrano webhook Stripe: ${event.type}`);
 
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -362,7 +369,7 @@ export class StripeService {
           await this.handleCheckoutCompleted(session);
         } else {
           this.logger.log(
-            `checkout.session.completed: payment still pending (${session.payment_status}) for session ${session.id} — awaiting async event`,
+            `checkout.session.completed: płatność w toku (${session.payment_status}) dla sesji ${session.id} — oczekiwanie na zdarzenie async`,
           );
         }
         break;
@@ -372,7 +379,7 @@ export class StripeService {
       case 'checkout.session.async_payment_succeeded': {
         const session = event.data.object as Stripe.Checkout.Session;
         this.logger.log(
-          `checkout.session.async_payment_succeeded: processing session ${session.id}`,
+          `checkout.session.async_payment_succeeded: przetwarzanie sesji ${session.id}`,
         );
         await this.handleCheckoutCompleted(session);
         break;
@@ -428,7 +435,7 @@ export class StripeService {
       });
       await this.connectAccountRepository.save(connectAccount);
       this.logger.log(
-        `Created Stripe Connect account ${account.id} for user ${userId}`,
+        `Utworzono konto Stripe Connect ${account.id} dla użytkownika ${userId}`,
       );
     }
 
@@ -464,7 +471,7 @@ export class StripeService {
       connectAccount.payoutsEnabled = account.payouts_enabled;
       await this.connectAccountRepository.save(connectAccount);
     } catch (err) {
-      this.logger.warn(`refreshConnectStatus failed: ${err}`);
+      this.logger.warn(`refreshConnectStatus nie powiodło się: ${err}`);
     }
   }
 
@@ -495,7 +502,7 @@ export class StripeService {
       });
       await this.connectAccountRepository.save(connectAccount);
       this.logger.log(
-        `Created Stripe Connect account ${account.id} for user ${userId}`,
+        `Utworzono konto Stripe Connect ${account.id} dla użytkownika ${userId}`,
       );
     }
 
@@ -575,7 +582,7 @@ export class StripeService {
       connectAccount.payoutsEnabled = account.payouts_enabled;
       await this.connectAccountRepository.save(connectAccount);
     } catch (err) {
-      this.logger.warn(`Could not refresh Stripe account status: ${err}`);
+      this.logger.warn(`Nie udało się odświeżyć statusu konta Stripe: ${err}`);
     }
 
     // Pobierz rzeczywiste saldo Stripe connected account
@@ -591,7 +598,7 @@ export class StripeService {
         stripeAvailableGrosze = pln?.amount ?? 0;
         stripePendingGrosze = pending?.amount ?? 0;
       } catch (err) {
-        this.logger.warn(`Could not fetch Stripe balance: ${err}`);
+        this.logger.warn(`Nie udało się pobrać salda Stripe: ${err}`);
       }
     }
 
@@ -686,7 +693,7 @@ export class StripeService {
         stripeTransferId = payout.id;
         status = 'processing';
         this.logger.log(
-          `Stripe payout created: ${payout.id} for user ${userId}`,
+          `Wypłata Stripe utworzona: ${payout.id} dla użytkownika ${userId}`,
         );
       } catch (err: any) {
         failureReason = err.message;
@@ -695,7 +702,7 @@ export class StripeService {
         wallet!.balance = Number(wallet!.balance) + amountGrosze;
         await manager.save(WalletEntity, wallet);
         this.logger.error(
-          `Stripe payout failed for user ${userId}: ${err.message}`,
+          `Wypłata Stripe nie powiodła się dla użytkownika ${userId}: ${err.message}`,
         );
         throw new BadRequestException(`Błąd wypłaty: ${err.message}`);
       }
@@ -736,7 +743,7 @@ export class StripeService {
       const guestBookingId = intent.metadata.guestBookingId;
       if (guestBookingId) {
         await this.guestBookingService.handlePaymentSuccessById(guestBookingId);
-        this.logger.log(`Guest booking ${guestBookingId} paid via payment_intent.succeeded`);
+        this.logger.log(`Rezerwacja gościa ${guestBookingId} opłacona przez payment_intent.succeeded`);
       }
       return;
     }
@@ -745,10 +752,13 @@ export class StripeService {
     const wrozkaId = parseInt(intent.metadata?.wrozkaId || '0', 10);
     const priceGrosze = parseInt(intent.metadata?.priceGrosze || '0', 10);
     const isDestinationCharge = intent.metadata?.isDestinationCharge === 'true';
+    const feePercent = intent.metadata?.platformFeePercent
+      ? parseInt(intent.metadata.platformFeePercent, 10)
+      : undefined;
 
     if (!appointmentId) {
       this.logger.warn(
-        'payment_intent.succeeded: missing appointmentId in metadata — skipping',
+        'payment_intent.succeeded: brak appointmentId w metadanych — pomijam',
       );
       return;
     }
@@ -758,13 +768,13 @@ export class StripeService {
     });
     if (!appointment) {
       this.logger.error(
-        `payment_intent.succeeded: appointment ${appointmentId} not found`,
+        `payment_intent.succeeded: wizyta ${appointmentId} nie znaleziona`,
       );
       return;
     }
     if (appointment.status === 'paid') {
       this.logger.warn(
-        `payment_intent.succeeded: appointment ${appointmentId} already paid`,
+        `payment_intent.succeeded: wizyta ${appointmentId} już opłacona`,
       );
       return;
     }
@@ -774,12 +784,14 @@ export class StripeService {
         wrozkaId,
         appointmentId,
         priceGrosze,
+        feePercent,
       );
     } else {
       await this.paymentService.processPayment(
         wrozkaId,
         appointmentId,
         priceGrosze,
+        feePercent,
       );
     }
 
@@ -788,7 +800,7 @@ export class StripeService {
     await this.meetingRoomService.createForAppointment(appointmentId);
 
     this.logger.log(
-      `Appointment ${appointmentId} paid via payment_intent.succeeded`,
+      `Wizyta ${appointmentId} opłacona przez payment_intent.succeeded`,
     );
   }
 
@@ -809,7 +821,7 @@ export class StripeService {
           : null;
 
       if (!wizardId) {
-        this.logger.error('Featured checkout: missing wizardId in metadata');
+        this.logger.error('Featured checkout: brak wizardId w metadanych');
         return;
       }
 
@@ -818,7 +830,7 @@ export class StripeService {
         paymentIntentId,
         durationHours,
       );
-      this.logger.log(`Featured wyróżnienie aktywowane dla wizard ${wizardId}`);
+      this.logger.log(`Wyróżnienie aktywowane dla wróżki ${wizardId}`);
       return;
     }
 
@@ -828,9 +840,12 @@ export class StripeService {
     const priceGrosze = parseInt(session.metadata?.priceGrosze || '0', 10);
     const isDestinationCharge =
       session.metadata?.isDestinationCharge === 'true';
+    const feePercent = session.metadata?.platformFeePercent
+      ? parseInt(session.metadata.platformFeePercent, 10)
+      : undefined;
 
     if (!appointmentId) {
-      this.logger.error('Missing appointmentId in webhook metadata');
+      this.logger.error('Brak appointmentId w metadanych webhooka');
       return;
     }
 
@@ -839,32 +854,31 @@ export class StripeService {
     });
 
     if (!appointment) {
-      this.logger.error(`Appointment ${appointmentId} not found`);
+      this.logger.error(`Wizyta ${appointmentId} nie znaleziona`);
       return;
     }
 
     if (appointment.status === 'paid') {
-      this.logger.warn(`Appointment ${appointmentId} already paid`);
+      this.logger.warn(`Wizyta ${appointmentId} już opłacona`);
       return;
     }
 
     if (isDestinationCharge) {
-      // Pieniądze już poszły bezpośrednio do wróżki przez Stripe Connect
-      // Rejestrujemy tylko transakcję dla historii (bez aktualizacji wallet)
       await this.paymentService.recordDestinationCharge(
         wrozkaId,
         appointmentId,
         priceGrosze,
+        feePercent,
       );
       this.logger.log(
-        `Destination charge recorded for appointment ${appointmentId}`,
+        `Destination charge zarejestrowane dla wizyty ${appointmentId}`,
       );
     } else {
-      // Standardowa płatność — cała kwota na konto platformy, aktualizuj wallet
       await this.paymentService.processPayment(
         wrozkaId,
         appointmentId,
         priceGrosze,
+        feePercent,
       );
     }
 
@@ -876,7 +890,7 @@ export class StripeService {
     await this.meetingRoomService.createForAppointment(appointmentId);
 
     this.logger.log(
-      `Appointment ${appointmentId} paid successfully via Stripe`,
+      `Wizyta ${appointmentId} opłacona pomyślnie przez Stripe`,
     );
   }
 }

@@ -15,7 +15,7 @@ export class AppointmentCronService {
 
   @Cron(CronExpression.EVERY_MINUTE)
   async completeFinishedAppointments() {
-    this.logger.debug('Running cron job to complete finished appointments...');
+    this.logger.debug('Cron: sprawdzanie zakończonych spotkań...');
 
     const now = new Date();
 
@@ -37,9 +37,9 @@ export class AppointmentCronService {
         appointment.status = 'completed';
         await this.appointmentRepository.save(appointment);
       }
-      this.logger.log(`Completed ${toComplete.length} finished appointments`);
+      this.logger.log(`Zakończono ${toComplete.length} spotkań`);
     } else {
-      this.logger.debug('No appointments to complete');
+      this.logger.debug('Brak spotkań do zakończenia');
     }
   }
 }

@@ -11,9 +11,7 @@ import {
   MeetingRequestEntity,
   MeetingRoomEntity,
 } from '@repo/postgresql-typeorm';
-import { I18nService } from 'nestjs-i18n';
 import { In, Repository } from 'typeorm';
-import { ErrorCode } from '@/constants/error-code.constant';
 import { AvailabilityService } from '../availability/availability.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateMeetingRequestReqDto } from './dto/create-meeting-request.dto';
@@ -30,7 +28,6 @@ export class MeetingRequestService {
     @InjectRepository(MeetingRoomEntity)
     private readonly meetingRoomRepository: Repository<MeetingRoomEntity>,
     private readonly availabilityService: AvailabilityService,
-    private readonly i18n: I18nService,
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -40,7 +37,9 @@ export class MeetingRequestService {
     options?: { roles?: string[] },
   ): Promise<{ id: number; requestedStartsAt: string | null; message: string }> {
     if (!dto.requestedStartsAt && !dto.preferredDate) {
-      throw new BadRequestException('Podaj requestedStartsAt lub preferredDate');
+      throw new BadRequestException(
+        'Podaj termin spotkania lub preferowaną datę',
+      );
     }
 
     const roles = options?.roles ?? [];
@@ -55,7 +54,7 @@ export class MeetingRequestService {
       relations: ['user'],
     });
     if (!ad) {
-      throw new NotFoundException(this.i18n.t(ErrorCode.E401));
+      throw new NotFoundException('Ogłoszenie nie istnieje');
     }
 
     if (ad.userId === userId) {
@@ -220,7 +219,7 @@ export class MeetingRequestService {
       relations: ['advertisement', 'advertisement.user'],
     });
     if (!request) {
-      throw new NotFoundException(this.i18n.t(ErrorCode.E401));
+      throw new NotFoundException('Prośba o spotkanie nie istnieje');
     }
     if (request.advertisement.userId !== wrozkaUserId) {
       throw new ForbiddenException('Nie możesz zaakceptować tej prośby');
@@ -262,7 +261,7 @@ export class MeetingRequestService {
       relations: ['advertisement'],
     });
     if (!request) {
-      throw new NotFoundException(this.i18n.t(ErrorCode.E401));
+      throw new NotFoundException('Prośba o spotkanie nie istnieje');
     }
     if (request.advertisement.userId !== wrozkaUserId) {
       throw new ForbiddenException('Nie możesz odrzucić tej prośby');

@@ -1,7 +1,5 @@
-import { ErrorCode } from '@/constants/error-code.constant';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ValidationException } from '@repo/api';
 import { ArticleEntity, UserEntity } from '@repo/postgresql-typeorm';
 import { Repository } from 'typeorm';
 import { toArticleDto } from '../article.util';
@@ -86,7 +84,7 @@ export class FavoriteService {
     });
 
     if (!article) {
-      throw new ValidationException(ErrorCode.E201);
+      throw new NotFoundException('Artykuł nie istnieje');
     }
 
     return { user, article };

@@ -1,8 +1,10 @@
 import { ProfileDto } from '@/api/profile/dto/profile.dto';
-import { ErrorCode } from '@/constants/error-code.constant';
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ValidationException } from '@repo/api';
 import {
   ArticleEntity,
   CommentEntity,
@@ -32,7 +34,7 @@ export class CommentService {
     const article = await this.articleRepository.findOneBy({ slug: slug });
 
     if (!article) {
-      throw new ValidationException(ErrorCode.E201);
+      throw new NotFoundException('Artykuł nie istnieje');
     }
 
     const user = await this.userRepository.findOneByOrFail({ id: userId });
@@ -56,7 +58,7 @@ export class CommentService {
     const article = await this.articleRepository.findOneBy({ slug: slug });
 
     if (!article) {
-      throw new ValidationException(ErrorCode.E201);
+      throw new NotFoundException('Artykuł nie istnieje');
     }
 
     const comments = await this.commentRepository.find({
@@ -80,11 +82,13 @@ export class CommentService {
     });
 
     if (!comment) {
-      throw new ValidationException(ErrorCode.E301);
+      throw new NotFoundException('Komentarz nie istnieje');
     }
 
     if (comment.authorId !== userId) {
-      throw new ValidationException(ErrorCode.E302);
+      throw new ForbiddenException(
+        'Nie masz uprawnień do usunięcia tego komentarza',
+      );
     }
 
     await this.commentRepository.remove(comment);

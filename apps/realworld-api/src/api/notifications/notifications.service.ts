@@ -50,9 +50,9 @@ export class NotificationsService {
     try {
       const { total } = await this.getPendingCount(wizardId);
       this.gateway.emitPendingCount(wizardId, total);
-      this.logger.debug(`Notified wizard ${wizardId}: ${total} pending`);
+      this.logger.debug(`Powiadomiono wróżkę ${wizardId}: ${total} oczekujących`);
     } catch (err) {
-      this.logger.error(`Failed to notify wizard ${wizardId}`, err);
+      this.logger.error(`Nie udało się powiadomić wróżki ${wizardId}`, err);
     }
   }
 }

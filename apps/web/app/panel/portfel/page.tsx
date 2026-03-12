@@ -7,12 +7,12 @@ import {
   apiGetWallet,
   apiGetTransactions,
   apiGetConnectStatus,
-
   apiCreateWithdrawal,
   apiGetWithdrawals,
   TransactionDto,
   ConnectStatusDto,
   WithdrawalDto,
+  CommissionTierDto,
 } from '../../lib/api-payment';
 import './portfel.css';
 import '../panel-shared.css';
@@ -40,6 +40,8 @@ export default function PortfelPage() {
   // Dane strony (ładowane raz)
   const [pageLoading, setPageLoading] = useState(true);
   const [balanceFormatted, setBalanceFormatted] = useState('0,00 zł');
+  const [platformFeePercent, setPlatformFeePercent] = useState<number | null>(null);
+  const [commissionTier, setCommissionTier] = useState<CommissionTierDto | null>(null);
   const [connectStatus, setConnectStatus] = useState<ConnectStatusDto | null>(null);
   const [withdrawals, setWithdrawals] = useState<WithdrawalDto[]>([]);
 
@@ -77,6 +79,8 @@ export default function PortfelPage() {
           apiGetWithdrawals(user.token, { limit: 5 }),
         ]);
         setBalanceFormatted(walletData.balanceFormatted);
+        setPlatformFeePercent(walletData.platformFeePercent ?? null);
+        setCommissionTier(walletData.commissionTier ?? null);
         setConnectStatus(connectData);
         setWithdrawals(withdrawalsData.withdrawals);
       } catch (err) {
@@ -122,6 +126,8 @@ export default function PortfelPage() {
       apiGetTransactions(token, { limit, offset, sortBy, sortOrder }),
     ]);
     setBalanceFormatted(walletData.balanceFormatted);
+    setPlatformFeePercent(walletData.platformFeePercent ?? null);
+    setCommissionTier(walletData.commissionTier ?? null);
     setConnectStatus(connectData);
     setWithdrawals(withdrawalsData.withdrawals);
     setTransactions(txData.transactions);
@@ -175,6 +181,31 @@ export default function PortfelPage() {
         <div className="portfel-balance-card">
           <div className="portfel-balance-label">Dostępne środki</div>
           <div className="portfel-balance-amount">{balanceFormatted}</div>
+          {platformFeePercent != null && (
+            <div className="portfel-balance-fee">
+              Prowizja platformy: {platformFeePercent}%
+              {commissionTier?.isSetByAdmin && (
+                <span className="portfel-balance-fee__admin"> (ustawiona przez admina)</span>
+              )}
+            </div>
+          )}
+          {commissionTier && !commissionTier.isSetByAdmin && (
+            <div className="portfel-tier-card">
+              <div className="portfel-tier-card__row">
+                <span className="portfel-tier-card__label">Spotkania w ostatnich {commissionTier.windowDays} dniach:</span>
+                <span className="portfel-tier-card__value">{commissionTier.meetingsInWindow}</span>
+              </div>
+              <div className="portfel-tier-card__row">
+                <span className="portfel-tier-card__label">Aktualna prowizja:</span>
+                <span className="portfel-tier-card__value">{commissionTier.currentTier.feePercent}%</span>
+              </div>
+              {commissionTier.nextTier && (
+                <div className="portfel-tier-card__next">
+                  Do progu {commissionTier.nextTier.feePercent}%: jeszcze {commissionTier.nextTier.minMeetings - commissionTier.meetingsInWindow} spotkań
+                </div>
+              )}
+            </div>
+          )}
           {isConnected && (connectStatus?.stripePendingGrosze ?? 0) > 0 && (
             <div className="portfel-balance-pending">
               + {((connectStatus?.stripePendingGrosze ?? 0) / 100).toFixed(2)} zł oczekujących

@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ArticleEntity, TagEntity, UserEntity } from '@repo/postgresql-typeorm';
-import { I18nService } from 'nestjs-i18n';
 import { Repository } from 'typeorm';
 import { ArticleService } from './article.service';
 
@@ -16,7 +15,6 @@ describe('ArticleService', () => {
   let userRepositoryValue: Partial<
     Record<keyof Repository<UserEntity>, jest.Mock>
   >;
-  let i18nServiceValue: Partial<Record<keyof I18nService, jest.Mock>>;
 
   beforeAll(async () => {
     articleRepositoryValue = {
@@ -29,10 +27,6 @@ describe('ArticleService', () => {
 
     userRepositoryValue = {
       findOne: jest.fn(),
-    };
-
-    i18nServiceValue = {
-      t: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -49,10 +43,6 @@ describe('ArticleService', () => {
         {
           provide: getRepositoryToken(UserEntity),
           useValue: userRepositoryValue,
-        },
-        {
-          provide: I18nService,
-          useValue: i18nServiceValue,
         },
       ],
     }).compile();
