@@ -300,7 +300,7 @@ export default function AdvertisementPage() {
       />
       <Header />
       <main className="advertisement-main">
-        <div className="advertisement-content">
+        <div className="advertisement-body">
           <div className="advertisement-breadcrumbs">
             <Link href="/ogloszenia" className="breadcrumb-link">Wróżki</Link>
             <span className="breadcrumb-separator">/</span>

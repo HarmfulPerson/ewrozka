@@ -14,7 +14,8 @@
   padding: 2rem 1.5rem;
 }
 
-.advertisement-content {
+/* advertisement-body zamiast advertisement-content – unikamy dopasowania przez rozszerzenia (ad blockery) */
+.advertisement-body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
