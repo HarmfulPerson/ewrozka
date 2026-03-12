@@ -21,6 +21,22 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── Redis (staging – rate limiting formularza kontaktowego) ──────────────────
+  redis-staging:
+    image: redis:7-alpine
+    restart: unless-stopped
+    env_file: .env.staging
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    networks:
+      - internal_staging
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis_staging_data:/data
+
   # ── API (NestJS staging) ─────────────────────────────────────────────────────
   api-staging:
     build:
@@ -32,6 +48,7 @@ services:
       DATABASE_HOST: db-staging
       DATABASE_PORT: 5432
       NODE_ENV: staging
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis-staging:6379
     volumes:
       - uploads_staging:/app/uploads
     networks:
@@ -39,6 +56,8 @@ services:
       - web
     depends_on:
       db-staging:
+        condition: service_healthy
+      redis-staging:
         condition: service_healthy
     labels:
       caddy: "api-staging.ewrozka.online"
@@ -87,6 +106,7 @@ networks:
 
 volumes:
   postgres_staging_data:
+  redis_staging_data:
   uploads_staging:
   caddy_staging_data:
   caddy_staging_config:

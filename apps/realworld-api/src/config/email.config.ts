@@ -7,6 +7,8 @@ export type EmailConfig = {
   pass: string;
   from: string;
   frontendUrl: string;
+  /** Adres na który trafiają wiadomości z formularza kontaktowego */
+  contactTo: string;
 };
 
 export default registerAs<EmailConfig>('email', () => ({
@@ -16,4 +18,5 @@ export default registerAs<EmailConfig>('email', () => ({
   pass: process.env.MAIL_PASS ?? '',
   from: process.env.MAIL_FROM || 'noreply@ewrozka.pl',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:4000',
+  contactTo: process.env.CONTACT_EMAIL || 'ewrozkaonline@gmail.com',
 }));

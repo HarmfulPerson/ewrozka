@@ -9,4 +9,10 @@ export enum EmailType {
   GUEST_BOOKING_ACCEPTED = 'guest-booking-accepted',
   GUEST_BOOKING_REJECTED = 'guest-booking-rejected',
   GUEST_BOOKING_PAID = 'guest-booking-paid',
+  /** Po spotkaniu – zalogowany klient: zachęta do oceny */
+  MEETING_COMPLETED_RATE = 'meeting-completed-rate',
+  /** Po spotkaniu – gość: podziękowanie */
+  MEETING_COMPLETED_GUEST = 'meeting-completed-guest',
+  /** Wiadomość z formularza kontaktowego → na ewrozkaonline@gmail.com */
+  CONTACT_FORM = 'contact-form',
 }

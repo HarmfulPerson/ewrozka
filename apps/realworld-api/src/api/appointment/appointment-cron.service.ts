@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AppointmentEntity } from '@repo/postgresql-typeorm';
-import { LessThan, Repository } from 'typeorm';
+import {
+  AppointmentEntity,
+  GuestBookingEntity,
+} from '@repo/postgresql-typeorm';
+import { Repository } from 'typeorm';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AppointmentCronService {
@@ -11,35 +15,86 @@ export class AppointmentCronService {
   constructor(
     @InjectRepository(AppointmentEntity)
     private readonly appointmentRepository: Repository<AppointmentEntity>,
+    @InjectRepository(GuestBookingEntity)
+    private readonly guestBookingRepository: Repository<GuestBookingEntity>,
+    private readonly emailService: EmailService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async completeFinishedAppointments() {
-    this.logger.debug('Cron: sprawdzanie zakończonych spotkań...');
-
+    this.logger.debug('Cron: sprawdzanie zakonczonych spotkan...');
     const now = new Date();
 
-    // Find all paid appointments where startsAt + durationMinutes < now
+    // ─── Appointments (zalogowani klienci) ─────────────────────────────────
     const paidAppointments = await this.appointmentRepository.find({
-      where: {
-        status: 'paid',
-      },
+      where: { status: 'paid' },
+      relations: ['client', 'wrozka', 'advertisement'],
     });
 
-    const toComplete = paidAppointments.filter((appointment) => {
-      const endTime = new Date(appointment.startsAt);
-      endTime.setMinutes(endTime.getMinutes() + appointment.durationMinutes);
+    const toComplete = paidAppointments.filter((apt) => {
+      const endTime = new Date(apt.startsAt);
+      endTime.setMinutes(endTime.getMinutes() + apt.durationMinutes);
       return endTime < now;
     });
 
-    if (toComplete.length > 0) {
-      for (const appointment of toComplete) {
-        appointment.status = 'completed';
-        await this.appointmentRepository.save(appointment);
+    for (const appointment of toComplete) {
+      appointment.status = 'completed';
+      await this.appointmentRepository.save(appointment);
+
+      // Email: zachęta do oceny (tylko zalogowany klient)
+      const client = appointment.client;
+      if (client?.email) {
+        this.emailService
+          .sendMeetingCompletedRate(
+            client.email,
+            client.username ?? client.email.split('@')[0],
+            appointment.wrozka?.username ?? 'wróżka',
+            appointment.advertisement?.title ?? 'Konsultacja',
+          )
+          .catch((err) =>
+            this.logger.error(`Failed to send rate email to ${client.email}`, err),
+          );
       }
-      this.logger.log(`Zakończono ${toComplete.length} spotkań`);
-    } else {
-      this.logger.debug('Brak spotkań do zakończenia');
+    }
+
+    if (toComplete.length > 0) {
+      this.logger.log(`Zakonczono ${toComplete.length} spotkan (appointments)`);
+    }
+
+    // ─── Guest bookings (niezalogowani) ────────────────────────────────────
+    const paidGuestBookings = await this.guestBookingRepository.find({
+      where: { status: 'paid' },
+      relations: ['wizard', 'advertisement'],
+    });
+
+    const toCompleteGuest = paidGuestBookings.filter((gb) => {
+      const endTime = new Date(gb.scheduledAt);
+      endTime.setMinutes(endTime.getMinutes() + gb.durationMinutes);
+      return endTime < now;
+    });
+
+    for (const booking of toCompleteGuest) {
+      booking.status = 'completed';
+      await this.guestBookingRepository.save(booking);
+
+      // Email: podziękowanie dla gościa
+      this.emailService
+        .sendMeetingCompletedGuest(
+          booking.guestEmail,
+          booking.guestName,
+          booking.wizard?.username ?? 'wróżka',
+        )
+        .catch((err) =>
+          this.logger.error(`Failed to send guest completed email to ${booking.guestEmail}`, err),
+        );
+    }
+
+    if (toCompleteGuest.length > 0) {
+      this.logger.log(`Zakonczono ${toCompleteGuest.length} rezerwacji gosci`);
+    }
+
+    if (toComplete.length === 0 && toCompleteGuest.length === 0) {
+      this.logger.debug('Brak spotkan do zakonczenia');
     }
   }
 }

@@ -54,10 +54,7 @@ function getCorsOrigin(): string | string[] | boolean {
 
 
 async function bootstrap() {
-
   dotenv.config();
-
-
 
   const corsOrigin = getCorsOrigin();
 

@@ -107,11 +107,54 @@ export class EmailService implements OnModuleInit {
     });
   }
 
-  async sendWizardApplicationRejected(
+  /** Po zakończonym spotkaniu – zalogowany klient: zachęta do oceny */
+  async sendMeetingCompletedRate(
     to: string,
     username: string,
-    reason: string | null,
+    wizardName: string,
+    adTitle: string,
   ): Promise<void> {
+    const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
+    const rateUrl = `${frontendUrl}/panel/moje-spotkania`;
+
+    await this.send({
+      type: EmailType.MEETING_COMPLETED_RATE,
+      to,
+      subject: 'Oceń swoje spotkanie ⭐ – eWróżka',
+      context: { username, wizardName, adTitle, rateUrl },
+    });
+  }
+
+  /** Po zakończonym spotkaniu – gość: podziękowanie */
+  async sendMeetingCompletedGuest(
+    to: string,
+    guestName: string,
+    wizardName: string,
+  ): Promise<void> {
+    const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
+
+    await this.send({
+      type: EmailType.MEETING_COMPLETED_GUEST,
+      to,
+      subject: 'Dziękujemy za spotkanie! ✨ – eWróżka',
+      context: { guestName, wizardName, appUrl: frontendUrl },
+    });
+  }
+
+  /** Wiadomość z formularza kontaktowego → na contactTo (ewrozkaonline@gmail.com) */
+  async sendContactForm(name: string, email: string, subject: string, message: string): Promise<void> {
+    const emailCfg = this.configService.getOrThrow('email', { infer: true });
+    const to = emailCfg.contactTo ?? 'ewrozkaonline@gmail.com';
+
+    await this.send({
+      type: EmailType.CONTACT_FORM,
+      to,
+      subject: subject ? `[eWróżka] ${subject}` : 'Wiadomość z formularza kontaktowego eWróżka',
+      context: { name, email, subject: subject || '', message },
+    });
+  }
+
+  async sendWizardApplicationRejected(to: string, username: string, reason?: string): Promise<void> {
     const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
     const applyAgainUrl = `${frontendUrl}/rejestracja/wrozka`;
 

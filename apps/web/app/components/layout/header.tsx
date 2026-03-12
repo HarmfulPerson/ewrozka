@@ -53,6 +53,9 @@ export function Header() {
           <Link href="/ogloszenia" className="header__link header__link--ghost">
             Wróżki
           </Link>
+          <Link href="/kontakt" className="header__link header__link--ghost">
+            Kontakt
+          </Link>
           {user ? (
             <>
               <Link href="/panel" className="header__link header__link--ghost">

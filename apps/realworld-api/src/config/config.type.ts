@@ -4,6 +4,7 @@ import { DatabaseConfig } from '@repo/postgresql-typeorm';
 import type { DailyConfig } from './daily.config';
 import type { EmailConfig } from './email.config';
 import type { FeaturedConfig } from './featured.config';
+import type { RedisConfig } from './redis.config';
 
 export type PaymentConfig = {
   platformFeePercentage: number;
@@ -28,4 +29,5 @@ export type AllConfigType = {
   email: EmailConfig;
   featured: FeaturedConfig;
   daily: DailyConfig;
+  redis: RedisConfig;
 };

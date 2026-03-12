@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ContactModule } from './contact/contact.module';
 import { GuestBookingModule } from './guest-booking/guest-booking.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AdvertisementModule } from './advertisement/advertisement.module';
@@ -38,6 +39,7 @@ import { StripeModule } from './stripe/stripe.module';
     StripeModule,
     GuestBookingModule,
     NotificationsModule,
+    ContactModule,
   ],
 })
 export class ApiModule {}

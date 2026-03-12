@@ -132,6 +132,20 @@ export async function apiVerifyEmail(token: string): Promise<{ message: string }
   return fetchApi(`auth/verify-email?token=${encodeURIComponent(token)}`);
 }
 
+export interface ContactFormData {
+  name: string;
+  email: string;
+  subject?: string;
+  message: string;
+}
+
+export async function apiContact(data: ContactFormData): Promise<{ success: boolean }> {
+  return fetchApi('contact', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 /** Pobiera dane profilu Google z tokena tymczasowego (dla dokończenia rejestracji). */
 export async function apiGetGoogleTempProfile(temp: string): Promise<{
   email: string;

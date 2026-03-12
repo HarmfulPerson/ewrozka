@@ -13,12 +13,12 @@
 /* ── Grid ── */
 .footer__grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 3rem;
   margin-bottom: 2.5rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .footer__grid {
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
@@ -104,6 +104,22 @@
 
 .footer__link:hover {
   color: var(--accent);
+}
+
+.footer__link--contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.footer__link--highlight {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.footer__link--highlight:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .footer__link--btn {

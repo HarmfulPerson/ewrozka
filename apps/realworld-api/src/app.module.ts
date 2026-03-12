@@ -22,6 +22,7 @@ import { ApiModule } from './api/api.module';
 import authConfig from './api/auth/config/auth.config';
 import paymentConfig from './config/payment.config';
 import stripeConfig from './config/stripe.config';
+import redisConfig from './config/redis.config';
 import emailConfig from './config/email.config';
 import featuredConfig from './config/featured.config';
 import dailyConfig from './config/daily.config';
@@ -33,7 +34,7 @@ import { TypeOrmConfigService } from './database/typeorm-config.service';
 
 const configModule = ConfigModule.forRoot({
   isGlobal: true,
-  load: [appConfig, databaseConfig, authConfig, paymentConfig, stripeConfig, emailConfig, featuredConfig, dailyConfig],
+  load: [appConfig, databaseConfig, authConfig, paymentConfig, stripeConfig, redisConfig, emailConfig, featuredConfig, dailyConfig],
   envFilePath: ['.env'],
 });
 

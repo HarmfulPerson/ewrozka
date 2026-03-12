@@ -43,6 +43,28 @@ export function Footer() {
             </p>
           </div>
 
+          {/* Kontakt */}
+          <div className="footer__col">
+            <p className="footer__col-title">Kontakt</p>
+            <ul className="footer__links">
+              <li>
+                <Link href="/kontakt" className="footer__link footer__link--highlight">
+                  Formularz kontaktowy
+                </Link>
+              </li>
+              <li>
+                <a href="tel:+48513159215" className="footer__link footer__link--contact">
+                  +48 513 159 215
+                </a>
+              </li>
+              <li>
+                <a href="mailto:ewrozka@gmail.com" className="footer__link footer__link--contact">
+                  ewrozka@gmail.com
+                </a>
+              </li>
+            </ul>
+          </div>
+
           {/* Prawne */}
           <div className="footer__col">
             <p className="footer__col-title">Informacje prawne</p>
