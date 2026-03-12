@@ -125,15 +125,18 @@ async function bootstrap() {
 
 
   fastifyAdapter.getInstance().addHook('onRequest', (request, reply, done) => {
+    (reply as any).setHeader = function (key: string, value: string | number | readonly string[]) {
+      return this.raw.setHeader(key, value);
+    };
+    (reply as any).end = function () {
+      this.raw.end();
+    };
+    (request as any).res = reply;
 
     asyncContext.run(() => {
-
       asyncContext.set('log', request.log);
-
       done();
-
     }, new Map());
-
   });
 
   // Save raw body for Stripe webhook signature verification
