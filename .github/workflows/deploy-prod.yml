@@ -1,36 +1,49 @@
 name: Deploy Production
 
 on:
-  # Odkomentuj gdy VPS gotowy i secrets skonfigurowane:
-  # push:
-  #   branches: [main]
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     name: Deploy na produkcję
     runs-on: ubuntu-latest
     environment: production
 
     steps:
+      - name: Przygotuj .env (base64)
+        id: prepare-env
+        env:
+          ENV_CONTENT: ${{ secrets.ENV_FILE }}
+        run: |
+          echo "b64=$(echo -n "$ENV_CONTENT" | base64 -w0)" >> $GITHUB_OUTPUT
+
       - name: Deploy na serwer (SSH)
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          ENV_B64: ${{ steps.prepare-env.outputs.b64 }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          envs: ENV_B64
           script: |
             set -e
             cd /opt/ewrozka
+
+            printf '%s' "$ENV_B64" | base64 -d > .env.production
 
             git fetch origin
             git checkout main
             git pull origin main
 
-            docker compose -f docker-compose.prod.yml \
-              --env-file .env.production \
-              up -d --build --remove-orphans
-
+            docker compose -f docker-compose.prod.yml --env-file .env.production build
+            docker compose -f docker-compose.prod.yml --env-file .env.production run --rm api sh -c "cd /app && ./node_modules/.bin/typeorm migration:run -d packages/postgresql-typeorm/dist/data-source.js" || true
+            docker compose -f docker-compose.prod.yml --env-file .env.production up -d --remove-orphans
             docker image prune -f
 
             echo "Production deployed successfully"
