@@ -64,7 +64,7 @@ export default function RejestracjaWrozkaPage() {
     const email     = (form.querySelector('#email')    as HTMLInputElement)?.value?.trim();
     const password  = (form.querySelector('#password') as HTMLInputElement)?.value;
     const bio       = (form.querySelector('#bio')      as HTMLTextAreaElement)?.value?.trim();
-    const gender    = (form.querySelector('#gender')   as HTMLSelectElement)?.value as '' | 'female' | 'male';
+    const gender    = (form.querySelector('input[name="gender"]:checked') as HTMLInputElement)?.value as '' | 'female' | 'male';
 
     if (!username || username.length < 3) {
       setError('Pseudonim musi mieć co najmniej 3 znaki.');
@@ -229,12 +229,17 @@ export default function RejestracjaWrozkaPage() {
         </div>
 
         <div className="auth-form__field">
-          <label htmlFor="gender">Płeć</label>
-          <select id="gender" className="auth-form__select">
-            <option value="">— Wybierz —</option>
-            <option value="female">Kobieta</option>
-            <option value="male">Mężczyzna</option>
-          </select>
+          <span className="auth-form__label">Płeć</span>
+          <div className="auth-form__radio-group" role="radiogroup" aria-label="Płeć">
+            <label className="auth-form__radio-label">
+              <input type="radio" name="gender" value="female" className="auth-form__radio" />
+              <span className="auth-form__radio-text">Kobieta</span>
+            </label>
+            <label className="auth-form__radio-label">
+              <input type="radio" name="gender" value="male" className="auth-form__radio" />
+              <span className="auth-form__radio-text">Mężczyzna</span>
+            </label>
+          </div>
         </div>
         <div className="auth-form__field">
           <label htmlFor="email">E-mail <span className="wrozka-reg__required">*</span></label>
