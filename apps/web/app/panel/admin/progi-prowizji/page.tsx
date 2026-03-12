@@ -126,15 +126,15 @@ export default function ProgiProwizjiPage() {
     const current = next[i];
     if (field === 'maxMeetings') {
       next[i] = {
-        minMeetings: current.minMeetings,
+        minMeetings: current?.minMeetings ?? 0,
         maxMeetings: value === 0 || value == null ? null : value,
-        feePercent: current.feePercent,
+        feePercent: current?.feePercent ?? 0,
       };
     } else {
       next[i] = {
-        minMeetings: field === 'minMeetings' ? (value ?? 0) : current.minMeetings,
-        maxMeetings: current.maxMeetings,
-        feePercent: field === 'feePercent' ? (value ?? 0) : current.feePercent,
+        minMeetings: field === 'minMeetings' ? (value ?? 0) : current?.minMeetings ?? 0,
+        maxMeetings: current?.maxMeetings ?? 0,
+        feePercent: field === 'feePercent' ? (value ?? 0) : current?.feePercent ?? 0,
       };
     }
     setTiers(next);
