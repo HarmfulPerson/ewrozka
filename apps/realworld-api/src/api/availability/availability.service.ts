@@ -301,22 +301,16 @@ export class AvailabilityService {
       where: { wizardId: wrozkaId },
     });
     for (const g of guestBookings) {
-      if (['pending', 'accepted', 'paid'].includes(g.status)) {
+      // Slot niedostępny dopiero gdy wróżka zaakceptuje (accepted) lub gość opłaci (paid)
+      if (['accepted', 'paid'].includes(g.status)) {
         const start = g.scheduledAt.getTime();
         const end = start + g.durationMinutes * 60 * 1000;
         busyRanges.push({ start, end });
       }
     }
 
-    const pendingRequests = await this.meetingRequestRepository.find({
-      where: { advertisementId, status: 'pending' },
-    });
-    const pendingStarts = new Set<string>();
-    for (const r of pendingRequests) {
-      if (r.requestedStartsAt) {
-        pendingStarts.add(r.requestedStartsAt.toISOString());
-      }
-    }
+    // Wnioski o spotkanie (pending) NIE blokują slotów – slot jest niedostępny dopiero po akceptacji
+    // (akceptacja tworzy appointment, który trafia do busyRanges)
 
     const overlaps = (slotStartMs: number, slotEndMs: number) =>
       busyRanges.some(
@@ -333,7 +327,6 @@ export class AvailabilityService {
       const slotStartMs = startsAt.getTime();
       const slotEndMs = endsAt.getTime();
       if (startsAt <= minStartsAt) return false;
-      if (pendingStarts.has(s.startsAt)) return false;
       if (overlaps(slotStartMs, slotEndMs)) return false;
       return true;
     });
