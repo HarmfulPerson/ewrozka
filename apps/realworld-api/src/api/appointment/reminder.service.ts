@@ -44,21 +44,32 @@ export class ReminderService {
     }
 
     const now = new Date();
+    const minMinutesAhead = 45; // Nigdy nie wysyłaj przypomnienia gdy spotkanie za <45 min
+    const cutoffTime = new Date(now.getTime() + minMinutesAhead * 60 * 1000);
 
-    for (const hours of REMINDER_HOURS) {
+    // Okna NIE NAKŁADAJĄCE SIĘ – każde przypomnienie tylko gdy spotkanie w swoim przedziale:
+    // 48h: spotkanie za 47–49h (tylko gdy rezerwacja była na >48h – np. rezerwacja 36h nie dostanie 48h)
+    // 24h: spotkanie za 23–25h
+    // 1h:  spotkanie za 55–65 min
+    const WINDOWS: Array<{ hours: number; fromMinutes: number; toMinutes: number }> = [
+      { hours: 48, fromMinutes: 47 * 60 + 30, toMinutes: 48 * 60 + 30 },
+      { hours: 24, fromMinutes: 23 * 60 + 30, toMinutes: 24 * 60 + 30 },
+      { hours: 1, fromMinutes: 55, toMinutes: 65 },
+    ];
+
+    for (const w of WINDOWS) {
       const enabled =
-        hours === 48 ? config.enabled48h : hours === 24 ? config.enabled24h : config.enabled1h;
+        w.hours === 48 ? config.enabled48h : w.hours === 24 ? config.enabled24h : config.enabled1h;
       if (!enabled) continue;
 
-      // Przypomnienie Xh: wysyłamy gdy do spotkania jest mniej niż Xh (okno: teraz → teraz+Xh)
-      const windowStart = now;
-      const windowEnd = new Date(now.getTime() + hours * 60 * 60 * 1000);
+      const windowStart = new Date(now.getTime() + w.fromMinutes * 60 * 1000);
+      const windowEnd = new Date(now.getTime() + w.toMinutes * 60 * 1000);
 
       const hoursLabel =
-        hours === 48 ? '48 godzin' : hours === 24 ? '24 godziny' : '1 godzinę';
+        w.hours === 48 ? '48 godzin' : w.hours === 24 ? '24 godziny' : '1 godzinę';
 
-      await this.sendAppointmentReminders(hours, windowStart, windowEnd, hoursLabel);
-      await this.sendGuestBookingReminders(hours, windowStart, windowEnd, hoursLabel);
+      await this.sendAppointmentReminders(w.hours, windowStart, windowEnd, hoursLabel, cutoffTime);
+      await this.sendGuestBookingReminders(w.hours, windowStart, windowEnd, hoursLabel, cutoffTime);
     }
   }
 
@@ -67,6 +78,7 @@ export class ReminderService {
     windowStart: Date,
     windowEnd: Date,
     hoursLabel: string,
+    cutoffTime: Date,
   ): Promise<void> {
     const appointments = await this.appointmentRepo.find({
       where: { startsAt: Between(windowStart, windowEnd) },
@@ -76,6 +88,7 @@ export class ReminderService {
     const appUrl = this.config.get('stripe.frontendUrl', { infer: true }) ?? 'http://localhost:4000';
 
     for (const apt of appointments) {
+      if (apt.startsAt <= cutoffTime) continue;
       if (apt.status !== 'accepted' && apt.status !== 'paid') continue;
 
       const alreadySent = await this.logRepo.findOne({
@@ -156,6 +169,7 @@ export class ReminderService {
     windowStart: Date,
     windowEnd: Date,
     hoursLabel: string,
+    cutoffTime: Date,
   ): Promise<void> {
     const bookings = await this.guestBookingRepo.find({
       where: { scheduledAt: Between(windowStart, windowEnd) },
@@ -165,6 +179,7 @@ export class ReminderService {
     const appUrl = this.config.get('stripe.frontendUrl', { infer: true }) ?? 'http://localhost:4000';
 
     for (const bk of bookings) {
+      if (bk.scheduledAt <= cutoffTime) continue;
       if (bk.status !== 'accepted' && bk.status !== 'paid') continue;
 
       const alreadySent = await this.logRepo.findOne({

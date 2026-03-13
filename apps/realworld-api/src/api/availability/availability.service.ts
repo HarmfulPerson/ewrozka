@@ -206,39 +206,59 @@ export class AvailabilityService {
       }
     }
 
-    const bookedStarts = new Set<string>();
+    // Zajęte przedziały: spotkania (wszystkie ogłoszenia) + rezerwacje gości (wszystkie ogłoszenia)
+    const busyRanges: { start: number; end: number }[] = [];
+
     const appointments = await this.appointmentRepository.find({
       where: { wrozkaId },
     });
     for (const a of appointments) {
       if (['accepted', 'paid', 'completed'].includes(a.status)) {
-        bookedStarts.add(a.startsAt.toISOString());
-      }
-    }
-    const pendingRequests = await this.meetingRequestRepository.find({
-      where: { advertisementId, status: 'pending' },
-    });
-    for (const r of pendingRequests) {
-      if (r.requestedStartsAt) {
-        bookedStarts.add(r.requestedStartsAt.toISOString());
+        const start = a.startsAt.getTime();
+        const end = start + a.durationMinutes * 60 * 1000;
+        busyRanges.push({ start, end });
       }
     }
 
     const guestBookings = await this.guestBookingRepository.find({
-      where: { advertisementId },
+      where: { wizardId: wrozkaId },
     });
     for (const g of guestBookings) {
       if (['pending', 'accepted', 'paid'].includes(g.status)) {
-        bookedStarts.add(g.scheduledAt.toISOString());
+        const start = g.scheduledAt.getTime();
+        const end = start + g.durationMinutes * 60 * 1000;
+        busyRanges.push({ start, end });
       }
     }
 
+    const pendingRequests = await this.meetingRequestRepository.find({
+      where: { advertisementId, status: 'pending' },
+    });
+    const pendingStarts = new Set<string>();
+    for (const r of pendingRequests) {
+      if (r.requestedStartsAt) {
+        pendingStarts.add(r.requestedStartsAt.toISOString());
+      }
+    }
+
+    const overlaps = (slotStartMs: number, slotEndMs: number) =>
+      busyRanges.some(
+        (r) => slotStartMs < r.end && slotEndMs > r.start,
+      );
+
     const now = new Date();
-    const minStartFromNowMs = 5 * 60 * 1000; // 5 min bufor na dokończenie rezerwacji
+    const minStartFromNowMs = 5 * 60 * 1000;
     const minStartsAt = new Date(now.getTime() + minStartFromNowMs);
-    return slots.filter(
-      (s) =>
-        !bookedStarts.has(s.startsAt) && new Date(s.startsAt) > minStartsAt,
-    );
+
+    return slots.filter((s) => {
+      const startsAt = new Date(s.startsAt);
+      const endsAt = new Date(s.endsAt);
+      const slotStartMs = startsAt.getTime();
+      const slotEndMs = endsAt.getTime();
+      if (startsAt <= minStartsAt) return false;
+      if (pendingStarts.has(s.startsAt)) return false;
+      if (overlaps(slotStartMs, slotEndMs)) return false;
+      return true;
+    });
   }
 }

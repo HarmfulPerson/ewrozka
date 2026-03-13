@@ -6,6 +6,7 @@ import { getStoredUser } from '../../../lib/auth-mock';
 import { apiGetWizardGuestBookingMeetingRoom } from '../../../lib/api-meetings';
 import VideoCall from '../../../spotkanie/components/video-call';
 import '../../../spotkanie/spotkanie.css';
+import '../../../guest/spotkanie/[token]/guest-spotkanie.css';
 
 function formatCountdown(ms: number): string {
   if (ms <= 0) return '0:00';
@@ -97,7 +98,7 @@ export default function WizardGuestSpotkaniePage() {
 
   if (inCall) {
     return (
-      <div className="spotkanie-call-wrapper">
+      <div className="spotkanie-call-wrapper spotkanie-call-wrapper--fill">
         <VideoCall
           roomUrl={room.roomUrl}
           meetingToken={room.token}
@@ -133,21 +134,22 @@ export default function WizardGuestSpotkaniePage() {
           </div>
         </div>
 
-        {tooEarly ? (
-          <div className="spotkanie-tooearly">
-            <p>Spotkanie będzie dostępne za:</p>
-            <div className="spotkanie-countdown">{countdown}</div>
-            <p className="spotkanie-tooearly__hint">Możesz dołączyć 5 minut przed planowaną godziną.</p>
-          </div>
-        ) : (
-          <button className="spotkanie-join-btn" onClick={() => setInCall(true)}>
-            Dołącz do spotkania
+        <div className="spotkanie-card__actions">
+          {tooEarly ? (
+            <div className="spotkanie-tooearly">
+              <p>Spotkanie będzie dostępne za:</p>
+              <div className="spotkanie-countdown">{countdown}</div>
+              <p className="spotkanie-tooearly__hint">Możesz dołączyć 5 minut przed planowaną godziną.</p>
+            </div>
+          ) : (
+            <button className="spotkanie-join-btn" onClick={() => setInCall(true)}>
+              Dołącz do spotkania
+            </button>
+          )}
+          <button className="spotkanie-back-btn spotkanie-back-btn--ghost" onClick={() => router.push('/panel')}>
+            ← Wróć do panelu
           </button>
-        )}
-
-        <button onClick={() => router.push('/panel')} style={{ marginTop: '1rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-          ← Wróć do panelu
-        </button>
+        </div>
       </div>
     </div>
   );

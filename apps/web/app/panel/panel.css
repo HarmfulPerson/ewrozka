@@ -530,6 +530,11 @@
   flex-direction: column;
 }
 
+/* Video call – pełna przestrzeń, bez paddingu */
+.panel-main:has(.spotkanie-call-wrapper--fill) .panel-main__content {
+  padding: 0;
+}
+
 @media (min-width: 768px) {
   .panel-main__content {
     padding: 1.25rem 1.5rem 2rem;
