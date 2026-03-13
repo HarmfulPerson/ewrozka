@@ -477,7 +477,7 @@ export default function DostepnoscPage() {
               <button className="modal-close" onClick={closeDeleteModal}>✕</button>
             </div>
             <div className="modal-body">
-              <p>Czy na pewno chcesz usunąć ten blok dostępności?</p>
+              <p>Czy na pewno chcesz usunąć ten blok dostępności? Spotkania opłacone nadal będą widoczne w kalendarzu i musisz je odbyć. Wnioski zaakceptowane(niepłacone) zostaną usunięte.</p>
               <div className="modal-info">
                 <strong>{formatDate(new Date(availabilityToDelete.startsAt))}</strong>
                 <span>
