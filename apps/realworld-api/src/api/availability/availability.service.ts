@@ -119,7 +119,8 @@ export class AvailabilityService {
     const adIds = ads.map((a) => a.id);
     const wizard = ads[0]?.user;
 
-    // Rezerwacje gości – anuluj, wyślij email (link do płatności przestanie działać po status=rejected)
+    // Rezerwacje gości – anuluj tylko przyszłe (przeszłe spotkania zostają w kalendarzu)
+    const now = new Date().getTime();
     const guestBookingsInBlock = await this.guestBookingRepository.find({
       where: { wizardId: userId },
       relations: ['wizard', 'advertisement'],
@@ -127,6 +128,7 @@ export class AvailabilityService {
     const toCancelGuest = guestBookingsInBlock.filter((gb) => {
       const start = gb.scheduledAt.getTime();
       const end = start + gb.durationMinutes * 60 * 1000;
+      if (end <= now) return false; // spotkanie już się zakończyło – nie anuluj
       const blockStart = block.startsAt.getTime();
       const blockEnd = block.endsAt.getTime();
       return start < blockEnd && end > blockStart && ['pending', 'accepted', 'paid'].includes(gb.status);
@@ -164,6 +166,7 @@ export class AvailabilityService {
       const toRejectRequests = requestsInBlock.filter((r) => {
         if (!r.requestedStartsAt || !['pending', 'accepted'].includes(r.status)) return false;
         const start = r.requestedStartsAt.getTime();
+        if (start <= now) return false; // spotkanie w przeszłości – nie odrzucaj (zostaw w historii)
         const ad = r.advertisement;
         const durationMs = (ad as { durationMinutes?: number })?.durationMinutes
           ? (ad as { durationMinutes: number }).durationMinutes * 60 * 1000
@@ -210,7 +213,7 @@ export class AvailabilityService {
       }
     }
 
-    // Ewentualne spotkania bez wniosku (fallback) – anuluj
+    // Ewentualne spotkania bez wniosku (fallback) – anuluj tylko przyszłe
     const appointmentsInBlock = await this.appointmentRepository.find({
       where: { wrozkaId: userId },
     });
@@ -218,6 +221,7 @@ export class AvailabilityService {
       if (!['accepted', 'paid'].includes(apt.status)) continue;
       const start = apt.startsAt.getTime();
       const end = start + apt.durationMinutes * 60 * 1000;
+      if (end <= now) continue; // spotkanie już się zakończyło – nie anuluj
       const blockStart = block.startsAt.getTime();
       const blockEnd = block.endsAt.getTime();
       if (start < blockEnd && end > blockStart) {
