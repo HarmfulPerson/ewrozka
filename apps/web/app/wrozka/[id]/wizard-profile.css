@@ -455,6 +455,15 @@
     text-align: center;
   }
 
+  .wizard-hero__name-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .wizard-hero__meet-btn {
+    margin-top: 0.25rem;
+  }
+
   .wizard-hero__topics {
     justify-content: center;
   }
