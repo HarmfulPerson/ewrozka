@@ -243,13 +243,14 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
 
     const dayAppointments = (appointments || []).filter(apt => {
       const s = new Date(apt.startsAt);
-      return `${s.getFullYear()}-${(s.getMonth() + 1).toString().padStart(2, '0')}-${s.getDate().toString().padStart(2, '0')}` === dayString && apt.status === 'paid';
+      return `${s.getFullYear()}-${(s.getMonth() + 1).toString().padStart(2, '0')}-${s.getDate().toString().padStart(2, '0')}` === dayString
+        && ['paid', 'completed'].includes(apt.status);
     });
 
     const dayGuestBookings = (guestBookings || []).filter(g => {
       const s = new Date(g.scheduledAt);
       return `${s.getFullYear()}-${(s.getMonth() + 1).toString().padStart(2, '0')}-${s.getDate().toString().padStart(2, '0')}` === dayString
-        && ['pending', 'accepted', 'paid'].includes(g.status);
+        && ['pending', 'accepted', 'paid', 'completed'].includes(g.status);
     });
 
     const dayBusyItems: CalendarBusyItem[] = [
@@ -410,6 +411,19 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                 const meetingEnd = new Date(meetingStart.getTime() + guest.durationMinutes * 60 * 1000);
                 const aptNow = new Date();
                 const guestLabel = guest.guestName || 'Gość';
+
+                if (guest.status === 'completed') {
+                  return (
+                    <div key={`${avail.id}-busy-${idx}`}
+                      className="calendar-week__appointment calendar-week__appointment--ended calendar-week__appointment--guest"
+                      style={{ top: `${top}px`, height: `${height}px` }}
+                      data-tooltip-id="meeting-tooltip"
+                      data-tooltip-content={`Spotkanie z gościem ${guestLabel} zakończone`}
+                    >
+                      {showText && 'Spotkanie z gościem'}
+                    </div>
+                  );
+                }
 
                 if (guest.status === 'paid') {
                   const isAvailable = aptNow >= fiveMinsBefore && aptNow <= meetingEnd;
