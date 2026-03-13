@@ -10,6 +10,7 @@ import {
 import { AvailabilityController } from './availability.controller';
 import { AvailabilityService } from './availability.service';
 import { AvailabilityCronService } from './availability-cron.service';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   controllers: [AvailabilityController],
@@ -23,6 +24,7 @@ import { AvailabilityCronService } from './availability-cron.service';
       GuestBookingEntity,
       MeetingRequestEntity,
     ]),
+    EmailModule,
   ],
 })
 export class AvailabilityModule {}

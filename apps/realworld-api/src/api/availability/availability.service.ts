@@ -1,4 +1,6 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { AllConfigType } from '@/config/config.type';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   AdvertisementEntity,
@@ -7,7 +9,9 @@ import {
   GuestBookingEntity,
   MeetingRequestEntity,
 } from '@repo/postgresql-typeorm';
-import { LessThan, MoreThan, Repository } from 'typeorm';
+import { In, LessThan, MoreThan, Repository } from 'typeorm';
+import { EmailService } from '../email/email.service';
+import { EmailType } from '../email/email-type.enum';
 export interface SlotDto {
   startsAt: string;
   endsAt: string;
@@ -17,6 +21,8 @@ export interface SlotDto {
 
 @Injectable()
 export class AvailabilityService {
+  private readonly logger = new Logger(AvailabilityService.name);
+
   constructor(
     @InjectRepository(AvailabilityEntity)
     private readonly availabilityRepository: Repository<AvailabilityEntity>,
@@ -28,6 +34,8 @@ export class AvailabilityService {
     private readonly meetingRequestRepository: Repository<MeetingRequestEntity>,
     @InjectRepository(GuestBookingEntity)
     private readonly guestBookingRepository: Repository<GuestBookingEntity>,
+    private readonly emailService: EmailService,
+    private readonly config: ConfigService<AllConfigType>,
   ) {}
 
   async addBlock(
@@ -103,7 +111,7 @@ export class AvailabilityService {
       throw new NotFoundException('Blok nie istnieje lub nie należy do Ciebie.');
     }
 
-    // Blokuj usunięcie jeśli w oknie tego bloku istnieje aktywne spotkanie
+    // Blokuj usunięcie jeśli w oknie tego bloku istnieje aktywne spotkanie (confirmed)
     const activeAppointment = await this.appointmentRepository
       .createQueryBuilder('a')
       .where('a.wrozkaId = :userId', { userId })
@@ -118,39 +126,102 @@ export class AvailabilityService {
       );
     }
 
-    // Blokuj usunięcie jeśli w oknie istnieje oczekujący wniosek o spotkanie
+    const appUrl = this.config.get('stripe.frontendUrl', { infer: true }) ?? 'http://localhost:4000';
     const ads = await this.advertisementRepository.find({
       where: { userId },
-      select: ['id'],
+      relations: ['user'],
     });
     const adIds = ads.map((a) => a.id);
+    const wizard = ads[0]?.user;
 
+    // Rezerwacje gości – anuluj, wyślij email (link do płatności przestanie działać po status=rejected)
+    const guestBookingsInBlock = await this.guestBookingRepository.find({
+      where: { wizardId: userId },
+      relations: ['wizard', 'advertisement'],
+    });
+    const toCancelGuest = guestBookingsInBlock.filter((gb) => {
+      const start = gb.scheduledAt.getTime();
+      const end = start + gb.durationMinutes * 60 * 1000;
+      const blockStart = block.startsAt.getTime();
+      const blockEnd = block.endsAt.getTime();
+      return start < blockEnd && end > blockStart && ['pending', 'accepted', 'paid'].includes(gb.status);
+    });
+
+    for (const gb of toCancelGuest) {
+        gb.status = 'rejected';
+        gb.rejectionReason = 'Termin został odwołany przez wróżkę.';
+        await this.guestBookingRepository.save(gb);
+        const scheduledPl = gb.scheduledAt.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' });
+        this.emailService
+          .send({
+            to: gb.guestEmail,
+            subject: 'Termin spotkania został odwołany – eWróżka',
+            type: EmailType.GUEST_BOOKING_CANCELLED_BY_BLOCK,
+            context: {
+              guestName: gb.guestName,
+              wizardName: gb.wizard?.username ?? wizard?.username ?? 'wróżka',
+              scheduledAt: scheduledPl,
+              appUrl,
+            },
+          })
+          .catch((err) =>
+            this.logger.error(`Failed to send guest cancellation email to ${gb.guestEmail}: ${err instanceof Error ? err.message : String(err)}`),
+          );
+      this.logger.log(`Guest booking ${gb.id} cancelled due to block removal`);
+    }
+
+    // Wnioski o spotkanie (zalogowani) – odrzuć, anuluj ewentualny appointment, wyślij email
     if (adIds.length > 0) {
-      const pendingRequest = await this.meetingRequestRepository
-        .createQueryBuilder('r')
-        .where('r.advertisementId IN (:...adIds)', { adIds })
-        .andWhere('r.requestedStartsAt >= :start', { start: block.startsAt })
-        .andWhere('r.requestedStartsAt < :end', { end: block.endsAt })
-        .andWhere('r.status IN (:...statuses)', { statuses: ['pending', 'accepted'] })
-        .getOne();
+      const requestsInBlock = await this.meetingRequestRepository.find({
+        where: { advertisementId: In(adIds) },
+        relations: ['user', 'advertisement', 'advertisement.user'],
+      });
+      const toRejectRequests = requestsInBlock.filter((r) => {
+        if (!r.requestedStartsAt || !['pending', 'accepted'].includes(r.status)) return false;
+        const start = r.requestedStartsAt.getTime();
+        const ad = r.advertisement;
+        const durationMs = (ad as { durationMinutes?: number })?.durationMinutes
+          ? (ad as { durationMinutes: number }).durationMinutes * 60 * 1000
+          : 60 * 60 * 1000;
+        const end = start + durationMs;
+        const blockStart = block.startsAt.getTime();
+        const blockEnd = block.endsAt.getTime();
+        return start < blockEnd && end > blockStart;
+      });
 
-      if (pendingRequest) {
-        throw new BadRequestException(
-          'Nie możesz usunąć tego bloku dostępności, ponieważ istnieje oczekujący wniosek o spotkanie w tym terminie. Odrzuć go najpierw lub poczekaj na zakończenie spotkania.',
-        );
-      }
+      for (const req of toRejectRequests) {
+        req.status = 'rejected';
+        await this.meetingRequestRepository.save(req);
 
-      const guestBooking = await this.guestBookingRepository
-        .createQueryBuilder('gb')
-        .where('gb.advertisementId IN (:...adIds)', { adIds })
-        .andWhere('gb.scheduledAt >= :start', { start: block.startsAt })
-        .andWhere('gb.scheduledAt < :end', { end: block.endsAt })
-        .andWhere('gb.status IN (:...statuses)', { statuses: ['pending', 'accepted', 'paid'] })
-        .getOne();
-      if (guestBooking) {
-        throw new BadRequestException(
-          'Nie możesz usunąć tego bloku dostępności, ponieważ istnieje rezerwacja gościa w tym terminie.',
-        );
+        const apt = await this.appointmentRepository.findOne({
+          where: { meetingRequestId: req.id },
+        });
+        if (apt && ['accepted', 'paid'].includes(apt.status)) {
+          apt.status = 'cancelled';
+          await this.appointmentRepository.save(apt);
+        }
+
+        const userEmail = req.user?.email;
+        if (userEmail) {
+          const requestedPl = req.requestedStartsAt!.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' });
+          const wizardName = (req.advertisement as { user?: { username?: string } })?.user?.username ?? 'wróżka';
+          this.emailService
+            .send({
+              to: userEmail,
+              subject: 'Twój wniosek o spotkanie został anulowany – eWróżka',
+              type: EmailType.MEETING_REQUEST_CANCELLED_BY_BLOCK,
+              context: {
+                username: (req.user as { username?: string })?.username ?? 'Użytkownik',
+                wizardName,
+                requestedAt: requestedPl,
+                appUrl,
+              },
+            })
+            .catch((err) =>
+              this.logger.error(`Failed to send meeting request cancellation email to ${userEmail}: ${err instanceof Error ? err.message : String(err)}`),
+            );
+        }
+        this.logger.log(`Meeting request ${req.id} rejected due to block removal`);
       }
     }
 

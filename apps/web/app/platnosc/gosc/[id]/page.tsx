@@ -227,11 +227,19 @@ export default function GuestPaymentPage() {
       </div>
     );
 
+    if (booking?.status === 'rejected') return (
+      <div className="gp-state">
+        <div className="gp-state__icon">❌</div>
+        <h2>Rezerwacja została anulowana</h2>
+        <p>Termin został odwołany przez wróżkę. Nie możesz już opłacić tej rezerwacji. Wybierz inny termin.</p>
+      </div>
+    );
+
     if (booking?.status !== 'accepted') return (
       <div className="gp-state">
         <div className="gp-state__icon">ℹ️</div>
         <h2>Link nieaktualny</h2>
-        <p>Rezerwacja może być oczekująca lub odrzucona.</p>
+        <p>Rezerwacja może być oczekująca na akceptację.</p>
       </div>
     );
 
