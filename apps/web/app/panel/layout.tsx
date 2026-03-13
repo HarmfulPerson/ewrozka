@@ -135,9 +135,15 @@ export default function PanelLayout({
     };
     window.addEventListener('ewrozka:connect-configured', handleConnectConfigured);
 
+    const handleAdsCountChanged = () => {
+      if (storedUser?.token) fetchAdsCount(storedUser.token);
+    };
+    window.addEventListener('ewrozka:ads-count-changed', handleAdsCountChanged);
+
     return () => {
       window.removeEventListener('ewrozka:user-updated', handleUserUpdated);
       window.removeEventListener('ewrozka:connect-configured', handleConnectConfigured);
+      window.removeEventListener('ewrozka:ads-count-changed', handleAdsCountChanged);
     };
   }, [router]);
 

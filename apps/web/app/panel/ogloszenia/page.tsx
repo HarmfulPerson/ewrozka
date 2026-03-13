@@ -161,6 +161,9 @@ export default function MojeOgloszeniaPage() {
       await apiDeleteAdvertisement(user.token, advertisementToDelete.id);
       setSuccess('Ogłoszenie zostało usunięte');
       await fetchAdvertisements();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('ewrozka:ads-count-changed'));
+      }
       closeDeleteModal();
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : 'Nie udało się usunąć ogłoszenia');
