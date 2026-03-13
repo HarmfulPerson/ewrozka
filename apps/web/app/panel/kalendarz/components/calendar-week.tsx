@@ -147,11 +147,25 @@ function QuickAddMenu({
   );
 }
 
+/** Godzina przewinięcia początkowego – typowe godziny wizyt (środek dnia) */
+const INITIAL_SCROLL_HOUR = 8;
+const SLOT_HEIGHT_PX = 40;
+
 /* ── Main component ── */
 export function CalendarWeek({ availabilities, appointments, guestBookings, onRefresh, token }: CalendarWeekProps) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [quickAdd, setQuickAdd] = useState<QuickAddState | null>(null);
   const [quickSaving, setQuickSaving] = useState(false);
+  const gridWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Przy wejściu przewiń do typowych godzin (8:00), zamiast 0:00
+  useEffect(() => {
+    const el = gridWrapperRef.current;
+    if (el) {
+      const scrollTop = INITIAL_SCROLL_HOUR * SLOT_HEIGHT_PX;
+      el.scrollTop = Math.min(scrollTop, el.scrollHeight - el.clientHeight);
+    }
+  }, []);
 
   const timeSlots = useMemo(() => {
     const slots = [];
@@ -537,7 +551,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
           })}
         </div>
 
-        <div className="calendar-week__grid-wrapper">
+        <div ref={gridWrapperRef} className="calendar-week__grid-wrapper">
           <div className="calendar-week__grid">
             <div className="calendar-week__time-column">
               {timeSlots.map((time) => (
