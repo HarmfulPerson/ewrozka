@@ -7,6 +7,7 @@ import {
   MeetingRoomEntity,
 } from '@repo/postgresql-typeorm';
 import { AvailabilityModule } from '../availability/availability.module';
+import { EmailModule } from '../email/email.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { MeetingRequestController } from './meeting-request.controller';
 import { MeetingRequestService } from './meeting-request.service';
@@ -22,6 +23,7 @@ import { MeetingRequestService } from './meeting-request.service';
       MeetingRoomEntity,
     ]),
     AvailabilityModule,
+    EmailModule,
     NotificationsModule,
   ],
 })

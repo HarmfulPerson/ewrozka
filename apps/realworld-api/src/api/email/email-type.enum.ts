@@ -23,4 +23,6 @@ export enum EmailType {
   GUEST_BOOKING_CANCELLED_BY_BLOCK = 'guest-booking-cancelled-by-block',
   /** Wniosek anulowany – wróżka odwołała blok dostępności */
   MEETING_REQUEST_CANCELLED_BY_BLOCK = 'meeting-request-cancelled-by-block',
+  /** Wniosek odrzucony przez wróżkę (zaakceptowany, nieopłacony) – wymaga powodu */
+  MEETING_REQUEST_REJECTED = 'meeting-request-rejected',
 }

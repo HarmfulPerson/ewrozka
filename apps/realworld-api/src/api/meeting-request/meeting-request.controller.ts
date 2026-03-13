@@ -89,11 +89,18 @@ export class MeetingRequestController {
   }
 
   @Patch(':id/reject')
-  @ApiAuth({ summary: 'Odrzuć prośbę (wróżka)' })
+  @ApiAuth({ summary: 'Odrzuć prośbę (wróżka). Dla zaakceptowanego, nieopłaconego – wymagany powód.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { reason: { type: 'string', description: 'Wymagany przy odrzuceniu zaakceptowanego wniosku' } },
+    },
+  })
   async reject(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
+    @Body('reason') reason?: string,
   ) {
-    return this.meetingRequestService.reject(userId, id);
+    return this.meetingRequestService.reject(userId, id, reason);
   }
 }

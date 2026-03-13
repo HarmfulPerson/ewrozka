@@ -108,12 +108,18 @@ export async function apiAcceptMeetingRequest(token: string, id: number): Promis
   });
 }
 
-export async function apiRejectMeetingRequest(token: string, id: number): Promise<{ status: string }> {
+export async function apiRejectMeetingRequest(
+  token: string,
+  id: number,
+  reason?: string,
+): Promise<{ status: string }> {
   return fetchApi(`meeting-requests/${id}/reject`, {
     method: 'PATCH',
     headers: {
       Authorization: `Token ${token}`,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ reason: reason?.trim() || undefined }),
   });
 }
 

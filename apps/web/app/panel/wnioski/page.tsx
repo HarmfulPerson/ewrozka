@@ -50,6 +50,7 @@ export default function WnioskiPage() {
     id: number | string | null;
     kind: 'regular' | 'guest';
     reason: string;
+    requiresReason?: boolean; // dla zaakceptowanego (nieopłaconego) wniosku – powód obowiązkowy
   }>({ open: false, id: null, kind: 'guest', reason: '' });
 
   // ── Pobieranie danych ────────────────────────────────────────────────────
@@ -98,8 +99,9 @@ export default function WnioskiPage() {
     } finally { setProcessingId(null); }
   };
 
-  const handleReject = (id: number) => {
-    setRejectModal({ open: true, id, kind: 'regular', reason: '' });
+  const handleReject = (id: number, request?: MeetingRequestDto) => {
+    const requiresReason = request?.status === 'accepted' && request?.appointment?.status !== 'paid';
+    setRejectModal({ open: true, id, kind: 'regular', reason: '', requiresReason });
   };
 
   // ── Akcje: goście ────────────────────────────────────────────────────────
@@ -118,20 +120,25 @@ export default function WnioskiPage() {
     } finally { setProcessingId(null); }
   };
 
-  const handleRejectGuest = (id: string) => {
-    setRejectModal({ open: true, id, kind: 'guest', reason: '' });
+  const handleRejectGuest = (id: string, booking?: GuestBookingDto) => {
+    const requiresReason = booking?.status === 'accepted'; // zaakceptowany, nieopłacony
+    setRejectModal({ open: true, id, kind: 'guest', reason: '', requiresReason });
   };
 
   const handleConfirmReject = async () => {
     if (!user || rejectModal.id === null) return;
-    const { id, kind, reason } = rejectModal;
+    const { id, kind, reason, requiresReason } = rejectModal;
+    if (requiresReason && !reason.trim()) {
+      setError('Podaj powód odrzucenia (wymagane dla zaakceptowanego, nieopłaconego wniosku).');
+      return;
+    }
     setRejectModal(m => ({ ...m, open: false }));
     setProcessingId(id);
     setError(null);
     setSuccess(null);
     try {
       if (kind === 'regular') {
-        await apiRejectMeetingRequest(user.token, id as number);
+        await apiRejectMeetingRequest(user.token, id as number, requiresReason ? reason.trim() : undefined);
         setSuccess('Wniosek odrzucony.');
       } else {
         await apiRejectGuestBooking(user.token, id as string, reason.trim() || undefined);
@@ -142,7 +149,7 @@ export default function WnioskiPage() {
       setError(err instanceof Error ? err.message : 'Błąd odrzucenia');
     } finally {
       setProcessingId(null);
-      setRejectModal({ open: false, id: null, kind: 'guest', reason: '' });
+      setRejectModal({ open: false, id: null, kind: 'guest', reason: '', requiresReason: false });
     }
   };
 
@@ -237,6 +244,7 @@ export default function WnioskiPage() {
                 const isProc = processingId === r.id;
                 const date   = r.requestedStartsAt ? new Date(r.requestedStartsAt) : null;
                 const isPending = r.status === 'pending';
+                const isAcceptedUnpaid = r.status === 'accepted' && r.appointment?.status !== 'paid';
                 return (
                   <div key={`r-${r.id}`} className="wnioski-card">
                     <div className="wnioski-card__header">
@@ -309,8 +317,16 @@ export default function WnioskiPage() {
                           {isProc ? 'Przetwarzanie...' : '✓ Zaakceptuj'}
                         </button>
                         <button className="wnioski-card__button wnioski-card__button--reject"
-                          onClick={() => handleReject(r.id)} disabled={isProc}>
+                          onClick={() => handleReject(r.id, r)} disabled={isProc}>
                           ✕ Odrzuć
+                        </button>
+                      </div>
+                    )}
+                    {isAcceptedUnpaid && (
+                      <div className="wnioski-card__actions">
+                        <button className="wnioski-card__button wnioski-card__button--reject"
+                          onClick={() => handleReject(r.id, r)} disabled={isProc}>
+                          {isProc ? 'Przetwarzanie...' : '✕ Odrzuć rezerwację'}
                         </button>
                       </div>
                     )}
@@ -323,6 +339,7 @@ export default function WnioskiPage() {
               const isProc = processingId === g.id;
               const date   = new Date(g.scheduledAt);
               const isPending = g.status === 'pending';
+              const isAcceptedUnpaidGuest = g.status === 'accepted'; // zaakceptowany, nieopłacony
               return (
                 <div key={`g-${g.id}`} className="wnioski-card wnioski-card--guest">
                   <div className="wnioski-card__header">
@@ -395,8 +412,16 @@ export default function WnioskiPage() {
                         {isProc ? 'Przetwarzanie...' : '✓ Zaakceptuj'}
                       </button>
                       <button className="wnioski-card__button wnioski-card__button--reject"
-                        onClick={() => handleRejectGuest(g.id)} disabled={isProc}>
+                        onClick={() => handleRejectGuest(g.id, g)} disabled={isProc}>
                         ✕ Odrzuć
+                      </button>
+                    </div>
+                  )}
+                  {isAcceptedUnpaidGuest && (
+                    <div className="wnioski-card__actions">
+                      <button className="wnioski-card__button wnioski-card__button--reject"
+                        onClick={() => handleRejectGuest(g.id, g)} disabled={isProc}>
+                        {isProc ? 'Przetwarzanie...' : '✕ Odrzuć rezerwację'}
                       </button>
                     </div>
                   )}
@@ -430,14 +455,30 @@ export default function WnioskiPage() {
               <button className="wnioski-modal__close" onClick={() => setRejectModal(m => ({ ...m, open: false }))}>✕</button>
             </div>
             <div className="wnioski-modal__body">
-              {rejectModal.kind === 'guest' ? (
+              {(rejectModal.kind === 'guest' || rejectModal.requiresReason) ? (
                 <>
                   <p className="wnioski-modal__desc">
-                    Możesz podać powód odrzucenia – zostanie wysłany e-mailem do gościa.
+                    {rejectModal.requiresReason
+                      ? `Zaakceptowany, nieopłacony wniosek – podaj powód odrzucenia (wymagane). ${rejectModal.kind === 'guest' ? 'Gość' : 'Klient'} otrzyma go e-mailem.`
+                      : 'Możesz podać powód odrzucenia – zostanie wysłany e-mailem do gościa.'}
                   </p>
                   <textarea
                     className="wnioski-modal__textarea"
-                    placeholder="Powód odrzucenia (opcjonalnie)..."
+                    placeholder={rejectModal.requiresReason ? 'Powód odrzucenia (wymagane)...' : 'Powód odrzucenia (opcjonalnie)...'}
+                    rows={4}
+                    value={rejectModal.reason}
+                    onChange={e => setRejectModal(m => ({ ...m, reason: e.target.value }))}
+                    autoFocus
+                  />
+                </>
+              ) : rejectModal.requiresReason ? (
+                <>
+                  <p className="wnioski-modal__desc">
+                    Podaj powód odrzucenia – zostanie wysłany e-mailem do klienta.
+                  </p>
+                  <textarea
+                    className="wnioski-modal__textarea"
+                    placeholder="Powód odrzucenia (wymagane)..."
                     rows={4}
                     value={rejectModal.reason}
                     onChange={e => setRejectModal(m => ({ ...m, reason: e.target.value }))}

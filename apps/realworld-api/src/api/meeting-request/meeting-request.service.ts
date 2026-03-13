@@ -12,7 +12,11 @@ import {
   MeetingRoomEntity,
 } from '@repo/postgresql-typeorm';
 import { In, Repository } from 'typeorm';
+import type { AllConfigType } from '@/config/config.type';
+import { ConfigService } from '@nestjs/config';
 import { AvailabilityService } from '../availability/availability.service';
+import { EmailService } from '../email/email.service';
+import { EmailType } from '../email/email-type.enum';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateMeetingRequestReqDto } from './dto/create-meeting-request.dto';
 
@@ -28,7 +32,9 @@ export class MeetingRequestService {
     @InjectRepository(MeetingRoomEntity)
     private readonly meetingRoomRepository: Repository<MeetingRoomEntity>,
     private readonly availabilityService: AvailabilityService,
+    private readonly emailService: EmailService,
     private readonly notificationsService: NotificationsService,
+    private readonly config: ConfigService<AllConfigType>,
   ) {}
 
   async create(
@@ -282,10 +288,10 @@ export class MeetingRequestService {
     };
   }
 
-  async reject(wrozkaUserId: number, requestId: number) {
+  async reject(wrozkaUserId: number, requestId: number, reason?: string) {
     const request = await this.meetingRequestRepository.findOne({
       where: { id: requestId },
-      relations: ['advertisement'],
+      relations: ['advertisement', 'advertisement.user', 'user'],
     });
     if (!request) {
       throw new NotFoundException('Prośba o spotkanie nie istnieje');
@@ -293,9 +299,56 @@ export class MeetingRequestService {
     if (request.advertisement.userId !== wrozkaUserId) {
       throw new ForbiddenException('Nie możesz odrzucić tej prośby');
     }
-    if (request.status !== 'pending') {
+    if (request.status !== 'pending' && request.status !== 'accepted') {
       throw new BadRequestException('Prośba została już obsłużona');
     }
+
+    // Zaakceptowany – tylko nieopłacony można odrzucić
+    if (request.status === 'accepted') {
+      const apt = await this.appointmentRepository.findOne({
+        where: { meetingRequestId: request.id },
+      });
+      if (apt && apt.status === 'paid') {
+        throw new BadRequestException('Nie można odrzucić opłaconego wniosku');
+      }
+      const reasonTrimmed = reason?.trim();
+      if (!reasonTrimmed) {
+        throw new BadRequestException('Podaj powód odrzucenia zaakceptowanego wniosku');
+      }
+      request.rejectionReason = reasonTrimmed;
+      // Anuluj powiązany appointment (tylko gdy accepted)
+      if (apt && apt.status === 'accepted') {
+        apt.status = 'cancelled';
+        await this.appointmentRepository.save(apt);
+      }
+      // E-mail do klienta
+      const userEmail = (request.user as { email?: string })?.email;
+      if (userEmail) {
+        const appUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+        const wizardName = (request.advertisement as { user?: { username?: string } })?.user?.username ?? 'wróżka';
+        const username = (request.user as { username?: string })?.username ?? 'Użytkownik';
+        const requestedPl = request.requestedStartsAt?.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' }) ?? '–';
+        void this.emailService
+          .send({
+            to: userEmail,
+            subject: 'Twój wniosek o spotkanie został odrzucony – eWróżka',
+            type: EmailType.MEETING_REQUEST_REJECTED,
+            context: {
+              username,
+              wizardName,
+              requestedAt: requestedPl,
+              rejectionReason: reasonTrimmed,
+              appUrl,
+            },
+          })
+          .catch((err) => {
+            // log but don't fail the reject
+          });
+      }
+    } else {
+      request.rejectionReason = reason?.trim() || null;
+    }
+
     request.status = 'rejected';
     await this.meetingRequestRepository.save(request);
 
