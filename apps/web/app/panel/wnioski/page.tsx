@@ -75,6 +75,13 @@ export default function WnioskiPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Odśwież listę, gdy przyjdzie powiadomienie o nowym wniosku (WebSocket)
+  useEffect(() => {
+    const handler = () => fetchAll();
+    window.addEventListener('ewrozka:pending-requests-changed', handler);
+    return () => window.removeEventListener('ewrozka:pending-requests-changed', handler);
+  }, [fetchAll]);
+
   // ── Akcje: zalogowani klienci ────────────────────────────────────────────
 
   const handleAccept = async (id: number) => {

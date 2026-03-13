@@ -40,6 +40,10 @@ export function useNotifications(token: string | null | undefined) {
 
     socket.on('pending_count', (data: { count: number }) => {
       setPendingCount(data.count);
+      // Powiadom strony (np. wnioski), żeby odświeżyły dane
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('ewrozka:pending-requests-changed', { detail: { count: data.count } }));
+      }
     });
 
     return () => {
