@@ -27,6 +27,13 @@ export default function RejestracjaWrozkaPage() {
   const [dragOver, setDragOver] = useState(false);
   const [phone, setPhone] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [error]);
 
   useEffect(() => {
     apiGetTopics().then(setTopics).catch(() => {});
@@ -156,7 +163,7 @@ export default function RejestracjaWrozkaPage() {
     >
       <form className="auth-form wrozka-reg__form" onSubmit={handleSubmit}>
         {error && (
-          <p className="auth-form__error" role="alert">
+          <p ref={errorRef} className="auth-form__error" role="alert">
             {error}
           </p>
         )}

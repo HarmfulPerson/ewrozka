@@ -233,6 +233,9 @@ export class AvailabilityService {
       }
     }
 
-    return slots.filter((s) => !bookedStarts.has(s.startsAt));
+    const now = new Date();
+    return slots.filter(
+      (s) => !bookedStarts.has(s.startsAt) && new Date(s.startsAt) > now,
+    );
   }
 }
