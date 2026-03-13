@@ -91,7 +91,8 @@ export default function MojeSpotkania() {
           createdAt: req.createdAt ? new Date(req.createdAt) : undefined,
         }));
 
-      const appointmentItems: MeetingItem[] = appointmentsData.appointments.map((apt) => ({
+      const statusRank: Record<string, number> = { completed: 4, paid: 3, accepted: 2, cancelled: 1 };
+      const mapped = appointmentsData.appointments.map((apt) => ({
         type: 'appointment' as const,
         id: apt.id,
         title: apt.advertisementTitle || 'Konsultacja',
@@ -103,24 +104,54 @@ export default function MojeSpotkania() {
         meetingToken: apt.meetingToken,
         rating: apt.rating,
       }));
+      // Deduplikacja appointmentów: ten sam termin + wróżka + tytuł → zostaw tylko ten z najlepszym statusem
+      const byKey = new Map<string, MeetingItem>();
+      for (const apt of mapped) {
+        const key = `${apt.wrozkaUsername}|${apt.date?.getTime() ?? 0}|${apt.title}`;
+        const existing = byKey.get(key);
+        const rNew = statusRank[(apt.status ?? '').toLowerCase()] ?? 0;
+        const rOld = existing ? statusRank[(existing.status ?? '').toLowerCase()] ?? 0 : 0;
+        if (!existing || rNew > rOld) byKey.set(key, apt);
+      }
+      const appointmentItems = Array.from(byKey.values());
 
-      let allItems = [...requestItems, ...appointmentItems];
+      // Deduplikacja: gdy mamy wniosek (rejected) i appointment (cancelled) dla tego samego spotkania,
+      // pokazujemy tylko appointment z etykietą „Anulowane” – bez wnosku odrzuconego
+      const cancelledAppointmentKeys = new Set(
+        appointmentItems
+          .filter((a) => a.status === 'cancelled')
+          .map((a) => `${a.wrozkaUsername}|${a.date?.getTime() ?? 0}|${a.title}`),
+      );
+      const dedupedRequestItems = requestItems.filter((req) => {
+        if (req.status !== 'rejected') return true;
+        const key = `${req.wrozkaUsername}|${req.date?.getTime() ?? 0}|${req.title}`;
+        return !cancelledAppointmentKeys.has(key);
+      });
 
+      let allItems = [...dedupedRequestItems, ...appointmentItems];
+
+      const statusEq = (item: MeetingItem, s: string) => (item.status ?? '').toLowerCase() === s.toLowerCase();
       if (filterType === 'pending') {
         allItems = allItems.filter(
-          (item) => item.type === 'request' && item.status === 'pending',
+          (item) => item.type === 'request' && statusEq(item, 'pending'),
         );
       } else if (filterType === 'accepted') {
         allItems = allItems.filter(
-          (item) => item.type === 'appointment' && item.status === 'accepted',
+          (item) => item.type === 'appointment' && statusEq(item, 'accepted'),
         );
       } else if (filterType === 'paid') {
         allItems = allItems.filter(
-          (item) => item.type === 'appointment' && item.status === 'paid',
+          (item) => item.type === 'appointment' && statusEq(item, 'paid'),
         );
       } else if (filterType === 'completed') {
         allItems = allItems.filter(
-          (item) => item.type === 'appointment' && item.status === 'completed',
+          (item) => item.type === 'appointment' && statusEq(item, 'completed'),
+        );
+      } else if (filterType === 'cancelled') {
+        allItems = allItems.filter(
+          (item) =>
+            (item.type === 'request' && statusEq(item, 'rejected')) ||
+            (item.type === 'appointment' && statusEq(item, 'cancelled')),
         );
       }
 
@@ -198,20 +229,22 @@ export default function MojeSpotkania() {
   };
 
   const getStatusInfo = (item: MeetingItem) => {
+    const s = (item.status ?? '').toLowerCase();
     if (item.type === 'request') {
       const statusMap: Record<string, { label: string; className: string }> = {
         pending: { label: 'Oczekuje na akceptację', className: 'moje-spotkania-status--pending' },
         accepted: { label: 'Zaakceptowane', className: 'moje-spotkania-status--accepted' },
         rejected: { label: 'Odrzucone', className: 'moje-spotkania-status--rejected' },
       };
-      return statusMap[item.status] || { label: item.status, className: '' };
+      return statusMap[s] ?? { label: 'Odrzucone', className: 'moje-spotkania-status--rejected' };
     } else {
       const statusMap: Record<string, { label: string; className: string }> = {
         accepted: { label: 'Do opłacenia', className: 'moje-spotkania-status--to-pay' },
         paid: { label: 'Opłacone', className: 'moje-spotkania-status--paid' },
         completed: { label: 'Zakończone', className: 'moje-spotkania-status--completed' },
+        cancelled: { label: 'Anulowane', className: 'moje-spotkania-status--rejected' },
       };
-      return statusMap[item.status] || { label: item.status, className: '' };
+      return statusMap[s] ?? { label: 'Anulowane', className: 'moje-spotkania-status--rejected' };
     }
   };
 
@@ -261,6 +294,7 @@ export default function MojeSpotkania() {
               <option value="accepted">Do opłacenia</option>
               <option value="paid">Opłacone</option>
               <option value="completed">Zakończone</option>
+              <option value="cancelled">Anulowane</option>
             </select>
           </div>
         </div>
@@ -280,7 +314,7 @@ export default function MojeSpotkania() {
               {items.map((item) => {
                 const isPaying = paymentModal?.appointmentId === item.id;
                 const statusInfo = getStatusInfo(item);
-                const canPay = item.type === 'appointment' && item.status === 'accepted';
+                const canPay = item.type === 'appointment' && (item.status ?? '').toLowerCase() === 'accepted';
                 const hasToken =
                   item.type === 'appointment' && item.status === 'paid' && item.meetingToken;
                 const meetingAccess =
