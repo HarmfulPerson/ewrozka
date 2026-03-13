@@ -14,7 +14,7 @@ import {
 } from '@repo/postgresql-typeorm';
 import { randomUUID } from 'crypto';
 import Stripe from 'stripe';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { AvailabilityService } from '../availability/availability.service';
 import { EmailType } from '../email/email-type.enum';
 import { EmailService } from '../email/email.service';
@@ -68,6 +68,21 @@ export class GuestBookingService {
       throw new BadRequestException(
         'Nie można zarezerwować terminu w przeszłości',
       );
+
+    const guestEmail = dto.guestEmail.trim().toLowerCase();
+    const existing = await this.bookingRepo.findOne({
+      where: {
+        guestEmail,
+        advertisementId: ad.id,
+        scheduledAt,
+        status: In(['pending', 'accepted']),
+      },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        'Masz już rezerwację na ten termin. Poczekaj na odpowiedź wróżki lub wybierz inny slot.',
+      );
+    }
 
     const booking = this.bookingRepo.create({
       wizardId: ad.userId,

@@ -80,6 +80,21 @@ export class MeetingRequestService {
       if (!slotMatch) {
         throw new BadRequestException('Wybrany slot jest niedostępny');
       }
+
+      // Jedna osoba nie może wysłać dwóch wniosków na ten sam slot
+      const existing = await this.meetingRequestRepository.findOne({
+        where: {
+          userId,
+          advertisementId: dto.advertisementId,
+          requestedStartsAt,
+          status: In(['pending', 'accepted']),
+        },
+      });
+      if (existing) {
+        throw new BadRequestException(
+          'Masz już wniosek na ten termin. Poczekaj na odpowiedź lub wybierz inny slot.',
+        );
+      }
     } else if (dto.preferredDate) {
       preferredDate = dto.preferredDate;
     }
