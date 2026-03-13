@@ -234,8 +234,11 @@ export class AvailabilityService {
     }
 
     const now = new Date();
+    const minStartFromNowMs = 5 * 60 * 1000; // 5 min bufor na dokończenie rezerwacji
+    const minStartsAt = new Date(now.getTime() + minStartFromNowMs);
     return slots.filter(
-      (s) => !bookedStarts.has(s.startsAt) && new Date(s.startsAt) > now,
+      (s) =>
+        !bookedStarts.has(s.startsAt) && new Date(s.startsAt) > minStartsAt,
     );
   }
 }
