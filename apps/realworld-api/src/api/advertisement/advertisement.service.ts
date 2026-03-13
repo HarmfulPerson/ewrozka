@@ -214,8 +214,8 @@ export class AdvertisementService {
         void this.emailService
           .send({
             to: userEmail,
-            subject: 'Twój wniosek o spotkanie został anulowany – eWróżka',
-            type: EmailType.MEETING_REQUEST_CANCELLED_BY_BLOCK,
+            subject: 'Ogłoszenie zostało usunięte – informacja o Twoim wniosku – eWróżka',
+            type: EmailType.MEETING_REQUEST_CANCELLED_BY_AD,
             context: {
               username: (req.user as { username?: string })?.username ?? 'Użytkownik',
               wizardName: (req.advertisement as { user?: { username?: string } })?.user?.username ?? wizardName,
@@ -245,8 +245,8 @@ export class AdvertisementService {
       void this.emailService
         .send({
           to: gb.guestEmail,
-          subject: 'Termin spotkania został odwołany – eWróżka',
-          type: EmailType.GUEST_BOOKING_CANCELLED_BY_BLOCK,
+          subject: 'Ogłoszenie zostało usunięte – informacja o Twojej rezerwacji – eWróżka',
+          type: EmailType.GUEST_BOOKING_CANCELLED_BY_AD,
           context: {
             guestName: gb.guestName,
             wizardName: gb.wizard?.username ?? wizardName,

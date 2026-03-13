@@ -23,6 +23,10 @@ export enum EmailType {
   GUEST_BOOKING_CANCELLED_BY_BLOCK = 'guest-booking-cancelled-by-block',
   /** Wniosek anulowany – wróżka odwołała blok dostępności */
   MEETING_REQUEST_CANCELLED_BY_BLOCK = 'meeting-request-cancelled-by-block',
+  /** Wniosek usunięty – wróżka usunęła ogłoszenie (zalogowany klient) */
+  MEETING_REQUEST_CANCELLED_BY_AD = 'meeting-request-cancelled-by-ad',
+  /** Rezerwacja usunięta – wróżka usunęła ogłoszenie (gość) */
+  GUEST_BOOKING_CANCELLED_BY_AD = 'guest-booking-cancelled-by-ad',
   /** Wniosek odrzucony przez wróżkę (zaakceptowany, nieopłacony) – wymaga powodu */
   MEETING_REQUEST_REJECTED = 'meeting-request-rejected',
 }
