@@ -111,21 +111,6 @@ export class AvailabilityService {
       throw new NotFoundException('Blok nie istnieje lub nie należy do Ciebie.');
     }
 
-    // Blokuj usunięcie jeśli w oknie tego bloku istnieje aktywne spotkanie (confirmed)
-    const activeAppointment = await this.appointmentRepository
-      .createQueryBuilder('a')
-      .where('a.wrozkaId = :userId', { userId })
-      .andWhere('a.startsAt >= :start', { start: block.startsAt })
-      .andWhere('a.startsAt < :end', { end: block.endsAt })
-      .andWhere('a.status IN (:...statuses)', { statuses: ['accepted', 'paid'] })
-      .getOne();
-
-    if (activeAppointment) {
-      throw new BadRequestException(
-        'Nie możesz usunąć tego bloku dostępności, ponieważ istnieje aktywne spotkanie w tym terminie. Poczekaj na jego zakończenie lub anuluj je ręcznie.',
-      );
-    }
-
     const appUrl = this.config.get('stripe.frontendUrl', { infer: true }) ?? 'http://localhost:4000';
     const ads = await this.advertisementRepository.find({
       where: { userId },
@@ -222,6 +207,23 @@ export class AvailabilityService {
             );
         }
         this.logger.log(`Meeting request ${req.id} rejected due to block removal`);
+      }
+    }
+
+    // Ewentualne spotkania bez wniosku (fallback) – anuluj
+    const appointmentsInBlock = await this.appointmentRepository.find({
+      where: { wrozkaId: userId },
+    });
+    for (const apt of appointmentsInBlock) {
+      if (!['accepted', 'paid'].includes(apt.status)) continue;
+      const start = apt.startsAt.getTime();
+      const end = start + apt.durationMinutes * 60 * 1000;
+      const blockStart = block.startsAt.getTime();
+      const blockEnd = block.endsAt.getTime();
+      if (start < blockEnd && end > blockStart) {
+        apt.status = 'cancelled';
+        await this.appointmentRepository.save(apt);
+        this.logger.log(`Appointment ${apt.id} cancelled due to block removal`);
       }
     }
 
