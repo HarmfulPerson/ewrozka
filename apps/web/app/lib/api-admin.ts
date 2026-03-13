@@ -277,3 +277,24 @@ export async function apiUpdateCommissionTierConfig(
     body: JSON.stringify(body),
   });
 }
+
+/** Konfiguracja przypomnień o nadchodzących spotkaniach (48h, 24h, 1h przed). */
+export interface ReminderConfig {
+  enabled48h: boolean;
+  enabled24h: boolean;
+  enabled1h: boolean;
+}
+
+export async function apiGetReminderConfig(token: string): Promise<ReminderConfig> {
+  return fetchAdmin<ReminderConfig>('admin/reminder-config', token);
+}
+
+export async function apiUpdateReminderConfig(
+  token: string,
+  body: { enabled48h?: boolean; enabled24h?: boolean; enabled1h?: boolean },
+): Promise<void> {
+  await fetchAdmin<unknown>('admin/reminder-config', token, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+}

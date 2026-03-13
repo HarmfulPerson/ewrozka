@@ -15,4 +15,8 @@ export enum EmailType {
   MEETING_COMPLETED_GUEST = 'meeting-completed-guest',
   /** Wiadomość z formularza kontaktowego → na ewrozkaonline@gmail.com */
   CONTACT_FORM = 'contact-form',
+  /** Przypomnienie o nadchodzącym spotkaniu (opłacone) */
+  MEETING_REMINDER_PAID = 'meeting-reminder-paid',
+  /** Przypomnienie o nadchodzącym spotkaniu (do opłacenia) */
+  MEETING_REMINDER_UNPAID = 'meeting-reminder-unpaid',
 }

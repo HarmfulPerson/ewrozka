@@ -176,8 +176,8 @@ export function StripeOnboarding({ token, onComplete, onExit }: StripeOnboarding
             <ConnectComponentsProvider connectInstance={stripeConnectInstance}>
               <ConnectAccountOnboarding
                 onExit={() => {
-                  // Użytkownik wyszedł z formularza — odśwież status
                   setStep('done');
+                  window.dispatchEvent(new CustomEvent('ewrozka:connect-configured'));
                 }}
               />
             </ConnectComponentsProvider>

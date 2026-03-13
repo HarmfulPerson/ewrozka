@@ -29,6 +29,8 @@ import {
 
   PlatformFeeTierEntity,
 
+  ReminderConfigEntity,
+
   RoleEntity,
 
   TopicEntity,
@@ -263,6 +265,10 @@ export class AdminService {
     @InjectRepository(PlatformFeeTierEntity)
 
     private readonly platformFeeTierRepo: Repository<PlatformFeeTierEntity>,
+
+    @InjectRepository(ReminderConfigEntity)
+
+    private readonly reminderConfigRepo: Repository<ReminderConfigEntity>,
 
     private readonly commissionTierService: CommissionTierService,
 
@@ -1304,6 +1310,41 @@ export class AdminService {
 
     }
 
+  }
+
+  /** Konfiguracja przypomnień o spotkaniach (48h, 24h, 1h przed). */
+  async getReminderConfig(): Promise<{
+    enabled48h: boolean;
+    enabled24h: boolean;
+    enabled1h: boolean;
+  }> {
+    const config = await this.reminderConfigRepo.findOne({ where: { id: 1 } });
+    if (!config) {
+      return { enabled48h: true, enabled24h: true, enabled1h: true };
+    }
+    return {
+      enabled48h: config.enabled48h,
+      enabled24h: config.enabled24h,
+      enabled1h: config.enabled1h,
+    };
+  }
+
+  /** Aktualizacja konfiguracji przypomnień. */
+  async updateReminderConfig(body: {
+    enabled48h?: boolean;
+    enabled24h?: boolean;
+    enabled1h?: boolean;
+  }): Promise<void> {
+    const config = await this.reminderConfigRepo.findOne({ where: { id: 1 } });
+    if (!config) {
+      throw new NotFoundException(
+        'Brak konfiguracji przypomnień. Uruchom migrację bazy danych.',
+      );
+    }
+    if (body.enabled48h !== undefined) config.enabled48h = body.enabled48h;
+    if (body.enabled24h !== undefined) config.enabled24h = body.enabled24h;
+    if (body.enabled1h !== undefined) config.enabled1h = body.enabled1h;
+    await this.reminderConfigRepo.save(config);
   }
 
 }

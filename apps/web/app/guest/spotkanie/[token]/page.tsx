@@ -101,6 +101,7 @@ export default function GuestSpotkaniePage() {
         <VideoCall
           roomUrl={room.roomUrl}
           meetingToken={room.token}
+          userName={room.booking.guestName}
           onLeave={() => setInCall(false)}
         />
       </div>

@@ -171,4 +171,20 @@ export class AdminController {
   ) {
     return this.adminService.updateCommissionTierConfig(body);
   }
+
+  @Get('reminder-config')
+  @ApiAuth({ summary: 'Pobierz konfigurację przypomnień o spotkaniach (tylko admin)' })
+  getReminderConfig() {
+    return this.adminService.getReminderConfig();
+  }
+
+  @Patch('reminder-config')
+  @ApiAuth({ summary: 'Zaktualizuj konfigurację przypomnień (tylko admin)' })
+  @HttpCode(HttpStatus.OK)
+  updateReminderConfig(
+    @Body()
+    body: { enabled48h?: boolean; enabled24h?: boolean; enabled1h?: boolean },
+  ) {
+    return this.adminService.updateReminderConfig(body);
+  }
 }

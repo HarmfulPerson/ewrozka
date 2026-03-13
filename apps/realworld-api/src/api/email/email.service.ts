@@ -141,6 +141,64 @@ export class EmailService implements OnModuleInit {
     });
   }
 
+  /** Przypomnienie o nadchodzącym spotkaniu (opłacone) – link do pokoju */
+  async sendMeetingReminderPaid(
+    to: string,
+    recipientName: string,
+    wizardName: string,
+    adTitle: string,
+    scheduledAt: string,
+    durationMinutes: number,
+    meetingUrl: string,
+    hoursLabel: string,
+  ): Promise<void> {
+    await this.send({
+      type: EmailType.MEETING_REMINDER_PAID,
+      to,
+      subject: `Przypomnienie: spotkanie za ${hoursLabel} – eWróżka`,
+      context: {
+        recipientName,
+        wizardName,
+        adTitle,
+        scheduledAt,
+        durationMinutes,
+        meetingUrl,
+        hoursLabel,
+      },
+    });
+  }
+
+  /** Przypomnienie o nadchodzącym spotkaniu (nieopłacone) – link do płatności */
+  async sendMeetingReminderUnpaid(
+    to: string,
+    recipientName: string,
+    wizardName: string,
+    adTitle: string,
+    scheduledAt: string,
+    durationMinutes: number,
+    priceFormatted: string,
+    paymentUrl: string,
+    hoursLabel: string,
+    paymentHint: string,
+  ): Promise<void> {
+    await this.send({
+      type: EmailType.MEETING_REMINDER_UNPAID,
+      to,
+      subject: `Opłać spotkanie za ${hoursLabel} – eWróżka`,
+      context: {
+        recipientName,
+        wizardName,
+        adTitle,
+        scheduledAt,
+        durationMinutes,
+        priceFormatted,
+        paymentUrl,
+        hoursLabel,
+        paymentHint,
+      },
+    });
+  }
+
   /** Wiadomość z formularza kontaktowego → na contactTo (ewrozkaonline@gmail.com) */
   async sendContactForm(name: string, email: string, subject: string, message: string): Promise<void> {
     const emailCfg = this.configService.getOrThrow('email', { infer: true });

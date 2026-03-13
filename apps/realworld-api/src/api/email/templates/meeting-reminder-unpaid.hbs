@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Opłać swoje spotkanie</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0f0e17;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #e2e0f0;
+      padding: 40px 16px;
+    }
+    .wrapper {
+      max-width: 560px;
+      margin: 0 auto;
+      background: #1a1827;
+      border-radius: 16px;
+      border: 1px solid #2e2a45;
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #6d28d9 0%, #a855f7 100%);
+      padding: 32px 40px;
+      text-align: center;
+    }
+    .header__logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .body {
+      padding: 40px;
+    }
+    .body__greeting {
+      font-size: 1.1rem;
+      color: #c4b5fd;
+      margin-bottom: 16px;
+    }
+    .body__text {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #b0aac8;
+      margin-bottom: 16px;
+    }
+    .highlight {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      font-size: 0.9rem;
+      color: #fcd34d;
+      line-height: 1.6;
+    }
+    .btn-wrapper { text-align: center; margin-bottom: 24px; }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      color: #fff !important;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 14px 36px;
+      border-radius: 50px;
+    }
+    .footer {
+      padding: 24px 40px;
+      background: #15121f;
+      font-size: 0.75rem;
+      color: #4a4462;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="header__logo">e<span style="color:#e9d5ff">Wróżka</span></div>
+    </div>
+    <div class="body">
+      <p class="body__greeting">Cześć, {{recipientName}}! ✨</p>
+      <p class="body__text">
+        Twoje spotkanie z <strong>{{wizardName}}</strong> ({{adTitle}}) odbędzie się za <strong>{{hoursLabel}}</strong>.
+      </p>
+      <div class="highlight">
+        ⚠️ <strong>Spotkanie nie zostało jeszcze opłacone.</strong><br />
+        Opłać teraz, aby móc dołączyć do wideorozmowy. Opłata: {{priceFormatted}} – czas: {{durationMinutes}} min.
+      </div>
+      <div class="btn-wrapper">
+        <a href="{{paymentUrl}}" class="btn">Opłać spotkanie</a>
+      </div>
+      <p class="body__text" style="font-size: 0.85rem; color: #8b7aa8;">
+        {{paymentHint}}
+      </p>
+    </div>
+    <div class="footer">© eWróżka · Czekamy na Ciebie!</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,113 @@
+/* VideoCall – full 100vh one-page layout, wypełnia kontener rodzica */
+.video-call-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0a0a0f;
+}
+
+.video-call-frame {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.video-call-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: #0a0a0f;
+  color: var(--text-primary, #e2e0f0);
+  z-index: 5;
+}
+
+.video-call-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(167, 139, 250, 0.2);
+  border-top-color: var(--accent, #a78bfa);
+  border-radius: 50%;
+  animation: video-call-spin 0.9s linear infinite;
+}
+
+@keyframes video-call-spin {
+  to { transform: rotate(360deg); }
+}
+
+.video-call-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(26, 26, 37, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.video-call-info {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #9c96b5);
+}
+
+.video-call-leave-btn {
+  padding: 0.85rem 2rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+.video-call-leave-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+}
+
+.video-call-leave-btn:active {
+  transform: translateY(0);
+}
+
+.video-call-error {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  background: #0a0a0f;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.video-call-error p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.video-call-error-btn {
+  padding: 0.75rem 1.75rem;
+  background: var(--accent, #a78bfa);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.video-call-error-btn:hover {
+  opacity: 0.9;
+}

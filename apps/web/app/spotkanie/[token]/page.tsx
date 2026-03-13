@@ -182,6 +182,7 @@ export default function SpotkanieePage() {
         <VideoCall
           roomUrl={room.dailyRoomUrl}
           meetingToken={room.dailyToken}
+          userName={getStoredUser()?.username}
           onLeave={() => router.push('/panel')}
         />
       )}

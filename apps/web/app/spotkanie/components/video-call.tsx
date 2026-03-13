@@ -2,14 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react';
 import DailyIframe, { DailyCall } from '@daily-co/daily-js';
+import './video-call.css';
 
 interface VideoCallProps {
   roomUrl: string;
   meetingToken: string;
+  userName?: string;
   onLeave: () => void;
 }
 
-export default function VideoCall({ roomUrl, meetingToken, onLeave }: VideoCallProps) {
+export default function VideoCall({ roomUrl, meetingToken, userName, onLeave }: VideoCallProps) {
   const callFrameRef = useRef<DailyCall | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isJoining, setIsJoining] = useState(true);
@@ -28,7 +30,7 @@ export default function VideoCall({ roomUrl, meetingToken, onLeave }: VideoCallP
         border: '0',
         borderRadius: '12px',
       },
-      showLeaveButton: false,
+      showLeaveButton: true,
       showFullscreenButton: true,
     });
 
@@ -63,7 +65,7 @@ export default function VideoCall({ roomUrl, meetingToken, onLeave }: VideoCallP
 
     // Join the room with signed token (nbf/exp enforced by Daily.co)
     callFrame
-      .join({ url: roomUrl, token: meetingToken })
+      .join({ url: roomUrl, token: meetingToken, userName: userName || undefined })
       .catch((err) => {
         console.error('Failed to join:', err);
         setError('Nie udało się dołączyć do spotkania');
@@ -75,7 +77,7 @@ export default function VideoCall({ roomUrl, meetingToken, onLeave }: VideoCallP
         callFrameRef.current.destroy();
       }
     };
-  }, [roomUrl, meetingToken, onLeave]);
+  }, [roomUrl, meetingToken, userName, onLeave]);
 
   const handleLeave = () => {
     if (callFrameRef.current) {

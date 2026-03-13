@@ -111,16 +111,16 @@ export default function PanelLayout({
     const storedUser = getStoredUser();
     if (!storedUser) {
       router.push('/login?returnUrl=/panel');
-    } else {
-      setUser(storedUser);
-      setMounted(true);
-      const isWizardRole = storedUser.roles?.includes('wizard');
-      const isAdminRole  = storedUser.roles?.includes('admin');
-      if (isWizardRole && !isAdminRole) {
-        fetchWizardBar(storedUser.token);
-        fetchFeaturedStatus(storedUser.token);
-        fetchAdsCount(storedUser.token);
-      }
+      return;
+    }
+    setUser(storedUser);
+    setMounted(true);
+    const isWizardRole = storedUser.roles?.includes('wizard');
+    const isAdminRole  = storedUser.roles?.includes('admin');
+    if (isWizardRole && !isAdminRole) {
+      fetchWizardBar(storedUser.token);
+      fetchFeaturedStatus(storedUser.token);
+      fetchAdsCount(storedUser.token);
     }
 
     const handleUserUpdated = () => {
@@ -129,7 +129,16 @@ export default function PanelLayout({
     };
 
     window.addEventListener('ewrozka:user-updated', handleUserUpdated);
-    return () => window.removeEventListener('ewrozka:user-updated', handleUserUpdated);
+
+    const handleConnectConfigured = () => {
+      if (storedUser?.token) fetchWizardBar(storedUser.token);
+    };
+    window.addEventListener('ewrozka:connect-configured', handleConnectConfigured);
+
+    return () => {
+      window.removeEventListener('ewrozka:user-updated', handleUserUpdated);
+      window.removeEventListener('ewrozka:connect-configured', handleConnectConfigured);
+    };
   }, [router]);
 
   async function fetchAdsCount(token: string) {
@@ -407,6 +416,17 @@ export default function PanelLayout({
                   </svg>
                 </span>
                 Progi prowizji
+              </Link>
+              <Link
+                href="/panel/admin/przypomnienia"
+                className={`panel-sidebar__link ${pathname?.startsWith('/panel/admin/przypomnienia') ? 'panel-sidebar__link--active' : ''}`}
+              >
+                <span className="panel-sidebar__link-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                  </svg>
+                </span>
+                Przypomnienia
               </Link>
             </>
           )}

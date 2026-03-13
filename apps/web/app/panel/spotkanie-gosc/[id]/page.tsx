@@ -101,6 +101,7 @@ export default function WizardGuestSpotkaniePage() {
         <VideoCall
           roomUrl={room.roomUrl}
           meetingToken={room.token}
+          userName={user?.username}
           onLeave={() => router.push('/panel')}
         />
       </div>

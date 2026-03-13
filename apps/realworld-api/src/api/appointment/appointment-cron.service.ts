@@ -7,6 +7,7 @@ import {
 } from '@repo/postgresql-typeorm';
 import { Repository } from 'typeorm';
 import { EmailService } from '../email/email.service';
+import { ReminderService } from './reminder.service';
 
 @Injectable()
 export class AppointmentCronService {
@@ -18,11 +19,12 @@ export class AppointmentCronService {
     @InjectRepository(GuestBookingEntity)
     private readonly guestBookingRepository: Repository<GuestBookingEntity>,
     private readonly emailService: EmailService,
+    private readonly reminderService: ReminderService,
   ) {}
 
   @Cron(CronExpression.EVERY_MINUTE)
   async completeFinishedAppointments() {
-    this.logger.debug('Cron: sprawdzanie zakonczonych spotkan...');
+    this.logger.log('Cron: sprawdzanie zakonczonych spotkan + przypomnienia...');
     const now = new Date();
 
     // ─── Appointments (zalogowani klienci) ─────────────────────────────────
@@ -96,5 +98,10 @@ export class AppointmentCronService {
     if (toComplete.length === 0 && toCompleteGuest.length === 0) {
       this.logger.debug('Brak spotkan do zakonczenia');
     }
+
+    // Przypomnienia o nadchodzących spotkaniach (48h, 24h, 1h)
+    this.reminderService.sendReminders().catch((err) =>
+      this.logger.error(`Reminder cron error: ${err instanceof Error ? err.message : String(err)}`),
+    );
   }
 }
