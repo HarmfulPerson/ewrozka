@@ -134,6 +134,9 @@ export default function MojeOgloszeniaPage() {
       setSuccess('Ogłoszenie zostało dodane!');
       closeFormModal();
       await fetchAdvertisements();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('ewrozka:ads-count-changed'));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się dodać ogłoszenia');
     } finally {
