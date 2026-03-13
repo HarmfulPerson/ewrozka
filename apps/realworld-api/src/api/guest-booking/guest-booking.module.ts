@@ -5,6 +5,7 @@ import {
   GuestBookingEntity,
   UserEntity,
 } from '@repo/postgresql-typeorm';
+import { AvailabilityModule } from '../availability/availability.module';
 import { EmailModule } from '../email/email.module';
 import { MeetingRoomModule } from '../meeting-room/meeting-room.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -18,6 +19,7 @@ import { GuestBookingService } from './guest-booking.service';
       AdvertisementEntity,
       UserEntity,
     ]),
+    AvailabilityModule,
     EmailModule,
     MeetingRoomModule,
     NotificationsModule,

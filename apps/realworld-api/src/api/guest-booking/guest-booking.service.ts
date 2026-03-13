@@ -15,6 +15,7 @@ import {
 import { randomUUID } from 'crypto';
 import Stripe from 'stripe';
 import { Repository } from 'typeorm';
+import { AvailabilityService } from '../availability/availability.service';
 import { EmailType } from '../email/email-type.enum';
 import { EmailService } from '../email/email.service';
 import { DailyCoService } from '../meeting-room/daily-co.service';
@@ -41,6 +42,7 @@ export class GuestBookingService {
     private readonly adRepo: Repository<AdvertisementEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    private readonly availabilityService: AvailabilityService,
     private readonly emailService: EmailService,
     private readonly dailyCo: DailyCoService,
     private readonly config: ConfigService<AllConfigType>,
@@ -108,6 +110,17 @@ export class GuestBookingService {
     const booking = await this.findOwned(wizardId, bookingId);
     if (booking.status !== 'pending')
       throw new BadRequestException('Wniosek nie jest w stanie oczekującym');
+
+    const occupied = await this.availabilityService.isSlotOccupied(
+      wizardId,
+      booking.scheduledAt,
+      booking.durationMinutes,
+    );
+    if (occupied) {
+      throw new BadRequestException(
+        'Ten termin jest już zajęty. Ktoś inny został w tym czasie zaakceptowany.',
+      );
+    }
 
     booking.status = 'accepted';
     await this.bookingRepo.save(booking);

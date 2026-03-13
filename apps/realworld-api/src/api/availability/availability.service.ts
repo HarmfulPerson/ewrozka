@@ -234,6 +234,45 @@ export class AvailabilityService {
     await this.availabilityRepository.remove(block);
   }
 
+  /**
+   * Sprawdza, czy slot jest już zajęty (appointment accepted/paid/completed lub guest booking accepted/paid).
+   * Używane przed akceptacją wniosku/rezerwacji, żeby uniknąć podwójnej rezerwacji.
+   */
+  async isSlotOccupied(
+    wizardId: number,
+    startsAt: Date,
+    durationMinutes: number,
+    excludeAppointmentId?: number,
+    excludeGuestBookingId?: string,
+  ): Promise<boolean> {
+    const slotStart = startsAt.getTime();
+    const slotEnd = slotStart + durationMinutes * 60 * 1000;
+
+    const appointments = await this.appointmentRepository.find({
+      where: { wrozkaId: wizardId },
+    });
+    for (const a of appointments) {
+      if (excludeAppointmentId && a.id === excludeAppointmentId) continue;
+      if (!['accepted', 'paid', 'completed'].includes(a.status)) continue;
+      const start = a.startsAt.getTime();
+      const end = start + a.durationMinutes * 60 * 1000;
+      if (slotStart < end && slotEnd > start) return true;
+    }
+
+    const guestBookings = await this.guestBookingRepository.find({
+      where: { wizardId },
+    });
+    for (const g of guestBookings) {
+      if (excludeGuestBookingId && g.id === excludeGuestBookingId) continue;
+      if (!['accepted', 'paid'].includes(g.status)) continue;
+      const start = g.scheduledAt.getTime();
+      const end = start + g.durationMinutes * 60 * 1000;
+      if (slotStart < end && slotEnd > start) return true;
+    }
+
+    return false;
+  }
+
   async getSlotsForAdvertisement(
     advertisementId: number,
     fromDate: string,

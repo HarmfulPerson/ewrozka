@@ -232,13 +232,25 @@ export class MeetingRequestService {
     }
 
     const startsAt = new Date(request.requestedStartsAt);
+    const durationMinutes = request.advertisement.durationMinutes;
+    const occupied = await this.availabilityService.isSlotOccupied(
+      wrozkaUserId,
+      startsAt,
+      durationMinutes,
+    );
+    if (occupied) {
+      throw new BadRequestException(
+        'Ten termin jest już zajęty. Ktoś inny został w tym czasie zaakceptowany.',
+      );
+    }
+
     const appointment = this.appointmentRepository.create({
       clientId: request.userId,
       wrozkaId: request.advertisement.userId,
       advertisementId: request.advertisementId,
       meetingRequestId: request.id,
       startsAt,
-      durationMinutes: request.advertisement.durationMinutes,
+      durationMinutes,
       priceGrosze: request.advertisement.priceGrosze,
       status: 'accepted',
     });
