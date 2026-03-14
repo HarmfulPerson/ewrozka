@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   AppointmentEntity,
+  GuestBookingEntity,
   StripeConnectAccountEntity,
   WithdrawalEntity,
   WalletEntity,
@@ -17,6 +18,7 @@ import { StripeService } from './stripe.service';
   imports: [
     TypeOrmModule.forFeature([
       AppointmentEntity,
+      GuestBookingEntity,
       StripeConnectAccountEntity,
       WithdrawalEntity,
       WalletEntity,

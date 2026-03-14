@@ -2,8 +2,10 @@ import { AllConfigType } from '@/config/config.type';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Environment } from '@repo/nest-common';
 import {
   AppointmentEntity,
+  GuestBookingEntity,
   StripeConnectAccountEntity,
   WalletEntity,
   WithdrawalEntity,
@@ -24,6 +26,8 @@ export class StripeService {
     private readonly configService: ConfigService<AllConfigType>,
     @InjectRepository(AppointmentEntity)
     private readonly appointmentRepository: Repository<AppointmentEntity>,
+    @InjectRepository(GuestBookingEntity)
+    private readonly guestBookingRepository: Repository<GuestBookingEntity>,
     @InjectRepository(StripeConnectAccountEntity)
     private readonly connectAccountRepository: Repository<StripeConnectAccountEntity>,
     @InjectRepository(WithdrawalEntity)
@@ -737,13 +741,80 @@ export class StripeService {
 
   // ────────────────────────────────────────────────────────────────────
 
+  /** Nie-prod: Top-up + transfer – środki od razu available u platformy i wróżki */
+  private async ensureFundsAvailableNonProd(
+    wrozkaId: number,
+    totalAmountGrosze: number,
+    platformFeePercent?: number,
+  ): Promise<void> {
+    const nodeEnv = this.configService.get('app.nodeEnv', { infer: true });
+    if (nodeEnv === Environment.PRODUCTION) return;
+
+    const feePercent = platformFeePercent ?? 20;
+    const platformFeeGrosze = Math.floor(
+      (totalAmountGrosze * feePercent) / 100,
+    );
+    const wizardAmountGrosze = totalAmountGrosze - platformFeeGrosze;
+
+    try {
+      await this.stripe.topups.create({
+        amount: totalAmountGrosze,
+        currency: 'pln',
+        source: 'tok_bypassPending' as string,
+        description: 'Top-up eWróżka (non-prod)',
+      });
+      const connectAccount = await this.connectAccountRepository.findOne({
+        where: { userId: wrozkaId },
+      });
+      if (!connectAccount?.onboardingCompleted) return;
+
+      await this.stripe.transfers.create({
+        amount: wizardAmountGrosze,
+        currency: 'pln',
+        destination: connectAccount.stripeAccountId,
+        description: 'Transfer eWróżka (non-prod)',
+      });
+      let wallet = await this.walletRepository.findOne({
+        where: { userId: wrozkaId },
+      });
+      if (!wallet) {
+        wallet = this.walletRepository.create({
+          userId: wrozkaId,
+          balance: 0,
+          currency: 'PLN',
+        });
+      }
+      wallet.balance = Number(wallet.balance) + wizardAmountGrosze;
+      await this.walletRepository.save(wallet);
+      this.logger.log(
+        `Non-prod: top-up ${totalAmountGrosze}gr, transfer ${wizardAmountGrosze}gr → wizard ${wrozkaId}`,
+      );
+    } catch (err) {
+      this.logger.warn(
+        `ensureFundsAvailableNonProd nie powiodło się: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
   private async handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
     // ── Gość ──────────────────────────────────────────────────────────────────
     if (intent.metadata?.bookingType === 'guest') {
       const guestBookingId = intent.metadata.guestBookingId;
       if (guestBookingId) {
         await this.guestBookingService.handlePaymentSuccessById(guestBookingId);
-        this.logger.log(`Rezerwacja gościa ${guestBookingId} opłacona przez payment_intent.succeeded`);
+        const booking = await this.guestBookingRepository.findOne({
+          where: { id: guestBookingId },
+          select: ['wizardId', 'priceGrosze'],
+        });
+        if (booking) {
+          await this.ensureFundsAvailableNonProd(
+            booking.wizardId,
+            booking.priceGrosze,
+          );
+        }
+        this.logger.log(
+          `Rezerwacja gościa ${guestBookingId} opłacona przez payment_intent.succeeded`,
+        );
       }
       return;
     }
@@ -799,6 +870,12 @@ export class StripeService {
     await this.appointmentRepository.save(appointment);
     await this.meetingRoomService.createForAppointment(appointmentId);
 
+    await this.ensureFundsAvailableNonProd(
+      wrozkaId,
+      priceGrosze,
+      feePercent,
+    );
+
     this.logger.log(
       `Wizyta ${appointmentId} opłacona przez payment_intent.succeeded`,
     );
@@ -808,6 +885,16 @@ export class StripeService {
     // ── Rezerwacja gościa ───────────────────────────────────────────────────
     if (session.metadata?.bookingType === 'guest') {
       await this.guestBookingService.handlePaymentSuccess(session.id);
+      const booking = await this.guestBookingRepository.findOne({
+        where: { stripeSessionId: session.id },
+        select: ['wizardId', 'priceGrosze'],
+      });
+      if (booking) {
+        await this.ensureFundsAvailableNonProd(
+          booking.wizardId,
+          booking.priceGrosze,
+        );
+      }
       return;
     }
 
@@ -889,8 +976,12 @@ export class StripeService {
     // Create meeting room
     await this.meetingRoomService.createForAppointment(appointmentId);
 
-    this.logger.log(
-      `Wizyta ${appointmentId} opłacona pomyślnie przez Stripe`,
+    await this.ensureFundsAvailableNonProd(
+      wrozkaId,
+      priceGrosze,
+      feePercent,
     );
+
+    this.logger.log(`Wizyta ${appointmentId} opłacona pomyślnie przez Stripe`);
   }
 }
