@@ -11,7 +11,7 @@ import {
   MeetingRequestEntity,
   MeetingRoomEntity,
 } from '@repo/postgresql-typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Repository } from 'typeorm';
 import type { AllConfigType } from '@/config/config.type';
 import { ConfigService } from '@nestjs/config';
 import { AvailabilityService } from '../availability/availability.service';
@@ -108,6 +108,7 @@ export class MeetingRequestService {
     const entity = this.meetingRequestRepository.create({
       userId,
       advertisementId: dto.advertisementId,
+      wizardId: ad.userId,
       requestedStartsAt,
       preferredDate,
       message: dto.message ?? '',
@@ -134,12 +135,23 @@ export class MeetingRequestService {
       select: { id: true },
     });
     const adIds = myAds.map((a) => a.id);
-    if (adIds.length === 0) return { requests: [], total: 0 };
 
-    const where: any = { advertisementId: In(adIds) };
-    if (options?.status) {
-      where.status = options.status;
-    }
+    const statusFilter = options?.status ? { status: options.status } : {};
+    const where =
+      adIds.length > 0
+        ? [
+            { advertisementId: In(adIds), ...statusFilter },
+            {
+              advertisementId: IsNull(),
+              wizardId: wrozkaUserId,
+              ...statusFilter,
+            },
+          ]
+        : {
+            advertisementId: IsNull(),
+            wizardId: wrozkaUserId,
+            ...statusFilter,
+          };
 
     const [requests, total] = await this.meetingRequestRepository.findAndCount({
       where,
@@ -186,7 +198,7 @@ export class MeetingRequestService {
       requests: requests.map((r) => ({
         id: r.id,
         advertisementId: r.advertisementId,
-        advertisementTitle: r.advertisement?.title,
+        advertisementTitle: r.advertisement?.title ?? '(Ogłoszenie usunięte)',
         clientId: r.userId,
         clientUsername: r.user?.username,
         requestedStartsAt: r.requestedStartsAt?.toISOString() ?? null,

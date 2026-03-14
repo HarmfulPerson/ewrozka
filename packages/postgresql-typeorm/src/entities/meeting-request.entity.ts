@@ -58,6 +58,10 @@ export class MeetingRequestEntity extends AbstractEntity {
 
   advertisementId!: number | null;
 
+  /** ID wróżki (z ogłoszenia) – pozwala wyświetlać odrzucone wnioski po usunięciu ogłoszenia */
+  @Column({ name: 'wizard_id', nullable: true, default: null })
+  wizardId!: number | null;
+
 
 
   /** Żądana data i godzina rozpoczęcia spotkania */
