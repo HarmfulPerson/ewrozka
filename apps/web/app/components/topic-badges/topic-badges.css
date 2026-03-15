@@ -1,0 +1,17 @@
+.topic-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.topic-badges__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  background: var(--accent-soft);
+  color: var(--text-secondary);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+}

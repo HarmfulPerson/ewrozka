@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { Cinzel_Decorative } from 'next/font/google';
 import PageTransition from './components/page-transition/PageTransition';
+import { GlobalToaster } from './components/global-toaster';
 import { CookieConsent } from './components/cookie-consent/CookieConsent';
 import './globals.css';
 
@@ -40,6 +41,7 @@ export default function RootLayout({
   return (
     <html lang="pl">
       <body className={`${geistSans.variable} ${geistMono.variable} ${cinzelDecorative.variable}`}>
+        <GlobalToaster />
         <PageTransition />
         {children}
         <CookieConsent />

@@ -7,370 +7,374 @@ interface VantaBackgroundProps {
   children: React.ReactNode;
 }
 
+// Star types with different visual characteristics
 interface Star {
   x: number;
   y: number;
-  z: number;
   size: number;
   brightness: number;
-  speedX: number;
-  speedY: number;
+  twinkleSpeed: number;
+  twinklePhase: number;
+  color: [number, number, number]; // RGB
 }
 
-interface ZodiacConstellation {
-  name: string;
+interface Nebula {
+  x: number;
+  y: number;
+  rx: number;
+  ry: number;
+  rotation: number;
+  color: [number, number, number];
+  opacity: number;
+  pulsePhase: number;
+  pulseSpeed: number;
+}
+
+interface Constellation {
   points: { x: number; y: number }[];
   connections: [number, number][];
-  posX: number;
-  posY: number;
   opacity: number;
-  fadeDirection: number;
+  fadeDir: number;
   fadeSpeed: number;
-  scale: number;
-  flashIntensity: number;
 }
+
+// Star color palette — realistic astronomical colors
+const STAR_COLORS: [number, number, number][] = [
+  [200, 220, 255],   // blue-white (hot)
+  [255, 255, 255],   // pure white
+  [255, 240, 220],   // warm white
+  [255, 210, 170],   // yellow-orange
+  [170, 190, 255],   // blue
+  [220, 200, 255],   // lavender
+  [255, 200, 200],   // pale red (cool)
+];
+
+// Nebula colors — cosmic palette
+const NEBULA_COLORS: [number, number, number][] = [
+  [58, 74, 143],     // deep indigo (accent)
+  [80, 50, 140],     // purple
+  [40, 80, 150],     // blue
+  [100, 60, 120],    // magenta-purple
+  [30, 60, 100],     // dark teal
+  [70, 40, 90],      // dark violet
+];
+
+const ZODIAC_TEMPLATES = [
+  { points: [{ x: 50, y: 0 }, { x: 30, y: 40 }, { x: 70, y: 40 }, { x: 20, y: 70 }, { x: 80, y: 70 }], connections: [[0,1],[0,2],[1,3],[2,4]] as [number,number][] },
+  { points: [{ x: 20, y: 0 }, { x: 80, y: 0 }, { x: 40, y: 30 }, { x: 60, y: 30 }, { x: 50, y: 60 }], connections: [[0,2],[1,3],[2,4],[3,4]] as [number,number][] },
+  { points: [{ x: 30, y: 0 }, { x: 30, y: 70 }, { x: 70, y: 0 }, { x: 70, y: 70 }, { x: 50, y: 35 }], connections: [[0,1],[2,3],[0,4],[2,4]] as [number,number][] },
+  { points: [{ x: 50, y: 0 }, { x: 30, y: 30 }, { x: 70, y: 30 }, { x: 50, y: 50 }, { x: 30, y: 70 }, { x: 70, y: 70 }], connections: [[0,1],[0,2],[1,3],[2,3],[3,4],[3,5]] as [number,number][] },
+  { points: [{ x: 20, y: 30 }, { x: 80, y: 30 }, { x: 50, y: 0 }, { x: 50, y: 60 }], connections: [[0,1],[2,1],[1,3]] as [number,number][] },
+  { points: [{ x: 20, y: 20 }, { x: 40, y: 40 }, { x: 60, y: 40 }, { x: 80, y: 20 }, { x: 70, y: 60 }], connections: [[0,1],[1,2],[2,3],[2,4]] as [number,number][] },
+  { points: [{ x: 30, y: 20 }, { x: 30, y: 60 }, { x: 70, y: 20 }, { x: 70, y: 60 }, { x: 50, y: 40 }], connections: [[0,1],[2,3],[1,4],[3,4]] as [number,number][] },
+];
 
 export function VantaBackground({ children }: VantaBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
-  const starsRef = useRef<Star[]>([]);
-  const zodiacConstellationsRef = useRef<ZodiacConstellation[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Szablony konstelacji znaków zodiaku
-    const zodiacTemplates = [
-      {
-        name: 'Aries',
-        points: [{ x: 50, y: 0 }, { x: 30, y: 40 }, { x: 70, y: 40 }, { x: 20, y: 70 }, { x: 80, y: 70 }],
-        connections: [[0, 1], [0, 2], [1, 3], [2, 4]] as [number, number][],
-      },
-      {
-        name: 'Taurus',
-        points: [{ x: 20, y: 0 }, { x: 80, y: 0 }, { x: 40, y: 30 }, { x: 60, y: 30 }, { x: 50, y: 60 }],
-        connections: [[0, 2], [1, 3], [2, 4], [3, 4]] as [number, number][],
-      },
-      {
-        name: 'Gemini',
-        points: [{ x: 30, y: 0 }, { x: 30, y: 70 }, { x: 70, y: 0 }, { x: 70, y: 70 }, { x: 50, y: 35 }],
-        connections: [[0, 1], [2, 3], [0, 4], [2, 4]] as [number, number][],
-      },
-      {
-        name: 'Cancer',
-        points: [{ x: 50, y: 0 }, { x: 30, y: 30 }, { x: 70, y: 30 }, { x: 20, y: 60 }, { x: 80, y: 60 }],
-        connections: [[0, 1], [0, 2], [1, 3], [2, 4]] as [number, number][],
-      },
-      {
-        name: 'Leo',
-        points: [{ x: 50, y: 0 }, { x: 30, y: 30 }, { x: 70, y: 30 }, { x: 50, y: 50 }, { x: 30, y: 70 }, { x: 70, y: 70 }],
-        connections: [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [3, 5]] as [number, number][],
-      },
-      {
-        name: 'Virgo',
-        points: [{ x: 20, y: 20 }, { x: 40, y: 0 }, { x: 60, y: 20 }, { x: 80, y: 0 }, { x: 50, y: 40 }, { x: 50, y: 70 }],
-        connections: [[0, 1], [1, 2], [2, 3], [1, 4], [4, 5]] as [number, number][],
-      },
-      {
-        name: 'Libra',
-        points: [{ x: 20, y: 30 }, { x: 80, y: 30 }, { x: 50, y: 0 }, { x: 50, y: 60 }],
-        connections: [[0, 1], [2, 1], [1, 3]] as [number, number][],
-      },
-      {
-        name: 'Scorpio',
-        points: [{ x: 20, y: 20 }, { x: 40, y: 40 }, { x: 60, y: 40 }, { x: 80, y: 20 }, { x: 70, y: 60 }],
-        connections: [[0, 1], [1, 2], [2, 3], [2, 4]] as [number, number][],
-      },
-      {
-        name: 'Sagittarius',
-        points: [{ x: 20, y: 60 }, { x: 80, y: 20 }, { x: 70, y: 0 }, { x: 90, y: 30 }],
-        connections: [[0, 1], [1, 2], [1, 3]] as [number, number][],
-      },
-      {
-        name: 'Capricorn',
-        points: [{ x: 30, y: 0 }, { x: 50, y: 30 }, { x: 70, y: 50 }, { x: 60, y: 70 }, { x: 40, y: 60 }],
-        connections: [[0, 1], [1, 2], [2, 3], [1, 4]] as [number, number][],
-      },
-      {
-        name: 'Aquarius',
-        points: [{ x: 20, y: 30 }, { x: 40, y: 40 }, { x: 60, y: 30 }, { x: 80, y: 40 }, { x: 50, y: 0 }],
-        connections: [[0, 1], [1, 2], [2, 3], [2, 4]] as [number, number][],
-      },
-      {
-        name: 'Pisces',
-        points: [{ x: 30, y: 20 }, { x: 30, y: 60 }, { x: 70, y: 20 }, { x: 70, y: 60 }, { x: 50, y: 40 }],
-        connections: [[0, 1], [2, 3], [1, 4], [3, 4]] as [number, number][],
-      },
-    ];
+    let w = 0, h = 0;
+    let stars: Star[] = [];
+    let nebulae: Nebula[] = [];
+    let constellations: Constellation[] = [];
+    // Static layer drawn once per resize
+    let staticCanvas: HTMLCanvasElement | null = null;
 
-    // Ustawienie rozmiaru canvas
-    let previousWidth = container.offsetWidth;
-    let previousHeight = container.offsetHeight;
-    
-    const resizeCanvas = () => {
-      const newWidth = container.offsetWidth;
-      const newHeight = container.offsetHeight;
-      
-      if (previousWidth > 0 && previousHeight > 0) {
-        zodiacConstellationsRef.current.forEach((constellation) => {
-          constellation.posX = (constellation.posX / previousWidth) * newWidth;
-          constellation.posY = (constellation.posY / previousHeight) * newHeight;
-        });
-        
-        starsRef.current.forEach((star) => {
-          star.x = (star.x / previousWidth) * newWidth;
-          star.y = (star.y / previousHeight) * newHeight;
-        });
-      }
-      
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-      previousWidth = newWidth;
-      previousHeight = newHeight;
+    const resize = () => {
+      w = container.offsetWidth;
+      h = container.offsetHeight;
+      canvas.width = w;
+      canvas.height = h;
+      createAll();
+      drawStatic();
     };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
 
-    // Tworzenie gwiazd
+    const createAll = () => {
+      createStars();
+      createNebulae();
+      createConstellations();
+    };
+
+    // ── Stars ──
     const createStars = () => {
-      const stars: Star[] = [];
-      const numStars = 300;
+      stars = [];
+      const area = w * h;
+      // Dense star field — ~600-2500 stars
+      const density = w < 500 ? 0.0003 : 0.0004;
+      const count = Math.max(400, Math.min(2500, Math.round(area * density)));
 
-      for (let i = 0; i < numStars; i++) {
+      for (let i = 0; i < count; i++) {
+        const isBright = Math.random() < 0.08; // 8% bright stars
         stars.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          z: Math.random() * 1000,
-          size: Math.random() * 2 + 0.5,
-          brightness: Math.random(),
-          speedX: (Math.random() - 0.5) * 0.1,
-          speedY: (Math.random() - 0.5) * 0.1,
+          x: Math.random() * w,
+          y: Math.random() * h,
+          size: isBright ? 1 + Math.random() * 2 : 0.3 + Math.random() * 1.2,
+          brightness: isBright ? 0.6 + Math.random() * 0.4 : 0.1 + Math.random() * 0.5,
+          twinkleSpeed: 0.002 + Math.random() * 0.006,
+          twinklePhase: Math.random() * Math.PI * 2,
+          color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)]!,
         });
       }
-      starsRef.current = stars;
     };
-    createStars();
 
-    // Tworzenie konstelacji znaków zodiaku
-    const createZodiacConstellations = () => {
-      const constellations: ZodiacConstellation[] = [];
-      const numConstellations = 3;
+    // ── Nebulae ──
+    const createNebulae = () => {
+      nebulae = [];
+      const pages = Math.max(1, h / Math.max(window.innerHeight, 1));
+      const count = Math.round(4 * pages);
 
-      for (let i = 0; i < numConstellations; i++) {
-        const template = zodiacTemplates[Math.floor(Math.random() * zodiacTemplates.length)];
+      for (let i = 0; i < count; i++) {
+        const baseSize = Math.min(w, 900);
+        nebulae.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          rx: baseSize * (0.2 + Math.random() * 0.35),
+          ry: baseSize * (0.15 + Math.random() * 0.25),
+          rotation: Math.random() * Math.PI * 2,
+          color: NEBULA_COLORS[Math.floor(Math.random() * NEBULA_COLORS.length)]!,
+          opacity: 0.015 + Math.random() * 0.025,
+          pulsePhase: Math.random() * Math.PI * 2,
+          pulseSpeed: 0.0005 + Math.random() * 0.001,
+        });
+      }
+    };
+
+    // ── Constellations ──
+    const createConstellations = () => {
+      constellations = [];
+      const pages = Math.max(1, h / Math.max(window.innerHeight, 1));
+      const count = Math.min(10, Math.round((w < 500 ? 2 : 3) * pages));
+
+      for (let i = 0; i < count; i++) {
+        const template = ZODIAC_TEMPLATES[Math.floor(Math.random() * ZODIAC_TEMPLATES.length)]!;
+        const screenFactor = Math.min(w, 1200) / 1200;
+        const scale = (0.8 + Math.random() * 0.6) * Math.max(screenFactor, 0.45);
+        const margin = 100 * scale;
+        const px = margin + Math.random() * Math.max(0, w - margin * 2);
+        const py = margin + Math.random() * Math.max(0, h - margin * 2);
+
         constellations.push({
-          name: template?.name ?? '',
-          points: template?.points ?? [],
-          connections: template?.connections ?? [],
-          posX: Math.random() * canvas.width,
-          posY: Math.random() * canvas.height,
-          opacity: Math.random() * 0.2,
-          fadeDirection: Math.random() > 0.5 ? 1 : -1,
-          fadeSpeed: 0.0003 + Math.random() * 0.0005,
-          scale: 0.8 + Math.random() * 0.6,
-          flashIntensity: 0,
+          points: template.points.map(p => ({ x: px + p.x * scale, y: py + p.y * scale })),
+          connections: template.connections,
+          opacity: Math.random() * 0.15,
+          fadeDir: Math.random() > 0.5 ? 1 : -1,
+          fadeSpeed: 0.0002 + Math.random() * 0.0004,
         });
       }
-      zodiacConstellationsRef.current = constellations;
     };
-    createZodiacConstellations();
 
-    // Obsługa ruchu myszki
+    // ── Static layer (nebulae + faint background stars) ──
+    const drawStatic = () => {
+      staticCanvas = document.createElement('canvas');
+      staticCanvas.width = w;
+      staticCanvas.height = h;
+      const sCtx = staticCanvas.getContext('2d');
+      if (!sCtx) return;
+
+      // Draw nebulae — multiple soft radial layers, no hard edges
+      nebulae.forEach(n => {
+        const [r, g, b] = n.color;
+        const maxR = Math.max(n.rx, n.ry);
+        // Draw 3 overlapping soft circles with decreasing size and opacity
+        const layers = [
+          { scale: 1.0,  opMul: 0.4 },
+          { scale: 0.65, opMul: 0.7 },
+          { scale: 0.35, opMul: 1.0 },
+        ];
+        for (const layer of layers) {
+          const lr = maxR * layer.scale;
+          const grad = sCtx.createRadialGradient(n.x, n.y, 0, n.x, n.y, lr);
+          const op = n.opacity * layer.opMul;
+          grad.addColorStop(0, `rgba(${r},${g},${b},${op})`);
+          grad.addColorStop(0.5, `rgba(${r},${g},${b},${op * 0.4})`);
+          grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+          sCtx.fillStyle = grad;
+          sCtx.beginPath();
+          sCtx.arc(n.x, n.y, lr, 0, Math.PI * 2);
+          sCtx.fill();
+        }
+      });
+
+      // Draw faint background stars (non-twinkling, very small)
+      const bgCount = Math.round((w * h) * 0.0003);
+      for (let i = 0; i < bgCount; i++) {
+        const x = Math.random() * w;
+        const y = Math.random() * h;
+        const alpha = 0.05 + Math.random() * 0.15;
+        const sz = 0.2 + Math.random() * 0.6;
+        sCtx.fillStyle = `rgba(200,210,240,${alpha})`;
+        sCtx.beginPath();
+        sCtx.arc(x, y, sz, 0, Math.PI * 2);
+        sCtx.fill();
+      }
+    };
+
+    // ── Mouse ──
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      mouseRef.current.x = (e.clientX - rect.left) * scaleX;
-      mouseRef.current.y = (e.clientY - rect.top) * scaleY;
+      mouseRef.current.x = e.clientX;
+      mouseRef.current.y = e.clientY;
     };
-    container.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove);
 
-    // Animacja
-    let animationId: number;
+    // ── Resize ──
+    resize();
+    window.addEventListener('resize', resize);
+    const ro = new ResizeObserver(() => resize());
+    ro.observe(container);
+
+    // ── Animation ──
+    let frame = 0;
+    let animId: number;
+
     const animate = () => {
-      ctx.fillStyle = 'rgba(10, 10, 26, 0.1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      frame++;
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw static layer (nebulae + bg stars)
+      if (staticCanvas) {
+        ctx.drawImage(staticCanvas, 0, 0);
+      }
+
+      // Animate nebula pulse (subtle opacity change)
+      if (frame % 3 === 0) {
+        nebulae.forEach(n => {
+          const pulse = Math.sin(frame * n.pulseSpeed + n.pulsePhase) * 0.015;
+          const [r, g, b] = n.color;
+          const alpha = n.opacity + pulse;
+          if (alpha > 0.005) {
+            const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, Math.max(n.rx, n.ry) * 0.5);
+            grad.addColorStop(0, `rgba(${r},${g},${b},${alpha * 0.5})`);
+            grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, Math.max(n.rx, n.ry) * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+      }
 
       const mouseX = mouseRef.current.x;
-      const mouseY = mouseRef.current.y;
+      const mouseY = mouseRef.current.y + (typeof window !== 'undefined' ? window.scrollY : 0);
 
-      const positions: { x: number; y: number; size: number; alpha: number }[] = [];
+      // Draw twinkling stars
+      for (const star of stars) {
+        // Subtle drift
+        star.x += (Math.random() - 0.5) * 0.02;
+        star.y += (Math.random() - 0.5) * 0.02;
 
-      starsRef.current.forEach((star) => {
-        star.x += star.speedX;
-        star.y += star.speedY;
-
-        // Odpychanie przez myszkę
+        // Mouse repel
         const dx = star.x - mouseX;
         const dy = star.y - mouseY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const repelRadius = 100;
-
-        if (distance < repelRadius) {
-          const force = (repelRadius - distance) / repelRadius;
-          star.x += (dx / distance) * force * 1.5;
-          star.y += (dy / distance) * force * 1.5;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 80 && dist > 0) {
+          const force = (80 - dist) / 80 * 0.8;
+          star.x += (dx / dist) * force;
+          star.y += (dy / dist) * force;
         }
 
-        if (star.x < 0) star.x = canvas.width;
-        if (star.x > canvas.width) star.x = 0;
-        if (star.y < 0) star.y = canvas.height;
-        if (star.y > canvas.height) star.y = 0;
+        // Wrap
+        if (star.x < -5) star.x = w + 5;
+        if (star.x > w + 5) star.x = -5;
+        if (star.y < -5) star.y = h + 5;
+        if (star.y > h + 5) star.y = -5;
 
-        star.brightness += (Math.random() - 0.5) * 0.03;
-        star.brightness = Math.max(0.3, Math.min(1, star.brightness));
+        // Twinkle
+        const twinkle = (Math.sin(frame * star.twinkleSpeed + star.twinklePhase) + 1) * 0.5;
+        const alpha = star.brightness * (0.4 + twinkle * 0.6);
+        if (alpha < 0.02) continue;
 
-        const scale = 1000 / (1000 + star.z);
-        const x = star.x;
-        const y = star.y;
-        const size = star.size * scale;
-        const alpha = star.brightness;
-        positions.push({ x, y, size, alpha });
-      });
+        const [r, g, b] = star.color;
 
-      // Linie między gwiazdami
-      const maxConnectionDistance = 100;
-      const maxConnections = 3;
+        // Glow for brighter stars
+        if (star.size > 1.2) {
+          const glowR = star.size * 4;
+          const grad = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, glowR);
+          grad.addColorStop(0, `rgba(${r},${g},${b},${alpha * 0.3})`);
+          grad.addColorStop(0.5, `rgba(${r},${g},${b},${alpha * 0.08})`);
+          grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, glowR, 0, Math.PI * 2);
+          ctx.fill();
 
-      for (let i = 0; i < positions.length; i++) {
-        let connections = 0;
-        for (let j = i + 1; j < positions.length; j++) {
-          if (connections >= maxConnections) break;
-
-          const dx = (positions[i]?.x ?? 0) - (positions[j]?.x ?? 0);
-          const dy = (positions[i]?.y ?? 0) - (positions[j]?.y ?? 0);
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < maxConnectionDistance) {
-            const alpha = (1 - distance / maxConnectionDistance) * 0.35;
-            ctx.strokeStyle = `rgba(139, 92, 246, ${alpha})`;
-            ctx.lineWidth = 0.8;
+          // Cross spikes for very bright stars
+          if (star.size > 2) {
+            ctx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.2})`;
+            ctx.lineWidth = 0.5;
+            const spike = star.size * 5;
             ctx.beginPath();
-            ctx.moveTo(positions[i]?.x ?? 0, positions[i]?.y ?? 0);
-            ctx.lineTo(positions[j]?.x ?? 0, positions[j]?.y ?? 0);
+            ctx.moveTo(star.x - spike, star.y);
+            ctx.lineTo(star.x + spike, star.y);
+            ctx.moveTo(star.x, star.y - spike);
+            ctx.lineTo(star.x, star.y + spike);
             ctx.stroke();
-            connections++;
           }
+        }
+
+        // Core
+        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Constellations
+      for (const c of constellations) {
+        c.opacity += c.fadeDir * c.fadeSpeed;
+        if (c.opacity >= 0.2) c.fadeDir = -1;
+        else if (c.opacity <= 0) {
+          c.fadeDir = 1;
+          c.opacity = 0;
+        }
+
+        if (c.opacity <= 0) continue;
+
+        // Lines
+        ctx.strokeStyle = `rgba(100, 120, 200, ${c.opacity * 0.5})`;
+        ctx.lineWidth = 1;
+        for (const [from, to] of c.connections) {
+          const a = c.points[from], b = c.points[to];
+          if (!a || !b) continue;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+
+        // Points
+        for (const p of c.points) {
+          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 4);
+          grad.addColorStop(0, `rgba(160, 180, 255, ${c.opacity})`);
+          grad.addColorStop(1, 'rgba(100, 120, 200, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = `rgba(255, 255, 255, ${c.opacity * 0.8})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
 
-      // Rysuj gwiazdy
-      positions.forEach((pos) => {
-        const { x, y, size, alpha } = pos;
-
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 3);
-        gradient.addColorStop(0, `rgba(139, 92, 246, ${alpha})`);
-        gradient.addColorStop(0.5, `rgba(139, 92, 246, ${alpha * 0.3})`);
-        gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(x, y, size * 3, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.8})`;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // Animuj konstelacje zodiaku
-      zodiacConstellationsRef.current.forEach((constellation) => {
-        constellation.opacity += constellation.fadeDirection * constellation.fadeSpeed;
-
-        if (constellation.opacity >= 0.25) {
-          constellation.fadeDirection = -1;
-        } else if (constellation.opacity <= 0) {
-          constellation.fadeDirection = 1;
-          constellation.posX = Math.random() * canvas.width;
-          constellation.posY = Math.random() * canvas.height;
-          const template = zodiacTemplates[Math.floor(Math.random() * zodiacTemplates.length)];
-          constellation.name = template?.name ?? '';
-          constellation.points = template?.points ?? [];
-          constellation.connections = template?.connections ?? [];
-          constellation.scale = 0.8 + Math.random() * 0.6;
-          constellation.flashIntensity = 1;
-        }
-
-        if (constellation.flashIntensity > 0) {
-          constellation.flashIntensity -= 0.008;
-          if (constellation.flashIntensity < 0) constellation.flashIntensity = 0;
-        }
-
-        if (constellation.opacity > 0) {
-          const centerX = constellation.posX + (50 * constellation.scale);
-          const centerY = constellation.posY + (35 * constellation.scale);
-
-          // Rozbłysk
-          if (constellation.flashIntensity > 0) {
-            const flashRadius = 120 * constellation.scale * constellation.flashIntensity;
-            const flashGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, flashRadius);
-            flashGradient.addColorStop(0, `rgba(167, 139, 250, ${constellation.flashIntensity * 0.4})`);
-            flashGradient.addColorStop(0.5, `rgba(139, 92, 246, ${constellation.flashIntensity * 0.2})`);
-            flashGradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
-            
-            ctx.fillStyle = flashGradient;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, flashRadius, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          // Linie konstelacji
-          const lineOpacity = constellation.opacity * 0.6 + (constellation.flashIntensity * 0.3);
-          ctx.strokeStyle = `rgba(139, 92, 246, ${lineOpacity})`;
-          ctx.lineWidth = 1.5;
-          constellation.connections.forEach(([from, to]) => {
-            const fromPoint = constellation.points[from];
-            const toPoint = constellation.points[to];
-            const x1 = constellation.posX + (fromPoint?.x ?? 0) * constellation.scale;
-            const y1 = constellation.posY + (fromPoint?.y ?? 0) * constellation.scale;
-            const x2 = constellation.posX + (toPoint?.x ?? 0) * constellation.scale;
-            const y2 = constellation.posY + (toPoint?.y ?? 0) * constellation.scale;
-
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
-          });
-
-          // Gwiazdki w konstelacji
-          constellation.points.forEach((point) => {
-            const x = constellation.posX + point.x * constellation.scale;
-            const y = constellation.posY + point.y * constellation.scale;
-            const glowSize = 4 + (constellation.flashIntensity * 3);
-            const starOpacity = constellation.opacity + (constellation.flashIntensity * 0.5);
-
-            const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowSize);
-            gradient.addColorStop(0, `rgba(167, 139, 250, ${starOpacity})`);
-            gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.arc(x, y, glowSize, 0, Math.PI * 2);
-            ctx.fill();
-
-            const coreSize = 1.5 + (constellation.flashIntensity * 1);
-            ctx.fillStyle = `rgba(255, 255, 255, ${starOpacity * 0.9})`;
-            ctx.beginPath();
-            ctx.arc(x, y, coreSize, 0, Math.PI * 2);
-            ctx.fill();
-          });
-        }
-      });
-
-      animationId = requestAnimationFrame(animate);
+      animId = requestAnimationFrame(animate);
     };
     animate();
 
     return () => {
-      window.removeEventListener('resize', resizeCanvas);
-      container.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      ro.disconnect();
+      cancelAnimationFrame(animId);
     };
   }, []);
 

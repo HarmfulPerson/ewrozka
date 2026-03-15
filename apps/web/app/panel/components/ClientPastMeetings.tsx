@@ -11,16 +11,13 @@ import {
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pl-PL', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
+    day: 'numeric', month: 'short',
   });
 }
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('pl-PL', {
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: '2-digit', minute: '2-digit',
   });
 }
 
@@ -28,42 +25,25 @@ interface ClientPastMeetingsProps {
   token: string;
 }
 
-const PAGE_SIZE = 5;
-
 export function ClientPastMeetings({ token }: ClientPastMeetingsProps) {
   const [appointments, setAppointments] = useState<AppointmentDto[]>([]);
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [offset, setOffset] = useState(0);
-  const [unratedOnly, setUnratedOnly] = useState(false);
   const [hoverRating, setHoverRating] = useState<Record<number, number>>({});
   const [submittingRating, setSubmittingRating] = useState<number | null>(null);
   const [pendingRating, setPendingRating] = useState<Record<number, { stars: number; comment: string }>>({});
 
   const fetchData = useCallback(() => {
     setLoading(true);
-    apiGetCompletedAppointments(token, {
-      limit: PAGE_SIZE,
-      offset,
-      unratedOnly,
-    })
-      .then((res) => {
-        setAppointments(res.appointments || []);
-        setTotal(res.total);
-      })
-      .catch(() => {
-        setAppointments([]);
-        setTotal(0);
-      })
+    apiGetCompletedAppointments(token, { limit: 3 })
+      .then((res) => setAppointments((res.appointments || []).slice(0, 3)))
+      .catch(() => setAppointments([]))
       .finally(() => setLoading(false));
-  }, [token, offset, unratedOnly]);
+  }, [token]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleSelectStar = (apt: AppointmentDto, stars: number) => {
-    setPendingRating((prev) => ({
+    setPendingRating(prev => ({
       ...prev,
       [apt.id]: { stars, comment: prev[apt.id]?.comment ?? '' },
     }));
@@ -75,27 +55,15 @@ export function ClientPastMeetings({ token }: ClientPastMeetingsProps) {
     setSubmittingRating(apt.id);
     try {
       await apiRateAppointment(token, apt.id, pending.stars, pending.comment || undefined);
-      toast.success(
-        `Oceniłeś spotkanie na ${pending.stars} ${pending.stars === 1 ? 'gwiazdkę' : pending.stars < 5 ? 'gwiazdki' : 'gwiazdek'}!`,
-      );
-      setAppointments((prev) =>
-        prev.map((a) => (a.id === apt.id ? { ...a, rating: pending.stars } : a)),
-      );
-      setPendingRating((prev) => {
-        const next = { ...prev };
-        delete next[apt.id];
-        return next;
-      });
-      if (unratedOnly && total <= 1) fetchData();
+      toast.success(`Oceniono na ${pending.stars} ${pending.stars === 1 ? 'gwiazdkę' : pending.stars < 5 ? 'gwiazdki' : 'gwiazdek'}!`);
+      setAppointments(prev => prev.map(a => a.id === apt.id ? { ...a, rating: pending.stars } : a));
+      setPendingRating(prev => { const n = { ...prev }; delete n[apt.id]; return n; });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Nie udało się zapisać oceny');
     } finally {
       setSubmittingRating(null);
     }
   };
-
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   return (
     <section className="dashboard__section">
@@ -104,155 +72,74 @@ export function ClientPastMeetings({ token }: ClientPastMeetingsProps) {
           <span className="dashboard__section-icon">✓</span>
           Odbyte spotkania
         </h2>
-        <Link href="/panel/moje-spotkania" className="dashboard__section-link">
+        <Link href="/panel/moje-spotkania?status=completed" className="dashboard__section-link">
           Zobacz wszystkie →
         </Link>
-      </div>
-
-      <div className="dashboard__past-toolbar">
-        <label className="dashboard__past-filter">
-          <input
-            type="checkbox"
-            checked={unratedOnly}
-            onChange={(e) => {
-              setUnratedOnly(e.target.checked);
-              setOffset(0);
-            }}
-          />
-          <span>Nieocenione</span>
-        </label>
       </div>
 
       {loading ? (
         <div className="dashboard__loading">Ładowanie…</div>
       ) : appointments.length === 0 ? (
         <div className="dashboard__empty">
-          <span>
-            {unratedOnly ? 'Brak nieocenionych spotkań' : 'Brak odbyte spotkań'}
-          </span>
+          <span>Brak odbytych spotkań</span>
         </div>
       ) : (
-        <div className="dashboard__table-wrap">
-          <table className="dashboard__table">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Wróżka</th>
-                <th>Oferta</th>
-                <th>Ocena</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((apt) => {
-                const displayRating = hoverRating[apt.id] ?? apt.rating ?? 0;
-                const isSubmitting = submittingRating === apt.id;
-                const hasPending = !!pendingRating[apt.id];
+        <div className="dashboard__card-list">
+          {appointments.map((apt) => {
+            const displayRating = hoverRating[apt.id] ?? apt.rating ?? 0;
+            const isSubmitting = submittingRating === apt.id;
 
-                return (
-                  <tr key={apt.id}>
-                    <td>
-                      <span className="dashboard__table-date">{formatDate(apt.startsAt)}</span>
-                      <span className="dashboard__table-time">{formatTime(apt.startsAt)}</span>
-                    </td>
-                    <td>{apt.wrozkaUsername || '—'}</td>
-                    <td>{apt.advertisementTitle || 'Konsultacja'}</td>
-                    <td>
-                      {apt.rating != null ? (
-                        <div className="dashboard__apt-rating-stars dashboard__apt-rating-stars--inline">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <span
-                              key={star}
-                              className={`dashboard__apt-star ${star <= apt.rating! ? 'dashboard__apt-star--filled' : ''}`}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="dashboard__table-rating">
-                          <div className="dashboard__apt-rating-stars dashboard__apt-rating-stars--inline">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                type="button"
-                                disabled={isSubmitting}
-                                className={`dashboard__apt-star dashboard__apt-star--btn ${star <= (pendingRating[apt.id]?.stars ?? displayRating) ? 'dashboard__apt-star--filled' : ''}`}
-                                onMouseEnter={() =>
-                                  setHoverRating((prev) => ({ ...prev, [apt.id]: star }))
-                                }
-                                onMouseLeave={() =>
-                                  setHoverRating((prev) => {
-                                    const next = { ...prev };
-                                    delete next[apt.id];
-                                    return next;
-                                  })
-                                }
-                                onClick={() => handleSelectStar(apt, star)}
-                                aria-label={`Oceń na ${star}`}
-                              >
-                                ★
-                              </button>
-                            ))}
-                          </div>
-                          {hasPending && (
-                            <div className="dashboard__table-rating-actions">
-                              <textarea
-                                className="dashboard__apt-rating-comment"
-                                placeholder="Komentarz (opcjonalnie)"
-                                rows={1}
-                                value={pendingRating[apt.id]?.comment ?? ''}
-                                onChange={(e) =>
-                                  setPendingRating((prev) => ({
-                                    ...prev,
-                                    [apt.id]: {
-                                      stars: prev[apt.id]?.stars ?? 0,
-                                      comment: e.target.value,
-                                    },
-                                  }))
-                                }
-                              />
-                              <button
-                                type="button"
-                                className="dashboard__apt-rating-submit"
-                                disabled={isSubmitting}
-                                onClick={() => handleSubmitRating(apt)}
-                              >
-                                {isSubmitting ? '…' : 'Zapisz'}
-                              </button>
-                            </div>
-                          )}
-                        </div>
+            return (
+              <div key={apt.id} className="dashboard__card">
+                <div className="dashboard__card-date">
+                  <span className="dashboard__card-date-day">{formatDate(apt.startsAt)}</span>
+                  <span className="dashboard__card-date-time">{formatTime(apt.startsAt)}</span>
+                </div>
+                <div className="dashboard__card-body">
+                  <p className="dashboard__card-title">
+                    {apt.advertisementTitle || 'Konsultacja'}
+                  </p>
+                  <p className="dashboard__card-sub">
+                    {apt.wrozkaUsername || '—'}
+                  </p>
+                </div>
+                <div className="dashboard__card-actions">
+                  {apt.rating != null ? (
+                    <div className="dashboard__card-stars">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <span key={s} className={`dashboard__card-star${s <= apt.rating! ? ' dashboard__card-star--filled' : ''}`}>★</span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="dashboard__card-stars">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          disabled={isSubmitting}
+                          className={`dashboard__card-star dashboard__card-star--btn${s <= (pendingRating[apt.id]?.stars ?? displayRating) ? ' dashboard__card-star--filled' : ''}`}
+                          onMouseEnter={() => setHoverRating(prev => ({ ...prev, [apt.id]: s }))}
+                          onMouseLeave={() => setHoverRating(prev => { const n = { ...prev }; delete n[apt.id]; return n; })}
+                          onClick={() => handleSelectStar(apt, s)}
+                        >★</button>
+                      ))}
+                      {pendingRating[apt.id] && (
+                        <button
+                          type="button"
+                          className="dashboard__card-btn-join"
+                          disabled={isSubmitting}
+                          onClick={() => handleSubmitRating(apt)}
+                          style={{ marginLeft: '0.375rem', fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+                        >
+                          {isSubmitting ? '…' : 'Zapisz'}
+                        </button>
                       )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {totalPages > 1 && !loading && (
-        <div className="dashboard__pagination">
-          <button
-            type="button"
-            className="dashboard__pagination-btn"
-            onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
-            disabled={currentPage <= 1}
-          >
-            ←
-          </button>
-          <span className="dashboard__pagination-info">
-            {currentPage} / {totalPages} ({total})
-          </span>
-          <button
-            type="button"
-            className="dashboard__pagination-btn"
-            onClick={() => setOffset(offset + PAGE_SIZE)}
-            disabled={currentPage >= totalPages}
-          >
-            →
-          </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </section>

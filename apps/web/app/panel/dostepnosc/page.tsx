@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { getStoredUser } from '../../lib/auth-mock';
 import {
@@ -9,14 +9,28 @@ import {
   apiDeleteAvailability,
   AvailabilityDto,
 } from '../../lib/api-calendar';
-import './dostepnosc.css';
+import '../wnioski/wnioski.css';
 import '../panel-shared.css';
 
-function formatDate(d: Date) {
-  return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+const PAGE_SIZES = [10, 20, 50, 100];
+const VALID_FILTERS = ['', 'upcoming', 'past'];
+const DAY_NAMES = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
+const DAY_SHORT = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nd'];
+
+function fmtDate(d: Date) {
+  return d.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
 }
-function formatTime(d: Date) {
+function fmtTime(d: Date) {
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function getWeekStart() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 export default function DostepnoscPage() {
@@ -24,15 +38,15 @@ export default function DostepnoscPage() {
   const [availabilities, setAvailabilities] = useState<AvailabilityDto[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [fetchingList, setFetchingList] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
-  // Add modal state
+  const [filterType, setFilterType] = useState('upcoming');
+  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('ASC');
+  const [offset, setOffset] = useState(0);
+  const [limit, setLimit] = useState(20);
+
+  // Add modal
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-
-  // Form state
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('17:00');
@@ -40,17 +54,9 @@ export default function DostepnoscPage() {
   const [repeatWeeks, setRepeatWeeks] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
-  // Delete modal state
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [availabilityToDelete, setAvailabilityToDelete] = useState<AvailabilityDto | null>(null);
+  // Delete modal
+  const [deleteTarget, setDeleteTarget] = useState<AvailabilityDto | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  // Pagination, filter and sort state
-  const [filterType, setFilterType] = useState<string>('upcoming');
-  const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('ASC');
-  const [offset, setOffset] = useState(0);
-  const [limit, setLimit] = useState(10);
 
   const timeSlots = useMemo(() => {
     const slots = [];
@@ -62,405 +68,296 @@ export default function DostepnoscPage() {
     return slots;
   }, []);
 
-  const DAY_NAMES = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
-  const DAY_SHORT = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Nd'];
-
-  const getWeekStart = () => {
-    const d = new Date();
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
-
-  const fetchAvailabilities = async (isInitialLoad = false) => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
-    if (isInitialLoad) setLoading(true);
-    else setFetchingList(true);
-
+    setLoading(true);
     try {
       const data = await apiGetMyAvailability(user.token, {
         filter: filterType || undefined,
-        limit,
-        offset,
-        sortOrder,
+        limit, offset, sortOrder,
       });
       setAvailabilities(data.availabilities);
       setTotal(data.total);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nie udało się załadować dostępności');
+    } catch {
+      toast.error('Nie udało się załadować dostępności');
     } finally {
-      if (isInitialLoad) setLoading(false);
-      else setFetchingList(false);
+      setLoading(false);
     }
+  }, [user, filterType, offset, limit, sortOrder]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // ── Sort toggle ──
+  const toggleSort = () => {
+    setSortOrder(prev => prev === 'ASC' ? 'DESC' : 'ASC');
+    setOffset(0);
   };
 
-  useEffect(() => { fetchAvailabilities(true); }, [user]);
-  useEffect(() => { if (!loading) fetchAvailabilities(false); }, [filterType, sortOrder, offset, limit]);
-
-  const totalPages = Math.ceil(total / limit);
-  const currentPage = Math.floor(offset / limit) + 1;
-
+  // ── Add availability ──
   const openAddModal = () => {
-    setSelectedDays([]);
-    setStartTime('09:00');
-    setEndTime('17:00');
-    setRepeat(false);
-    setRepeatWeeks(1);
-    setFormError(null);
+    setSelectedDays([]); setStartTime('09:00'); setEndTime('17:00');
+    setRepeat(false); setRepeatWeeks(1); setFormError(null);
     setAddModalOpen(true);
   };
 
-  const closeAddModal = () => {
-    if (submitting) return;
-    setAddModalOpen(false);
+  const toggleDay = (i: number) => {
+    setSelectedDays(prev => prev.includes(i) ? prev.filter(d => d !== i) : [...prev, i].sort());
   };
 
-  const toggleDay = (dayIndex: number) => {
-    setSelectedDays((prev) =>
-      prev.includes(dayIndex) ? prev.filter((d) => d !== dayIndex) : [...prev, dayIndex].sort(),
-    );
-  };
-
-  const handleAddAvailability = async (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-
     setFormError(null);
     setSubmitting(true);
-
     try {
       if (selectedDays.length === 0) throw new Error('Wybierz przynajmniej jeden dzień');
-      if (!startTime || !endTime) throw new Error('Wybierz godziny');
-
-      const [startH = 0, startM = 0] = startTime.split(':').map(Number);
-      const [endH = 0, endM = 0] = endTime.split(':').map(Number);
-
-      if (endH * 60 + endM <= startH * 60 + startM) {
-        throw new Error('Godzina zakończenia musi być po godzinie rozpoczęcia');
-      }
+      const [sH = 0, sM = 0] = startTime.split(':').map(Number);
+      const [eH = 0, eM = 0] = endTime.split(':').map(Number);
+      if (eH * 60 + eM <= sH * 60 + sM) throw new Error('Godzina zakończenia musi być po godzinie rozpoczęcia');
 
       const now = new Date();
-      const todayMidnight = new Date();
-      todayMidnight.setHours(0, 0, 0, 0);
-
+      const todayMidnight = new Date(); todayMidnight.setHours(0, 0, 0, 0);
       const weekStart = getWeekStart();
       const weeks = repeat ? repeatWeeks : 1;
-      let addedCount = 0;
+      let added = 0;
 
-      for (let week = 0; week < weeks; week++) {
-        for (const dayIndex of selectedDays) {
+      for (let w = 0; w < weeks; w++) {
+        for (const dayIdx of selectedDays) {
           const dayDate = new Date(weekStart);
-          dayDate.setDate(weekStart.getDate() + dayIndex + week * 7);
+          dayDate.setDate(weekStart.getDate() + dayIdx + w * 7);
           dayDate.setHours(0, 0, 0, 0);
-
-          // Pomiń dni przed dzisiaj (częściowy tydzień bieżący)
           if (dayDate < todayMidnight) continue;
 
-          const start = new Date(dayDate);
-          start.setHours(startH, startM, 0, 0);
-          const end = new Date(dayDate);
-          end.setHours(endH, endM, 0, 0);
+          const start = new Date(dayDate); start.setHours(sH, sM, 0, 0);
+          const end = new Date(dayDate); end.setHours(eH, eM, 0, 0);
 
-          // Jeśli to dziś i godzina już minęła → błąd
           if (dayDate.getTime() === todayMidnight.getTime() && start < now) {
-            throw new Error(`Godzina ${startTime} na dziś już minęła — wybierz późniejszą godzinę lub odznacz dzień bieżący`);
+            throw new Error(`Godzina ${startTime} na dziś już minęła`);
           }
-
-          await apiCreateAvailability(user.token, {
-            startsAt: start.toISOString(),
-            endsAt: end.toISOString(),
-          });
-          addedCount++;
+          await apiCreateAvailability(user.token, { startsAt: start.toISOString(), endsAt: end.toISOString() });
+          added++;
         }
       }
-
-      if (addedCount === 0) {
-        throw new Error('Nie dodano żadnych bloków — wszystkie wybrane dni są w przeszłości bieżącego tygodnia');
-      }
-
-      toast.success(`Dodano ${addedCount} ${addedCount === 1 ? 'blok' : addedCount < 5 ? 'bloki' : 'bloków'} dostępności`);
+      if (added === 0) throw new Error('Nie dodano żadnych bloków — dni w przeszłości');
+      toast.success(`Dodano ${added} ${added === 1 ? 'blok' : added < 5 ? 'bloki' : 'bloków'} dostępności`);
       setAddModalOpen(false);
-      await fetchAvailabilities(false);
+      await fetchData();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Nie udało się dodać dostępności');
+      setFormError(err instanceof Error ? err.message : 'Błąd');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const openDeleteModal = (avail: AvailabilityDto) => {
-    setAvailabilityToDelete(avail);
-    setDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteModalOpen(false);
-    setAvailabilityToDelete(null);
-    setDeleteError(null);
-  };
-
+  // ── Delete ──
   const confirmDelete = async () => {
-    if (!user || !availabilityToDelete) return;
+    if (!user || !deleteTarget) return;
     setDeleting(true);
-    setDeleteError(null);
     try {
-      await apiDeleteAvailability(user.token, availabilityToDelete.id);
-      toast.success('Dostępność została usunięta');
-      await fetchAvailabilities(false);
-      closeDeleteModal();
+      await apiDeleteAvailability(user.token, deleteTarget.id);
+      toast.success('Dostępność usunięta');
+      setDeleteTarget(null);
+      await fetchData();
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Nie udało się usunąć dostępności');
+      toast.error(err instanceof Error ? err.message : 'Błąd usuwania');
     } finally {
       setDeleting(false);
     }
   };
 
-  if (loading) {
+  // ── Pagination ──
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const currentPage = Math.floor(offset / limit) + 1;
+
+  // ── Render ──
+  if (loading && availabilities.length === 0) {
     return (
-      <div className="panel-page">
+      <div className="panel-page wnioski-page">
         <div className="panel-page-spinner"><span className="panel-spinner" /></div>
       </div>
     );
   }
 
   return (
-    <div className="panel-page">
+    <div className="panel-page wnioski-page">
       <div className="panel-page__head">
         <h1 className="panel-page__title">Moja dostępność</h1>
-        <button className="dostepnosc-add-btn" onClick={openAddModal}>
-          + Dodaj dostępność
+        <button className="wnioski-btn wnioski-btn--accept" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={openAddModal}>
+          + Dodaj
         </button>
       </div>
 
-      {error && <div className="dostepnosc-alert dostepnosc-alert--error">{error}</div>}
-
-      <section className="dostepnosc-section dostepnosc-section--scrollable" ref={listRef}>
-        <div className="dostepnosc-filters">
-          <div className="panel-select">
-            <span className="panel-select__label">Pokaż:</span>
-            <div className="panel-select__control">
-              <select
-                className="panel-select__dropdown"
-                value={filterType}
-                onChange={(e) => { setFilterType(e.target.value); setOffset(0); }}
-              >
-                <option value="">Wszystkie</option>
-                <option value="upcoming">Nadchodzące</option>
-                <option value="past">Przeszłe</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="panel-select">
-            <span className="panel-select__label">Sortuj:</span>
-            <div className="panel-select__control">
-              <select
-                className="panel-select__dropdown"
-                value={sortOrder}
-                onChange={(e) => { setSortOrder(e.target.value as 'ASC' | 'DESC'); setOffset(0); }}
-              >
-                <option value="ASC">Data rosnąco ↑</option>
-                <option value="DESC">Data malejąco ↓</option>
-              </select>
-            </div>
-          </div>
+      <div className="wnioski-toolbar">
+        <div className="wnioski-filters">
+          {([
+            ['', 'Wszystkie'],
+            ['upcoming', 'Nadchodzące'],
+            ['past', 'Przeszłe'],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              className={`wnioski-filter-btn${filterType === value ? ' wnioski-filter-btn--active' : ''}`}
+              onClick={() => { setFilterType(value); setOffset(0); }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {availabilities.length === 0 && !fetchingList ? (
-          <p className="dostepnosc-empty">
-            Nie masz jeszcze żadnych bloków dostępności dla wybranego filtra
-          </p>
+      <div className="wnioski-table-wrap">
+        {availabilities.length === 0 ? (
+          <p className="wnioski-empty">Brak bloków dostępności dla wybranego filtra</p>
         ) : (
-          <>
-            {fetchingList && (
-              <div className="dostepnosc-list" style={{ justifyContent: 'center', alignItems: 'center', display: 'flex', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                Ładowanie...
-              </div>
-            )}
-            {!fetchingList && (
-              <div className="dostepnosc-list">
-                {availabilities.map((avail) => {
-                  const start = new Date(avail.startsAt);
-                  const end = new Date(avail.endsAt);
-                  return (
-                    <div key={avail.id} className="dostepnosc-item">
-                      <div className="dostepnosc-item__info">
-                        <div className="dostepnosc-item__date">
-                          {formatDate(start)} {formatTime(start)} – {formatTime(end)}
-                        </div>
-                        <div className="dostepnosc-item__duration">
-                          {Math.round((end.getTime() - start.getTime()) / 60000)} min
-                        </div>
-                      </div>
+          <table className="wnioski-table">
+            <thead>
+              <tr>
+                <th data-sortable onClick={toggleSort}>
+                  <span className="wnioski-th-inner">
+                    Data
+                    <span className={`wnioski-sort-arrow wnioski-sort-arrow--active`}>
+                      {sortOrder === 'ASC' ? '▲' : '▼'}
+                    </span>
+                  </span>
+                </th>
+                <th>Godziny</th>
+                <th>Czas trwania</th>
+                <th style={{ width: 100 }}>Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {availabilities.map(avail => {
+                const start = new Date(avail.startsAt);
+                const end = new Date(avail.endsAt);
+                const durationMin = Math.round((end.getTime() - start.getTime()) / 60000);
+                const isPast = end < new Date();
+
+                return (
+                  <tr key={avail.id} style={isPast ? { opacity: 0.5 } : undefined}>
+                    <td>
+                      <span className="wnioski-cell-client">{fmtDate(start)}</span>
+                    </td>
+                    <td className="wnioski-cell-date">
+                      {fmtTime(start)} – {fmtTime(end)}
+                    </td>
+                    <td>
+                      {durationMin >= 60
+                        ? `${Math.floor(durationMin / 60)} h${durationMin % 60 > 0 ? ` ${durationMin % 60} min` : ''}`
+                        : `${durationMin} min`
+                      }
+                    </td>
+                    <td>
                       <button
-                        className="dostepnosc-item__delete"
-                        onClick={() => openDeleteModal(avail)}
+                        className="wnioski-btn wnioski-btn--reject"
+                        onClick={() => setDeleteTarget(avail)}
                       >
                         Usuń
                       </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {totalPages > 1 && (
-              <div className="panel-pagination">
-                <div className="panel-pagination__controls">
-                  <button
-                    className="panel-pagination__btn panel-pagination__btn--arrow"
-                    onClick={() => { setOffset(Math.max(0, offset - limit)); listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                    disabled={currentPage === 1}
-                    aria-label="Poprzednia strona"
-                  >
-                    ←
-                  </button>
-                  <span className="panel-pagination__info">Strona {currentPage} z {totalPages}</span>
-                  <button
-                    className="panel-pagination__btn panel-pagination__btn--arrow"
-                    onClick={() => { setOffset(offset + limit); listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                    disabled={currentPage === totalPages}
-                    aria-label="Następna strona"
-                  >
-                    →
-                  </button>
-                </div>
-                <div className="panel-pagination__per-page">
-                  <span className="panel-pagination__per-page-label">Na stronie:</span>
-                  <select
-                    className="panel-pagination__per-page-select"
-                    value={limit}
-                    onChange={(e) => { setLimit(parseInt(e.target.value)); setOffset(0); }}
-                  >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                  </select>
-                </div>
-              </div>
-            )}
-          </>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
-      </section>
+      </div>
 
-      {/* Add Availability Modal */}
+      <div className="wnioski-pagination">
+        <div className="wnioski-pagination__per-page">
+          <span className="wnioski-pagination__label">Wierszy:</span>
+          <select
+            className="wnioski-pagination__select"
+            value={limit}
+            onChange={e => { setLimit(Number(e.target.value)); setOffset(0); }}
+          >
+            {PAGE_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+
+        <div className="wnioski-pagination__nav">
+          <button className="wnioski-pagination__btn" onClick={() => setOffset(0)} disabled={currentPage === 1}>«</button>
+          <button className="wnioski-pagination__btn" onClick={() => setOffset(Math.max(0, offset - limit))} disabled={currentPage === 1}>‹</button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+            .reduce<(number | 'dots')[]>((acc, p, idx, arr) => {
+              if (idx > 0 && p - (arr[idx - 1] ?? 0) > 1) acc.push('dots');
+              acc.push(p);
+              return acc;
+            }, [])
+            .map((item, idx) =>
+              item === 'dots' ? (
+                <span key={`dots-${idx}`} className="wnioski-pagination__dots">…</span>
+              ) : (
+                <button key={item} className={`wnioski-pagination__btn${item === currentPage ? ' wnioski-pagination__btn--active' : ''}`} onClick={() => setOffset((item - 1) * limit)}>{item}</button>
+              )
+            )}
+          <button className="wnioski-pagination__btn" onClick={() => setOffset(offset + limit)} disabled={currentPage === totalPages}>›</button>
+          <button className="wnioski-pagination__btn" onClick={() => setOffset((totalPages - 1) * limit)} disabled={currentPage === totalPages}>»</button>
+        </div>
+
+        <span className="wnioski-pagination__info">
+          {total > 0 ? `${offset + 1}–${Math.min(offset + limit, total)} z ${total}` : '0 z 0'}
+        </span>
+      </div>
+
+      {/* Modal dodawania */}
       {addModalOpen && (
-        <div className="modal-overlay" onClick={closeAddModal}>
-          <div className="modal-content modal-content--wide" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Dodaj blok dostępności</h3>
-              <button className="modal-close" onClick={closeAddModal}>✕</button>
+        <div className="wnioski-modal-overlay" onClick={() => !submitting && setAddModalOpen(false)}>
+          <div className="wnioski-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+            <div className="wnioski-modal__header">
+              <h3 className="wnioski-modal__title">Dodaj blok dostępności</h3>
+              <button className="wnioski-modal__close" onClick={() => !submitting && setAddModalOpen(false)}>✕</button>
             </div>
+            <form onSubmit={handleAdd}>
+              <div className="wnioski-modal__body">
+                {formError && <p className="wnioski-modal__error" style={{ marginBottom: '0.75rem' }}>{formError}</p>}
 
-            <form onSubmit={handleAddAvailability}>
-              <div className="modal-body">
-                {formError && (
-                  <div className="dostepnosc-alert dostepnosc-alert--error" style={{ marginBottom: '1rem' }}>
-                    {formError}
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Wybierz dni tygodnia</p>
+                <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                  {DAY_SHORT.map((name, i) => (
+                    <button
+                      key={i} type="button"
+                      className={`wnioski-filter-btn${selectedDays.includes(i) ? ' wnioski-filter-btn--active' : ''}`}
+                      onClick={() => toggleDay(i)}
+                    >{name}</button>
+                  ))}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Od</label>
+                    <select className="wnioski-pagination__select" style={{ width: '100%', padding: '0.5rem' }} value={startTime} onChange={e => setStartTime(e.target.value)}>
+                      {timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
                   </div>
-                )}
-
-                <div className="dostepnosc-form__field">
-                  <label className="dostepnosc-form__label">Wybierz dni tygodnia</label>
-                  <div className="dostepnosc-days">
-                    {DAY_NAMES.map((name, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        className={`dostepnosc-day${selectedDays.includes(i) ? ' dostepnosc-day--selected' : ''}`}
-                        onClick={() => toggleDay(i)}
-                      >
-                        <span className="dostepnosc-day__short">{DAY_SHORT[i]}</span>
-                        <span className="dostepnosc-day__name">{name}</span>
-                      </button>
-                    ))}
+                  <div>
+                    <label style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Do</label>
+                    <select className="wnioski-pagination__select" style={{ width: '100%', padding: '0.5rem' }} value={endTime} onChange={e => setEndTime(e.target.value)}>
+                      {timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
                   </div>
                 </div>
 
-                <div className="dostepnosc-form__row">
-                  <div className="dostepnosc-form__field">
-                    <label className="dostepnosc-form__label">Godzina rozpoczęcia</label>
-                    <div className="panel-select__control">
-                      <select
-                        className="panel-select__dropdown"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        required
-                      >
-                        {timeSlots.map((time) => (
-                          <option key={time} value={time}>{time}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="dostepnosc-form__field">
-                    <label className="dostepnosc-form__label">Godzina zakończenia</label>
-                    <div className="panel-select__control">
-                      <select
-                        className="panel-select__dropdown"
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                        required
-                      >
-                        {timeSlots.map((time) => (
-                          <option key={time} value={time}>{time}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="dostepnosc-form__field">
-                  <label className="dostepnosc-form__checkbox-label">
-                    <input
-                      type="checkbox"
-                      className="dostepnosc-form__checkbox"
-                      checked={repeat}
-                      onChange={(e) => setRepeat(e.target.checked)}
-                    />
-                    Powtarzaj przez kolejne tygodnie
-                  </label>
-                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8125rem', color: 'var(--text-primary)', cursor: 'pointer', marginBottom: repeat ? '0.75rem' : 0 }}>
+                  <input type="checkbox" checked={repeat} onChange={e => setRepeat(e.target.checked)} style={{ accentColor: 'var(--accent)' }} />
+                  Powtarzaj przez kolejne tygodnie
+                </label>
 
                 {repeat && (
-                  <div className="dostepnosc-form__field">
-                    <label className="dostepnosc-form__label">Liczba tygodni</label>
-                    <input
-                      type="number"
-                      className="dostepnosc-form__input"
-                      min="1"
-                      max="12"
-                      value={repeatWeeks}
-                      onChange={(e) => setRepeatWeeks(Math.max(1, Math.min(12, parseInt(e.target.value) || 1)))}
-                    />
-                    <p className="dostepnosc-form__hint">
-                      Tydzień 1 – od dziś do niedzieli (minione dni bieżącego tygodnia są pomijane).
-                      Kolejne tygodnie – pełne, od poniedziałku.
-                      Łącznie do {selectedDays.length * repeatWeeks} bloków.
+                  <div>
+                    <label style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Liczba tygodni</label>
+                    <input type="number" min={1} max={12} value={repeatWeeks} onChange={e => setRepeatWeeks(Math.max(1, Math.min(12, parseInt(e.target.value) || 1)))}
+                      className="wnioski-pagination__select" style={{ width: '80px', padding: '0.5rem', textAlign: 'center' }} />
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.375rem' }}>
+                      Łącznie do {selectedDays.length * repeatWeeks} bloków
                     </p>
                   </div>
                 )}
               </div>
-
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="modal-button modal-button--cancel"
-                  onClick={closeAddModal}
-                  disabled={submitting}
-                >
-                  Anuluj
-                </button>
-                <button
-                  type="submit"
-                  className="modal-button modal-button--primary"
-                  disabled={submitting || selectedDays.length === 0}
-                >
-                  {submitting ? 'Dodawanie...' : 'Dodaj dostępność'}
+              <div className="wnioski-modal__footer">
+                <button type="button" className="wnioski-btn wnioski-btn--cancel" onClick={() => setAddModalOpen(false)} disabled={submitting}>Anuluj</button>
+                <button type="submit" className="wnioski-btn wnioski-btn--accept" style={{ padding: '0.5rem 1rem' }} disabled={submitting || selectedDays.length === 0}>
+                  {submitting ? 'Dodawanie…' : 'Dodaj'}
                 </button>
               </div>
             </form>
@@ -468,40 +365,26 @@ export default function DostepnoscPage() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {deleteModalOpen && availabilityToDelete && (
-        <div className="modal-overlay" onClick={closeDeleteModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">Potwierdź usunięcie</h3>
-              <button className="modal-close" onClick={closeDeleteModal}>✕</button>
+      {/* Modal usuwania */}
+      {deleteTarget && (
+        <div className="wnioski-modal-overlay" onClick={() => !deleting && setDeleteTarget(null)}>
+          <div className="wnioski-modal" onClick={e => e.stopPropagation()}>
+            <div className="wnioski-modal__header">
+              <h3 className="wnioski-modal__title">Potwierdź usunięcie</h3>
+              <button className="wnioski-modal__close" onClick={() => !deleting && setDeleteTarget(null)}>✕</button>
             </div>
-            <div className="modal-body">
-              <p>Czy na pewno chcesz usunąć ten blok dostępności? Spotkania opłacone nadal będą widoczne w kalendarzu i musisz je odbyć. Wnioski zaakceptowane(niepłacone) zostaną usunięte.</p>
-              <div className="modal-info">
-                <strong>{formatDate(new Date(availabilityToDelete.startsAt))}</strong>
-                <span>
-                  {formatTime(new Date(availabilityToDelete.startsAt))} – {formatTime(new Date(availabilityToDelete.endsAt))}
-                </span>
-              </div>
-              {deleteError && (
-                <p className="modal-error">{deleteError}</p>
-              )}
+            <div className="wnioski-modal__body">
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                Czy na pewno chcesz usunąć ten blok dostępności?
+              </p>
+              <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {fmtDate(new Date(deleteTarget.startsAt))} · {fmtTime(new Date(deleteTarget.startsAt))} – {fmtTime(new Date(deleteTarget.endsAt))}
+              </p>
             </div>
-            <div className="modal-footer">
-              <button
-                className="modal-button modal-button--cancel"
-                onClick={closeDeleteModal}
-                disabled={deleting}
-              >
-                Anuluj
-              </button>
-              <button
-                className="modal-button modal-button--danger"
-                onClick={confirmDelete}
-                disabled={deleting}
-              >
-                {deleting ? 'Usuwanie...' : 'Usuń'}
+            <div className="wnioski-modal__footer">
+              <button className="wnioski-btn wnioski-btn--cancel" onClick={() => setDeleteTarget(null)} disabled={deleting}>Anuluj</button>
+              <button className="wnioski-btn wnioski-btn--reject" style={{ padding: '0.5rem 1rem' }} onClick={confirmDelete} disabled={deleting}>
+                {deleting ? 'Usuwanie…' : 'Usuń'}
               </button>
             </div>
           </div>

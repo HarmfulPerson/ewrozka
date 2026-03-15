@@ -1,117 +1,59 @@
-.wnioski-alert {
-  padding: 1rem;
-  border-radius: var(--radius);
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
-}
+/* ── Wnioski – tabela ─────────────────────────────────────────────────────── */
 
-.wnioski-alert--error {
-  background: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-  border: 1px solid rgba(220, 53, 69, 0.3);
-}
-
-.wnioski-alert--success {
-  background: rgba(40, 167, 69, 0.1);
-  color: #28a745;
-  border: 1px solid rgba(40, 167, 69, 0.3);
-}
-
-.wnioski-tabs {
+.wnioski-page {
+  flex: 1;
+  min-height: 0;
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.wnioski-tab {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 0.6rem 1.2rem;
-  cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  font-weight: 500;
+.wnioski-toolbar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: color 0.15s, border-color 0.15s;
-  margin-bottom: -1px;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
-.wnioski-tab:hover {
-  color: var(--text-primary);
-}
-
-.wnioski-tab--active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-}
-
-.wnioski-tab__badge {
-  background: var(--accent);
-  color: #fff;
-  border-radius: 999px;
-  padding: 0 0.45rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1.6;
-}
+/* ── Pill filter bar ──────────────────────────────────────────────────────── */
 
 .wnioski-filters {
-  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 0.25rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.25rem;
+  flex-wrap: wrap;
 }
 
-.wnioski-card__info-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.5rem;
-  font-size: 0.85rem;
+.wnioski-filter-btn {
+  padding: 0.4rem 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: inherit;
   color: var(--text-secondary);
-  margin-top: 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
 }
 
-/* Badge "Gość" */
-.wnioski-guest-badge {
-  background: rgba(167, 139, 250, 0.15);
-  color: #a78bfa;
-  border: 1px solid rgba(167, 139, 250, 0.3);
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.1rem 0.45rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  flex-shrink: 0;
+.wnioski-filter-btn:hover:not(.wnioski-filter-btn--active) {
+  color: var(--text-primary);
+  background: rgba(167, 139, 250, 0.08);
 }
 
-.wnioski-card--guest {
-  border-left: 3px solid rgba(167, 139, 250, 0.4);
+.wnioski-filter-btn--active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(167, 139, 250, 0.3);
 }
 
-.wnioski-card__title-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.wnioski-card__duration {
-  color: var(--text-muted, #6b7280);
-  font-size: 0.8rem;
-}
-
-.wnioski-email-link {
-  color: var(--accent);
-  text-decoration: none;
-}
-.wnioski-email-link:hover {
-  text-decoration: underline;
-}
-
-/* Licznik oczekujących w tytule */
 .wnioski-head-badge {
   display: inline-flex;
   align-items: center;
@@ -128,12 +70,353 @@
   vertical-align: middle;
 }
 
-.wnioski-section {
-  background: var(--bg-card);
+/* ── Alerts ────────────────────────────────────────────────────────────────── */
+
+.wnioski-alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+}
+
+.wnioski-alert--error {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.wnioski-alert--success {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+/* ── Table wrapper ─────────────────────────────────────────────────────────── */
+
+.wnioski-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  background: var(--bg-card);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(167, 139, 250, 0.35) transparent;
 }
+
+.wnioski-table-wrap::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.wnioski-table-wrap::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+.wnioski-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.3);
+  border-radius: 99px;
+  transition: background 0.2s;
+}
+
+.wnioski-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.55);
+}
+
+.wnioski-table-wrap::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.wnioski-table {
+  width: 100%;
+  min-width: 750px;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  table-layout: fixed;
+}
+
+/* Sticky header */
+.wnioski-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.wnioski-table th {
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+  user-select: none;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wnioski-table th[data-sortable] {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.wnioski-table th[data-sortable]:hover {
+  color: var(--accent);
+}
+
+.wnioski-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.wnioski-sort-arrow {
+  font-size: 0.625rem;
+  opacity: 0.4;
+}
+
+.wnioski-sort-arrow--active {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* Rows */
+.wnioski-table td {
+  padding: 0.625rem 1rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+
+.wnioski-table tbody tr {
+  transition: background 0.1s;
+}
+
+.wnioski-table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+.wnioski-table tbody tr:last-child td {
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Cell content ──────────────────────────────────────────────────────────── */
+
+.wnioski-cell-client {
+  font-weight: 500;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wnioski-cell-client__sub {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wnioski-cell-date {
+  white-space: nowrap;
+}
+
+.wnioski-cell-date__time {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.wnioski-cell-msg {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+/* ── Type badge ────────────────────────────────────────────────────────────── */
+
+.wnioski-type-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.wnioski-type-badge--regular {
+  background: rgba(58, 74, 143, 0.15);
+  color: var(--text-secondary);
+  border: 1px solid rgba(58, 74, 143, 0.25);
+}
+
+.wnioski-type-badge--guest {
+  background: rgba(79, 96, 173, 0.15);
+  color: var(--accent-hover);
+  border: 1px solid rgba(79, 96, 173, 0.3);
+}
+
+/* ── Status badges ─────────────────────────────────────────────────────────── */
+
+.wnioski-status {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius);
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wnioski-status--pending {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.wnioski-status--accepted {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.wnioski-status--paid {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.wnioski-status--rejected {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.wnioski-status--completed {
+  background: rgba(142, 150, 184, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid rgba(142, 150, 184, 0.25);
+}
+
+/* ── Action buttons ────────────────────────────────────────────────────────── */
+
+.wnioski-actions {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: nowrap;
+}
+
+.wnioski-btn {
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.wnioski-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wnioski-btn--accept {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.wnioski-btn--accept:hover:not(:disabled) {
+  background: #28a745;
+  color: #fff;
+}
+
+.wnioski-btn--reject {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+.wnioski-btn--reject:hover:not(:disabled) {
+  background: #dc3545;
+  color: #fff;
+}
+
+.wnioski-btn--join {
+  background: var(--accent);
+  color: var(--text-primary);
+}
+
+.wnioski-btn--join:hover {
+  background: var(--accent-hover);
+}
+
+.wnioski-btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Join wrapper with tooltip */
+.wnioski-join-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.wnioski-join-wrap:hover .wnioski-btn--disabled {
+  pointer-events: none;
+}
+
+.wnioski-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+
+.wnioski-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--border);
+}
+
+.wnioski-join-wrap:hover .wnioski-tooltip {
+  opacity: 1;
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────────── */
 
 .wnioski-empty {
   text-align: center;
@@ -142,326 +425,144 @@
   font-size: 0.875rem;
 }
 
-.wnioski-list {
+/* ── Inline rating (client table) ─────────────────────────────────────────── */
+
+.wnioski-rating-inline {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  align-items: center;
+  gap: 0.125rem;
 }
 
-.wnioski-card {
+.wnioski-rating-inline .wnioski-btn {
+  margin-left: 0.375rem;
+}
+
+.wnioski-star {
+  font-size: 1.125rem;
+  color: var(--border);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.0625rem;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.wnioski-star:hover {
+  color: #fbbf24;
+}
+
+.wnioski-star--filled {
+  color: #fbbf24;
+}
+
+.wnioski-star--static {
+  cursor: default;
+}
+
+.wnioski-star:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ── Additional status variants (client) ──────────────────────────────────── */
+
+.wnioski-status--completed {
+  background: rgba(142, 150, 184, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid rgba(142, 150, 184, 0.25);
+}
+
+.wnioski-status--cancelled {
+  background: rgba(220, 53, 69, 0.08);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+/* ── Pagination ────────────────────────────────────────────────────────────── */
+
+.wnioski-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.625rem 1rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.wnioski-pagination__per-page {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wnioski-pagination__label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.wnioski-pagination__select {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  transition: border-color 0.2s ease;
-}
-
-.wnioski-card:hover {
-  border-color: var(--accent);
-}
-
-.wnioski-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-  gap: 1rem;
-}
-
-.wnioski-card__title {
-  font-size: 1.125rem;
-  font-weight: 600;
+  border-radius: 6px;
   color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+  cursor: pointer;
 }
 
-.wnioski-card__client {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
+.wnioski-pagination__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.wnioski-card__client strong {
+.wnioski-pagination__btn {
+  padding: 0.3rem 0.55rem;
+  font-size: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.wnioski-pagination__btn:hover:not(:disabled):not(.wnioski-pagination__btn--active) {
+  border-color: var(--accent);
   color: var(--accent);
 }
 
-.wnioski-card__status {
-  padding: 0.375rem 0.75rem;
-  border-radius: var(--radius);
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.wnioski-card__status--pending {
-  background: rgba(255, 193, 7, 0.1);
-  color: #ffc107;
-  border: 1px solid rgba(255, 193, 7, 0.3);
-}
-
-.wnioski-card__status--accepted {
-  background: rgba(40, 167, 69, 0.1);
-  color: #28a745;
-  border: 1px solid rgba(40, 167, 69, 0.3);
-}
-
-.wnioski-card__status--rejected {
-  background: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-  border: 1px solid rgba(220, 53, 69, 0.3);
-}
-
-.wnioski-card__body {
-  margin-bottom: 1rem;
-}
-
-.wnioski-card__datetime {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.wnioski-card__date,
-.wnioski-card__time {
-  font-size: 0.9375rem;
-  color: var(--text-primary);
-}
-
-.wnioski-card__no-date {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  font-style: italic;
-  margin-bottom: 1rem;
-}
-
-.wnioski-card__message {
-  padding: 0.75rem;
-  background: var(--bg-primary);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin-bottom: 0.75rem;
-}
-
-.wnioski-card__message strong {
-  color: var(--text-primary);
-}
-
-.wnioski-card__created {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.wnioski-card__actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.wnioski-card__button {
-  flex: 1;
-  padding: 0.75rem;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.wnioski-card__button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.wnioski-card__button--accept {
-  background: rgba(40, 167, 69, 0.1);
-  color: #28a745;
-  border: 1px solid rgba(40, 167, 69, 0.3);
-}
-
-.wnioski-card__button--accept:hover:not(:disabled) {
-  background: #28a745;
-  color: white;
-  border-color: #28a745;
-}
-
-.wnioski-card__button--reject {
-  background: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-  border: 1px solid rgba(220, 53, 69, 0.3);
-}
-
-.wnioski-card__button--reject:hover:not(:disabled) {
-  background: #dc3545;
-  color: white;
-  border-color: #dc3545;
-}
-
-.wnioski-card__button--meeting {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
-  text-decoration: none;
-  text-align: center;
-  width: auto;
-  max-width: max-content;
-}
-
-.wnioski-card__button--meeting:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-}
-
-.wnioski-card__button--meeting-disabled {
-  padding: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  font-weight: 600;
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  cursor: not-allowed;
-  opacity: 0.6;
-  text-align: center;
-  width: auto;
-  max-width: max-content;
-}
-
-.wnioski-card__meeting-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.wnioski-tooltip {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.wnioski-tooltip__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 0.75rem;
-  font-weight: bold;
-  border: 1.5px solid var(--border);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.wnioski-tooltip__icon:hover {
-  background: var(--bg-secondary);
+.wnioski-pagination__btn--active {
+  background: var(--accent);
   border-color: var(--accent);
-  transform: scale(1.1);
-}
-
-.wnioski-tooltip__text {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%);
-  padding: 0.625rem 1rem;
-  background: var(--bg-card);
   color: var(--text-primary);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.2s ease;
-  pointer-events: none;
-  z-index: 1000;
+  font-weight: 700;
 }
 
-.wnioski-tooltip__text::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: var(--border);
-}
-
-.wnioski-tooltip:hover .wnioski-tooltip__text {
-  opacity: 1;
-  visibility: visible;
-}
-
-.wnioski-card__appointment-info {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(139, 92, 246, 0.05);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.wnioski-card__payment-status {
-  margin-bottom: 0.75rem;
-}
-
-.wnioski-status-badge {
-  display: inline-block;
-  padding: 0.375rem 0.875rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.wnioski-status-badge--paid {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-}
-
-.wnioski-status-badge--pending {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: white;
-}
-
-.wnioski-card__meeting-link {
-  margin-top: 0.5rem;
-}
-
-.wnioski-meeting-btn {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.wnioski-meeting-btn--active {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
-  cursor: pointer;
-}
-
-.wnioski-meeting-btn--active:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-}
-
-.wnioski-meeting-btn--disabled {
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  border: 1px solid var(--border);
+.wnioski-pagination__btn:disabled {
+  opacity: 0.3;
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
-/* ── Modal odrzucenia ───────────────────────────────────────────────────── */
+.wnioski-pagination__dots {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0 0.25rem;
+}
+
+.wnioski-pagination__info {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Modal odrzucenia ──────────────────────────────────────────────────────── */
+
 .wnioski-modal-overlay {
   position: fixed;
   inset: 0;
@@ -475,8 +576,8 @@
 }
 
 .wnioski-modal {
-  background: var(--bg-secondary, #1a1625);
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  background: var(--bg-secondary);
+  border: 1px solid rgba(79, 96, 173, 0.2);
   border-radius: 16px;
   width: 100%;
   max-width: 440px;
@@ -514,7 +615,9 @@
   transition: color 0.15s;
 }
 
-.wnioski-modal__close:hover { color: var(--text-primary); }
+.wnioski-modal__close:hover {
+  color: var(--text-primary);
+}
 
 .wnioski-modal__body {
   padding: 1rem 1.5rem;
@@ -529,8 +632,8 @@
 
 .wnioski-modal__textarea {
   width: 100%;
-  background: var(--bg-primary, #0f0b1a);
-  border: 1px solid rgba(167, 139, 250, 0.2);
+  background: var(--bg-primary);
+  border: 1px solid rgba(79, 96, 173, 0.2);
   border-radius: 8px;
   color: var(--text-primary);
   font-size: 0.875rem;
@@ -544,7 +647,18 @@
 
 .wnioski-modal__textarea:focus {
   outline: none;
-  border-color: var(--accent, #a78bfa);
+  border-color: var(--accent);
+}
+
+.wnioski-modal__textarea--error {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+}
+
+.wnioski-modal__error {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: #dc3545;
 }
 
 .wnioski-modal__footer {
@@ -554,23 +668,27 @@
   justify-content: flex-end;
 }
 
-/* Przycisk Anuluj */
-.wnioski-card__button--cancel {
+.wnioski-modal__footer .wnioski-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+}
+
+.wnioski-btn--cancel {
   background: transparent;
-  border: 1px solid rgba(167, 139, 250, 0.25);
+  border: 1px solid var(--border);
   color: var(--text-secondary);
 }
-.wnioski-card__button--cancel:hover {
-  background: rgba(167, 139, 250, 0.08);
+
+.wnioski-btn--cancel:hover {
+  background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+
 @media (max-width: 768px) {
-  .wnioski-card__header {
-    flex-direction: column;
-  }
-  
-  .wnioski-card__actions {
-    flex-direction: column;
+  .wnioski-filter-btn {
+    padding: 0.35rem 0.625rem;
+    font-size: 0.75rem;
   }
 }

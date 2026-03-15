@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '../../components/layout/header';
 import { Footer } from '../../components/layout/footer';
+import { VantaBackground } from '../../components/vanta-background/vanta-background';
+import { TopicBadges } from '../../components/topic-badges/topic-badges';
 import { apiGetAdvertisement, AdvertisementDetailDto, getUploadUrl } from '../../lib/api';
 import { getStoredUser } from '../../lib/auth-mock';
 import { apiGetAvailableSlots, SlotDto } from '../../lib/api-booking';
@@ -284,6 +286,7 @@ export default function AdvertisementPage() {
 
   return (
     <div className="advertisement-page">
+      <VantaBackground>
       <Toaster
         position="bottom-right"
         toastOptions={{
@@ -300,8 +303,9 @@ export default function AdvertisementPage() {
       />
       <Header />
       <main className="advertisement-main">
-        <div className="advertisement-body">
-          <div className="advertisement-breadcrumbs">
+        <div className="advertisement-topnav">
+          <Link href={`/wrozka/${advertisement.wizard.id}`} className="advertisement-topnav__back">← Wróć</Link>
+          <div className="advertisement-topnav__breadcrumbs">
             <Link href="/ogloszenia" className="breadcrumb-link">Wróżki</Link>
             <span className="breadcrumb-separator">/</span>
             <Link href={`/wrozka/${advertisement.wizard.id}`} className="breadcrumb-link">
@@ -310,6 +314,8 @@ export default function AdvertisementPage() {
             <span className="breadcrumb-separator">/</span>
             <span className="breadcrumb-current">{advertisement.title}</span>
           </div>
+        </div>
+        <div className="advertisement-body">
 
           <div className="advertisement-details">
             {advertisement.imageUrl && (
@@ -345,11 +351,7 @@ export default function AdvertisementPage() {
               </div>
 
               {advertisement.wizard.topicNames && advertisement.wizard.topicNames.length > 0 && (
-                <div className="advertisement-details__topics">
-                  {advertisement.wizard.topicNames.map((topic, i) => (
-                    <span key={i} className="topic-badge">{topic}</span>
-                  ))}
-                </div>
+                <TopicBadges topics={advertisement.wizard.topicNames} />
               )}
 
               <p className="advertisement-details__description">{advertisement.description}</p>
@@ -391,6 +393,7 @@ export default function AdvertisementPage() {
           </div>
         </div>
       </main>
+      </VantaBackground>
       <Footer />
 
       {/* Modal edycji */}

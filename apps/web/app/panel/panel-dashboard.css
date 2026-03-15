@@ -3,6 +3,7 @@
   max-width: 1100px;
 }
 
+
 /* Panel klienta – ograniczenie do 100vh, przewijanie wewnętrzne */
 .dashboard--client {
   max-height: calc(100vh - 2rem);
@@ -39,10 +40,20 @@
   opacity: 0.7;
 }
 
+/* Top row – welcome + featured inline */
+
+.dashboard__top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
 /* Welcome */
 
 .dashboard__welcome {
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .dashboard__title {
@@ -68,7 +79,31 @@
   border: 1px solid rgba(245,158,11,0.35);
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
-  margin-bottom: 1.75rem;
+  margin-bottom: 0;
+}
+
+.dashboard__featured--compact {
+  padding: 0.75rem 1rem;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.dashboard__featured--compact .dashboard__featured-icon {
+  font-size: 1.25rem;
+}
+
+.dashboard__featured--compact .dashboard__featured-title {
+  font-size: 0.8125rem;
+  margin-bottom: 0.125rem;
+}
+
+.dashboard__featured--compact .dashboard__featured-desc {
+  font-size: 0.75rem;
+}
+
+.dashboard__featured--compact .dashboard__featured-btn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
 }
 
 .dashboard__featured--active {
@@ -128,6 +163,11 @@
 }
 
 @media (max-width: 640px) {
+  .dashboard__top-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .dashboard__featured {
     flex-direction: column;
     align-items: flex-start;
@@ -162,6 +202,8 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard__section-head {
@@ -218,30 +260,39 @@
   font-size: 0.9rem;
 }
 
-/* Karta spotkania */
+/* ─── Unified card list (appointments & requests) ─────────────────────────── */
 
-.dashboard__appointment-card {
+.dashboard__card-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.dashboard__card {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.875rem;
   padding: 0.875rem 1.25rem;
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
+  min-height: 72px;
 }
 
-.dashboard__appointment-card:last-child {
+.dashboard__card:last-child {
   border-bottom: none;
 }
 
-.dashboard__appointment-card:hover {
+.dashboard__card:hover {
   background: var(--bg-secondary);
 }
 
-.dashboard__apt-date {
+/* Date block (left) */
+
+.dashboard__card-date {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 64px;
+  min-width: 72px;
   padding: 0.375rem 0.625rem;
   background: rgba(139, 92, 246, 0.1);
   border-radius: 8px;
@@ -249,26 +300,29 @@
   flex-shrink: 0;
 }
 
-.dashboard__apt-day {
+.dashboard__card-date-day {
   font-size: 0.75rem;
   color: var(--primary);
   font-weight: 600;
   text-transform: capitalize;
+  white-space: nowrap;
 }
 
-.dashboard__apt-time {
+.dashboard__card-date-time {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
 }
 
-.dashboard__apt-info {
+/* Body (middle) */
+
+.dashboard__card-body {
   flex: 1;
   min-width: 0;
 }
 
-.dashboard__apt-client {
+.dashboard__card-title {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -276,15 +330,48 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
-.dashboard__apt-duration {
+.dashboard__card-sub {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard__card-msg {
   font-size: 0.8125rem;
   color: var(--text-muted);
-  margin: 0;
+  margin: 0.125rem 0 0;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.dashboard__apt-right {
+.dashboard__card-tag {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 4px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.dashboard__card-tag--guest {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+/* Actions (right) */
+
+.dashboard__card-actions {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -292,13 +379,13 @@
   flex-shrink: 0;
 }
 
-.dashboard__apt-until {
+.dashboard__card-meta {
   font-size: 0.8125rem;
   color: var(--text-secondary);
   white-space: nowrap;
 }
 
-.dashboard__apt-join {
+.dashboard__card-btn-join {
   padding: 0.3rem 0.75rem;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
@@ -309,98 +396,238 @@
   transition: opacity 0.15s;
 }
 
-.dashboard__apt-join:hover {
+.dashboard__card-btn-join:hover {
   opacity: 0.85;
 }
 
-/* Karta prośby */
+/* Accept / Reject buttons */
 
-.dashboard__request-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.875rem;
-  padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-}
-
-.dashboard__request-card:last-child {
-  border-bottom: none;
-}
-
-.dashboard__request-card:hover {
+.dashboard__card-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
   background: var(--bg-secondary);
-}
-
-.dashboard__req-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
-  font-size: 0.9375rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
   font-weight: 700;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-}
-
-.dashboard__req-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.dashboard__req-client {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 0.125rem;
-}
-
-.dashboard__req-ad {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  margin: 0 0 0.125rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dashboard__req-date {
-  font-size: 0.8125rem;
-  color: var(--primary);
-  margin: 0 0 0.125rem;
-  font-weight: 500;
-}
-
-.dashboard__req-msg {
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  margin: 0.25rem 0 0;
-  font-style: italic;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dashboard__req-action {
-  padding: 0.3rem 0.75rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  text-decoration: none;
-  white-space: nowrap;
-  flex-shrink: 0;
   transition: all 0.15s;
 }
 
-.dashboard__req-action:hover {
+.dashboard__card-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dashboard__card-btn--accept {
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.dashboard__card-btn--accept:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #22c55e;
+}
+
+.dashboard__card-btn--reject {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.dashboard__card-btn--reject:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+}
+
+/* For requests: show accept/reject side by side */
+.dashboard__card-actions:has(.dashboard__card-btn) {
+  flex-direction: row;
+  align-items: center;
+}
+
+/* Stars in cards */
+.dashboard__card-stars {
+  display: flex;
+  align-items: center;
+  gap: 0.0625rem;
+}
+
+.dashboard__card-star {
+  font-size: 1rem;
+  color: var(--border);
+  line-height: 1;
+  background: none;
+  border: none;
+  padding: 0.0625rem;
+}
+
+.dashboard__card-star--filled {
+  color: #fbbf24;
+}
+
+.dashboard__card-star--btn {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.dashboard__card-star--btn:hover {
+  color: #fbbf24;
+}
+
+.dashboard__card-star--btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.dashboard__card-actions:has(.dashboard__card-stars) {
+  flex-direction: row;
+  align-items: center;
+}
+
+/* Full-width section (below grid) */
+
+.dashboard__section--full {
+  margin-bottom: 1.5rem;
+}
+
+/* Status badge */
+
+.dashboard__card-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.175rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.dashboard__card-status--accepted {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+
+/* ─── Reject modal ─────────────────────────────────────────────────────────── */
+
+.dashboard__modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dashboard__modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 420px;
+  margin: 1rem;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+
+.dashboard__modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dashboard__modal-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.dashboard__modal-close {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.dashboard__modal-close:hover {
+  color: var(--text-primary);
+}
+
+.dashboard__modal-body {
+  padding: 1rem 1.25rem;
+}
+
+.dashboard__modal-textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  resize: vertical;
+  min-height: 72px;
+  font-family: inherit;
+}
+
+.dashboard__modal-textarea:focus {
+  outline: none;
   border-color: var(--primary);
-  color: var(--primary);
+}
+
+.dashboard__modal-textarea--error {
+  border-color: #ef4444;
+}
+
+.dashboard__modal-error {
+  font-size: 0.8125rem;
+  color: #ef4444;
+  margin: 0.375rem 0 0;
+}
+
+.dashboard__modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.dashboard__modal-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dashboard__modal-btn--cancel {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.dashboard__modal-btn--cancel:hover {
+  background: var(--bg-primary);
+}
+
+.dashboard__modal-btn--reject {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.dashboard__modal-btn--reject:hover {
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
 /* Szybkie linki */

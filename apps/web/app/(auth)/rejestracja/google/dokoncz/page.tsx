@@ -11,6 +11,7 @@ import {
   type TopicDto,
 } from '../../../../lib/api';
 import { setStoredUser, userFromApi } from '../../../../lib/auth-mock';
+import { TopicIcon } from '../../../../components/topic-icon/topic-icon';
 import '../../wrozka/wrozka-registration.css';
 
 type Step = 'role' | 'form' | 'success';
@@ -290,6 +291,7 @@ function DokonczGoogleRejestracjaForm() {
                       className={`wrozka-reg__topic${selectedTopics.includes(t.id) ? ' wrozka-reg__topic--active' : ''}`}
                       onClick={() => toggleTopic(t.id)}
                     >
+                      <TopicIcon name={t.name} size={15} />
                       {t.name}
                     </button>
                   ))}

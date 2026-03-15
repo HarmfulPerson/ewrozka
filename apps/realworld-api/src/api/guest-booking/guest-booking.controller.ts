@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiPublic, ApiAuth } from '@repo/api/decorators/http.decorators';
 import { CurrentUser } from '@repo/api';
@@ -66,8 +67,22 @@ export class GuestBookingController {
   @ApiAuth({ summary: 'Wizard: list guest bookings' })
   async listForWizard(
     @CurrentUser('id') wizardId: number,
+    @Query('status') status?: string,
+    @Query('limit') limit?: string,
+    @Query('offset') offset?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
   ) {
-    return { bookings: await this.service.getForWizard(wizardId) };
+    const parsedLimit = parseInt(limit ?? '50', 10) || 50;
+    const parsedOffset = parseInt(offset ?? '0', 10) || 0;
+
+    return this.service.getForWizard(wizardId, {
+      status,
+      limit: parsedLimit,
+      offset: parsedOffset,
+      sortBy,
+      order,
+    });
   }
 
   /** Wróżka: akceptacja wniosku */

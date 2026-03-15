@@ -119,6 +119,39 @@
   opacity: 0.9;
 }
 
+/* Na mobilce: Dziś pod nawigacją, na desktopie: po lewej */
+.calendar-week__nav-btn--today-right {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .calendar-week__nav {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    gap: 0.5rem;
+  }
+
+  .calendar-week__nav-left {
+    display: none;
+  }
+
+  .calendar-week__nav-center {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+
+  .calendar-week__nav-right {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+
+  .calendar-week__nav-btn--today-right {
+    display: inline-flex;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ── Nagłówek dni ── */
 .calendar-week__header {
   display: grid;
@@ -126,6 +159,23 @@
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  /* Scrollbar rezerwuje to samo miejsce co w grid-wrapperze, ale jest ukryty */
+  overflow-y: scroll;
+}
+
+.calendar-week__header::-webkit-scrollbar {
+  width: 7px;
+}
+
+.calendar-week__header::-webkit-scrollbar-track,
+.calendar-week__header::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Firefox — same gutter width */
+.calendar-week__header {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
 }
 
 .calendar-week__time-label,
@@ -138,7 +188,7 @@
 }
 
 .calendar-week__day-label {
-  border-left: 1px solid var(--border);
+  box-shadow: -1px 0 0 0 var(--border);
 }
 
 /* ── Wrapper gridu – scrolluje wewnętrznie, ściśle ograniczony ── */
@@ -204,7 +254,7 @@
 
 .calendar-week__day-column {
   position: relative;
-  border-left: 1px solid var(--border);
+  box-shadow: -1px 0 0 0 var(--border);
 }
 
 .calendar-week__slot {

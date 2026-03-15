@@ -1,6 +1,7 @@
 export default {
-  endOfLine: "crlf",
+  endOfLine: "lf",
   singleQuote: true,
   trailingComma: "all",
+  printWidth: 120,
   plugins: ['prettier-plugin-organize-imports'],
 };

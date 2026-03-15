@@ -75,8 +75,10 @@
 
 /* Formularz */
 .kontakt-form {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(12, 16, 37, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(58, 74, 143, 0.25);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
 }
@@ -143,14 +145,14 @@
   font-size: 0.875rem;
   font-weight: 600;
   font-family: inherit;
-  color: #fff;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--text-primary);
+  background: var(--accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.2s;
 }
 
 .kontakt-form__submit:hover {
-  opacity: 0.9;
+  background: var(--accent-hover);
 }

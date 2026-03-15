@@ -128,8 +128,12 @@ export class MeetingRequestService {
 
   async listForMyAds(
     wrozkaUserId: number,
-    options?: { status?: string; limit?: number; offset?: number },
+    options?: { status?: string; limit?: number; offset?: number; sortBy?: string; order?: string },
   ) {
+    const allowedSortBy = ['createdAt', 'requestedStartsAt', 'status'] as const;
+    const allowedOrder = ['ASC', 'DESC'] as const;
+    const validatedSortBy = allowedSortBy.includes(options?.sortBy as any) ? options!.sortBy! : 'createdAt';
+    const validatedOrder = allowedOrder.includes(options?.order?.toUpperCase() as any) ? (options!.order!.toUpperCase() as 'ASC' | 'DESC') : 'DESC';
     const myAds = await this.advertisementRepository.find({
       where: { userId: wrozkaUserId },
       select: { id: true },
@@ -156,7 +160,7 @@ export class MeetingRequestService {
     const [requests, total] = await this.meetingRequestRepository.findAndCount({
       where,
       relations: ['user', 'advertisement'],
-      order: { createdAt: 'DESC' },
+      order: { [validatedSortBy]: validatedOrder },
       take: options?.limit ?? 50,
       skip: options?.offset ?? 0,
     });
@@ -214,8 +218,12 @@ export class MeetingRequestService {
 
   async listMyRequests(
     clientUserId: number,
-    options?: { status?: string; limit?: number; offset?: number },
+    options?: { status?: string; limit?: number; offset?: number; sortBy?: string; order?: string },
   ) {
+    const allowedSortBy = ['createdAt', 'requestedStartsAt', 'status'] as const;
+    const allowedOrder = ['ASC', 'DESC'] as const;
+    const validatedSortBy = allowedSortBy.includes(options?.sortBy as any) ? options!.sortBy! : 'createdAt';
+    const validatedOrder = allowedOrder.includes(options?.order?.toUpperCase() as any) ? (options!.order!.toUpperCase() as 'ASC' | 'DESC') : 'DESC';
     const where: any = { userId: clientUserId };
     if (options?.status) {
       where.status = options.status;
@@ -224,7 +232,7 @@ export class MeetingRequestService {
     const [requests, total] = await this.meetingRequestRepository.findAndCount({
       where,
       relations: ['advertisement', 'advertisement.user'],
-      order: { createdAt: 'DESC' },
+      order: { [validatedSortBy]: validatedOrder },
       take: options?.limit ?? 50,
       skip: options?.offset ?? 0,
     });
