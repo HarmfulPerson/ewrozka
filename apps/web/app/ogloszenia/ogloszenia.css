@@ -2,16 +2,13 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-top: 80px;
-  background: var(--bg-primary);
 }
 
 .ogloszenia-main {
-  flex: 1;
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 3rem 1.5rem;
+  padding: calc(80px + 2rem) 1.5rem 3rem;
 }
 
 .ogloszenia-header {

@@ -1,24 +1,20 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { getStoredUser } from '../../lib/auth-mock';
 import {
-  apiGetMyMeetingRequests,
   apiAcceptMeetingRequest,
   apiRejectMeetingRequest,
-  apiGetWizardGuestBookings,
   apiAcceptGuestBooking,
   apiRejectGuestBooking,
-  MeetingRequestDto,
-  GuestBookingDto,
+  apiGetWizardUnifiedRequests,
+  type UnifiedRequestDto,
 } from '../../lib/api-meetings';
 import './wnioski.css';
 import '../panel-shared.css';
-
-type UnifiedItem =
-  | { kind: 'regular'; data: MeetingRequestDto; sortDate: Date }
-  | { kind: 'guest';   data: GuestBookingDto;   sortDate: Date };
 
 const STATUS_LABELS: Record<string, string> = {
   pending:   'Oczekujące',
@@ -28,423 +24,369 @@ const STATUS_LABELS: Record<string, string> = {
   completed: 'Zakończone',
 };
 
+const PAGE_SIZES = [10, 20, 50, 100];
+const VALID_FILTERS = ['', 'pending', 'accepted', 'paid', 'rejected'];
+
 export default function WnioskiPage() {
+  const searchParams = useSearchParams();
   const [user] = useState(() => getStoredUser());
 
-  const [requests, setRequests]         = useState<MeetingRequestDto[]>([]);
-  const [total, setTotal]               = useState(0);
+  const [items, setItems]   = useState<UnifiedRequestDto[]>([]);
+  const [total, setTotal]   = useState(0);
+
   const [offset, setOffset]             = useState(0);
-  const [limit]                         = useState(20);
-  const [statusFilter, setStatusFilter] = useState('pending');
+  const [limit, setLimit]               = useState(20);
+  const [statusFilter, setStatusFilter] = useState(() => {
+    const fromUrl = searchParams.get('status') ?? 'pending';
+    return VALID_FILTERS.includes(fromUrl) ? fromUrl : 'pending';
+  });
+  const [sortBy, setSortBy]             = useState('scheduledAt');
+  const [sortOrder, setSortOrder]       = useState<'ASC' | 'DESC'>('DESC');
 
-  const [guestBookings, setGuestBookings] = useState<GuestBookingDto[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState<string | null>(null);
-  const [success, setSuccess]     = useState<string | null>(null);
-  const [processingId, setProcessingId] = useState<number | string | null>(null);
-
-  // Modal odrzucenia
   const [rejectModal, setRejectModal] = useState<{
     open: boolean;
-    id: number | string | null;
+    id: string | null;
     kind: 'regular' | 'guest';
     reason: string;
-    requiresReason?: boolean; // dla zaakceptowanego (nieopłaconego) wniosku – powód obowiązkowy
+    showError?: boolean;
   }>({ open: false, id: null, kind: 'guest', reason: '' });
 
-  // ── Pobieranie danych ────────────────────────────────────────────────────
-
+  // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    setError(null);
     try {
-      const [regData, guestData] = await Promise.all([
-        apiGetMyMeetingRequests(user.token, { status: statusFilter || undefined, limit, offset }),
-        apiGetWizardGuestBookings(user.token),
-      ]);
-      setRequests(regData.requests);
-      setTotal(regData.total);
-      setGuestBookings(guestData.bookings);
+      const data = await apiGetWizardUnifiedRequests(user.token, {
+        status: statusFilter || undefined,
+        limit, offset, sortBy, order: sortOrder,
+      });
+      setItems(data.items);
+      setTotal(data.total);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nie udało się załadować wniosków');
+      toast.error(err instanceof Error ? err.message : 'Nie udało się załadować wniosków');
     } finally {
       setLoading(false);
     }
-  }, [user, statusFilter, limit, offset]);
+  }, [user, statusFilter, offset, limit, sortBy, sortOrder]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Odśwież listę, gdy przyjdzie powiadomienie o nowym wniosku (WebSocket)
   useEffect(() => {
     const handler = () => fetchAll();
     window.addEventListener('ewrozka:pending-requests-changed', handler);
     return () => window.removeEventListener('ewrozka:pending-requests-changed', handler);
   }, [fetchAll]);
 
-  // ── Akcje: zalogowani klienci ────────────────────────────────────────────
+  // ── Actions ────────────────────────────────────────────────────────────────
+  const notifyChanged = () => window.dispatchEvent(new Event('ewrozka:pending-requests-changed'));
 
-  const handleAccept = async (id: number) => {
+  const handleAccept = async (item: UnifiedRequestDto) => {
     if (!user) return;
-    setProcessingId(id);
-    setError(null);
-    setSuccess(null);
+    setProcessingId(item.id);
     try {
-      await apiAcceptMeetingRequest(user.token, id);
-      setSuccess('Wniosek zaakceptowany! Klient otrzyma powiadomienie o płatności.');
+      if (item.kind === 'regular') {
+        await apiAcceptMeetingRequest(user.token, Number(item.id));
+      } else {
+        await apiAcceptGuestBooking(user.token, item.id);
+      }
+      toast.success('Wniosek zaakceptowany!');
+      notifyChanged();
       await fetchAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Błąd akceptacji');
+      toast.error(err instanceof Error ? err.message : 'Błąd akceptacji');
     } finally { setProcessingId(null); }
   };
 
-  const handleReject = (id: number, request?: MeetingRequestDto) => {
-    const requiresReason = request?.status === 'accepted' && request?.appointment?.status !== 'paid';
-    setRejectModal({ open: true, id, kind: 'regular', reason: '', requiresReason });
-  };
-
-  // ── Akcje: goście ────────────────────────────────────────────────────────
-
-  const handleAcceptGuest = async (id: string) => {
-    if (!user) return;
-    setProcessingId(id);
-    setError(null);
-    setSuccess(null);
-    try {
-      await apiAcceptGuestBooking(user.token, id);
-      setSuccess('Zaakceptowano! Gość otrzyma e-mail z linkiem do płatności.');
-      await fetchAll();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Błąd akceptacji');
-    } finally { setProcessingId(null); }
-  };
-
-  const handleRejectGuest = (id: string, booking?: GuestBookingDto) => {
-    const requiresReason = booking?.status === 'accepted'; // zaakceptowany, nieopłacony
-    setRejectModal({ open: true, id, kind: 'guest', reason: '', requiresReason });
+  const handleReject = (item: UnifiedRequestDto) => {
+    setRejectModal({ open: true, id: item.id, kind: item.kind, reason: '' });
   };
 
   const handleConfirmReject = async () => {
     if (!user || rejectModal.id === null) return;
-    const { id, kind, reason, requiresReason } = rejectModal;
-    if (requiresReason && !reason.trim()) {
-      setError('Podaj powód odrzucenia (wymagane dla zaakceptowanego, nieopłaconego wniosku).');
+    const { id, kind, reason } = rejectModal;
+    if (!reason.trim()) {
+      setRejectModal(m => ({ ...m, showError: true }));
       return;
     }
     setRejectModal(m => ({ ...m, open: false }));
     setProcessingId(id);
-    setError(null);
-    setSuccess(null);
     try {
       if (kind === 'regular') {
-        await apiRejectMeetingRequest(user.token, id as number, requiresReason ? reason.trim() : undefined);
-        setSuccess('Wniosek odrzucony.');
+        await apiRejectMeetingRequest(user.token, Number(id), reason.trim());
       } else {
-        await apiRejectGuestBooking(user.token, id as string, reason.trim() || undefined);
-        setSuccess('Wniosek gościa odrzucony.');
+        await apiRejectGuestBooking(user.token, id, reason.trim());
       }
+      toast.success('Wniosek odrzucony.');
+      notifyChanged();
       await fetchAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Błąd odrzucenia');
+      toast.error(err instanceof Error ? err.message : 'Błąd odrzucenia');
     } finally {
       setProcessingId(null);
-      setRejectModal({ open: false, id: null, kind: 'guest', reason: '', requiresReason: false });
+      setRejectModal({ open: false, id: null, kind: 'guest', reason: '' });
     }
   };
 
-  // ── Scalona lista ────────────────────────────────────────────────────────
+  // ── Sorting ────────────────────────────────────────────────────────────────
+  const toggleSort = (col: string) => {
+    if (sortBy === col) {
+      setSortOrder(prev => prev === 'ASC' ? 'DESC' : 'ASC');
+    } else {
+      setSortBy(col);
+      setSortOrder('DESC');
+    }
+    setOffset(0);
+  };
 
-  const canJoin = (startsAt: string) =>
-    new Date() >= new Date(new Date(startsAt).getTime() - 5 * 60 * 1000);
+  const SortArrow = ({ col }: { col: string }) => (
+    <span className={`wnioski-sort-arrow${sortBy === col ? ' wnioski-sort-arrow--active' : ''}`}>
+      {sortBy === col ? (sortOrder === 'ASC' ? '▲' : '▼') : '▼'}
+    </span>
+  );
 
-  // Filtrujemy gości tak samo jak zalogowanych (mapujemy statusy)
-  const filteredGuests = statusFilter
-    ? guestBookings.filter(b => {
-        if (statusFilter === 'pending')   return b.status === 'pending';
-        if (statusFilter === 'accepted')  return b.status === 'accepted' || b.status === 'paid';
-        if (statusFilter === 'rejected')  return b.status === 'rejected';
-        return true;
-      })
-    : guestBookings;
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const getJoinStatus = (startsAt: string | null) => {
+    if (!startsAt) return { canJoin: false, tooltip: '' };
+    const diff = new Date(startsAt).getTime() - 5 * 60 * 1000 - Date.now();
+    if (diff <= 0) return { canJoin: true, tooltip: '' };
+    const totalMins = Math.ceil(diff / 60000);
+    const d = Math.floor(totalMins / 1440);
+    const h = Math.floor((totalMins % 1440) / 60);
+    const m = totalMins % 60;
+    const parts: string[] = [];
+    if (d > 0) parts.push(`${d} d`);
+    if (h > 0) parts.push(`${h} h`);
+    if (m > 0 || parts.length === 0) parts.push(`${m} min`);
+    return { canJoin: false, tooltip: `Dostępne za ${parts.join(' ')}` };
+  };
 
-  const unified: UnifiedItem[] = [
-    ...requests.map(r => ({
-      kind: 'regular' as const,
-      data: r,
-      sortDate: r.requestedStartsAt ? new Date(r.requestedStartsAt) : new Date(r.createdAt ?? 0),
-    })),
-    ...filteredGuests.map(g => ({
-      kind: 'guest' as const,
-      data: g,
-      sortDate: new Date(g.scheduledAt),
-    })),
-  ].sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
-
-  const pendingCount = unified.filter(item =>
-    item.kind === 'guest' ? item.data.status === 'pending' : item.data.status === 'pending'
-  ).length;
-
-  const totalPages  = Math.ceil(total / limit);
+  const totalPages = Math.max(1, Math.ceil(total / limit));
   const currentPage = Math.floor(offset / limit) + 1;
 
-  if (loading && unified.length === 0) {
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+  const fmtTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  if (loading && items.length === 0) {
     return (
-      <div className="panel-page">
+      <div className="panel-page wnioski-page">
         <div className="panel-page-spinner"><span className="panel-spinner" /></div>
       </div>
     );
   }
 
   return (
-    <div className="panel-page">
+    <div className="panel-page wnioski-page">
       <div className="panel-page__head">
-        <div>
-          <h1 className="panel-page__title">
-            Wnioski o spotkanie
-            {pendingCount > 0 && (
-              <span className="wnioski-head-badge">{pendingCount}</span>
-            )}
-          </h1>
-          <p className="panel-page__subtitle">
-            Zaakceptuj lub odrzuć wnioski zalogowanych klientów i gości
-          </p>
-        </div>
+        <h1 className="panel-page__title">
+          Wnioski o spotkanie
+        </h1>
       </div>
 
-      {error   && <div className="wnioski-alert wnioski-alert--error">{error}</div>}
-      {success && <div className="wnioski-alert wnioski-alert--success">{success}</div>}
-
-      <div className="wnioski-filters">
-        <div className="panel-select">
-          <span className="panel-select__label">Status:</span>
-          <div className="panel-select__control">
-            <select
-              className="panel-select__dropdown"
-              value={statusFilter}
-              onChange={e => { setStatusFilter(e.target.value); setOffset(0); }}
+      <div className="wnioski-toolbar">
+        <div className="wnioski-filters">
+          {([
+            ['', 'Wszystkie'],
+            ['pending', 'Oczekujące'],
+            ['accepted', 'Oczekujące na płatność'],
+            ['paid', 'Opłacone'],
+            ['rejected', 'Odrzucone'],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              className={`wnioski-filter-btn${statusFilter === value ? ' wnioski-filter-btn--active' : ''}`}
+              onClick={() => { setStatusFilter(value); setOffset(0); }}
             >
-              <option value="">Wszystkie</option>
-              <option value="pending">Oczekujące</option>
-              <option value="accepted">Zaakceptowane / Opłacone</option>
-              <option value="rejected">Odrzucone</option>
-            </select>
-          </div>
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <section className="wnioski-section">
-        {unified.length === 0 ? (
+      <div className="wnioski-table-wrap">
+        {items.length === 0 ? (
           <p className="wnioski-empty">Brak wniosków dla wybranego filtra</p>
         ) : (
-          <div className="wnioski-list">
-            {unified.map(item => {
-              if (item.kind === 'regular') {
-                const r = item.data;
-                const isProc = processingId === r.id;
-                const date   = r.requestedStartsAt ? new Date(r.requestedStartsAt) : null;
-                const isPending = r.status === 'pending';
-                const isAcceptedUnpaid = r.status === 'accepted' && r.appointment?.status !== 'paid';
+          <table className="wnioski-table">
+            <thead>
+              <tr>
+                <th style={{ width: 65 }}>Typ</th>
+                <th style={{ width: 170 }}>Klient</th>
+                <th style={{ width: 140 }}>Ogłoszenie</th>
+                <th style={{ width: 110 }} data-sortable onClick={() => toggleSort('scheduledAt')}>
+                  <span className="wnioski-th-inner">Data <SortArrow col="scheduledAt" /></span>
+                </th>
+                {statusFilter === '' ? (
+                  <th style={{ width: 120 }} data-sortable onClick={() => toggleSort('status')}>
+                    <span className="wnioski-th-inner">Status <SortArrow col="status" /></span>
+                  </th>
+                ) : (
+                  <th style={{ width: 120 }}>Status</th>
+                )}
+                <th style={{ width: 145 }}>Akcje</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map(item => {
+                const isProc = processingId === item.id;
+                const isPending = item.unifiedStatus === 'pending';
+                const isAccepted = item.unifiedStatus === 'accepted';
+                const isPaid = item.unifiedStatus === 'paid';
+                const dateStr = item.scheduledAt;
+
                 return (
-                  <div key={`r-${r.id}`} className="wnioski-card">
-                    <div className="wnioski-card__header">
-                      <div>
-                        <h3 className="wnioski-card__title">{r.advertisementTitle}</h3>
-                        <span className="wnioski-card__client">
-                          Klient: <strong>{r.clientUsername}</strong>
-                        </span>
-                      </div>
-                      <span className={`wnioski-card__status wnioski-card__status--${r.status}`}>
-                        {STATUS_LABELS[r.status] ?? r.status}
+                  <tr key={`${item.kind}-${item.id}`}>
+                    <td>
+                      <span className={`wnioski-type-badge wnioski-type-badge--${item.kind === 'regular' ? 'regular' : 'guest'}`}>
+                        {item.kind === 'regular' ? 'Klient' : 'Gość'}
                       </span>
-                    </div>
-
-                    <div className="wnioski-card__body">
-                      {date ? (
-                        <div className="wnioski-card__datetime">
-                          <div className="wnioski-card__date">
-                            📅 {date.toLocaleDateString('pl-PL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                          </div>
-                          <div className="wnioski-card__time">
-                            🕐 {date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                        </div>
+                    </td>
+                    <td>
+                      <span className="wnioski-cell-client">{item.clientName || 'Klient'}</span>
+                      {item.kind === 'guest' && item.clientEmail && (
+                        <span className="wnioski-cell-client__sub">{item.clientEmail}</span>
+                      )}
+                    </td>
+                    <td>{item.advertisementTitle ?? 'Konsultacja'}</td>
+                    <td className="wnioski-cell-date">
+                      {dateStr ? (
+                        <>
+                          {fmtDate(dateStr)}
+                          <span className="wnioski-cell-date__time">
+                            {fmtTime(dateStr)}
+                            {item.durationMinutes ? ` · ${item.durationMinutes} min` : ''}
+                          </span>
+                        </>
                       ) : (
-                        <div className="wnioski-card__no-date">Data do ustalenia</div>
+                        <span style={{ color: 'var(--text-muted)' }}>—</span>
                       )}
-                      {r.message && (
-                        <div className="wnioski-card__message">
-                          <strong>Wiadomość:</strong> {r.message}
-                        </div>
-                      )}
-                      {r.appointment?.status === 'paid' && (
-                        <div className="wnioski-card__payment-status">
-                          <span className="wnioski-status-badge wnioski-status-badge--paid">✓ Opłacone</span>
-                        </div>
-                      )}
-                      {r.createdAt && (
-                        <div className="wnioski-card__created">
-                          Wysłano: {new Date(r.createdAt).toLocaleString('pl-PL')}
-                        </div>
-                      )}
-                    </div>
-
-                    {r.appointment?.status === 'paid' && r.appointment.meetingToken && (
-                      <div className="wnioski-card__actions">
-                        {canJoin(r.appointment.startsAt) ? (
-                          <Link href={`/spotkanie/${r.appointment.meetingToken}`}
-                            className="wnioski-card__button wnioski-card__button--meeting">
-                            🎥 Dołącz do spotkania
-                          </Link>
-                        ) : (
-                          <div className="wnioski-card__meeting-wrapper">
-                            <div className="wnioski-card__button wnioski-card__button--meeting-disabled">
-                              🎥 Dołącz do spotkania
-                            </div>
-                            <div className="wnioski-tooltip">
-                              <span className="wnioski-tooltip__icon">ℹ</span>
-                              <span className="wnioski-tooltip__text">Dostępne 5 minut przed rozpoczęciem</span>
-                            </div>
-                          </div>
+                    </td>
+                    <td>
+                      <span className={`wnioski-status wnioski-status--${item.unifiedStatus}`}>
+                        {STATUS_LABELS[item.unifiedStatus] ?? item.unifiedStatus}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="wnioski-actions">
+                        {isPending && (
+                          <>
+                            <button className="wnioski-btn wnioski-btn--accept" onClick={() => handleAccept(item)} disabled={isProc}>
+                              ✓
+                            </button>
+                            <button className="wnioski-btn wnioski-btn--reject" onClick={() => handleReject(item)} disabled={isProc}>
+                              ✕
+                            </button>
+                          </>
                         )}
+                        {isAccepted && (
+                          <button className="wnioski-btn wnioski-btn--reject" onClick={() => handleReject(item)} disabled={isProc}>
+                            ✕ Odrzuć
+                          </button>
+                        )}
+                        {isPaid && item.kind === 'regular' && item.meetingToken && (() => {
+                          const { canJoin, tooltip } = getJoinStatus(item.appointmentStartsAt);
+                          return canJoin ? (
+                            <Link href={`/spotkanie/${item.meetingToken}`} className="wnioski-btn wnioski-btn--join">
+                              Dołącz
+                            </Link>
+                          ) : (
+                            <span className="wnioski-join-wrap">
+                              <span className="wnioski-btn wnioski-btn--join wnioski-btn--disabled">Dołącz</span>
+                              <span className="wnioski-tooltip">{tooltip}</span>
+                            </span>
+                          );
+                        })()}
+                        {isPaid && item.kind === 'guest' && item.scheduledAt && (() => {
+                          const { canJoin, tooltip } = getJoinStatus(item.scheduledAt);
+                          return canJoin ? (
+                            <Link href={`/panel/spotkanie-gosc/${item.id}`} className="wnioski-btn wnioski-btn--join">
+                              Dołącz
+                            </Link>
+                          ) : (
+                            <span className="wnioski-join-wrap">
+                              <span className="wnioski-btn wnioski-btn--join wnioski-btn--disabled">Dołącz</span>
+                              <span className="wnioski-tooltip">{tooltip}</span>
+                            </span>
+                          );
+                        })()}
                       </div>
-                    )}
-
-                    {isPending && (
-                      <div className="wnioski-card__actions">
-                        <button className="wnioski-card__button wnioski-card__button--accept"
-                          onClick={() => handleAccept(r.id)} disabled={isProc}>
-                          {isProc ? 'Przetwarzanie...' : '✓ Zaakceptuj'}
-                        </button>
-                        <button className="wnioski-card__button wnioski-card__button--reject"
-                          onClick={() => handleReject(r.id, r)} disabled={isProc}>
-                          ✕ Odrzuć
-                        </button>
-                      </div>
-                    )}
-                    {isAcceptedUnpaid && (
-                      <div className="wnioski-card__actions">
-                        <button className="wnioski-card__button wnioski-card__button--reject"
-                          onClick={() => handleReject(r.id, r)} disabled={isProc}>
-                          {isProc ? 'Przetwarzanie...' : '✕ Odrzuć rezerwację'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                    </td>
+                  </tr>
                 );
-              }
-
-              // ── Gość ─────────────────────────────────────────────────────
-              const g = item.data;
-              const isProc = processingId === g.id;
-              const date   = new Date(g.scheduledAt);
-              const isPending = g.status === 'pending';
-              const isAcceptedUnpaidGuest = g.status === 'accepted'; // zaakceptowany, nieopłacony
-              return (
-                <div key={`g-${g.id}`} className="wnioski-card wnioski-card--guest">
-                  <div className="wnioski-card__header">
-                    <div>
-                      <div className="wnioski-card__title-row">
-                        <h3 className="wnioski-card__title">{g.advertisementTitle ?? 'Konsultacja'}</h3>
-                        <span className="wnioski-guest-badge">Gość</span>
-                      </div>
-                      <span className="wnioski-card__client">
-                        {g.guestName}
-                        {g.guestEmail && <> · <a href={`mailto:${g.guestEmail}`} className="wnioski-email-link">{g.guestEmail}</a></>}
-                        {g.guestPhone && <> · {g.guestPhone}</>}
-                      </span>
-                    </div>
-                    <span className={`wnioski-card__status wnioski-card__status--${g.status}`}>
-                      {STATUS_LABELS[g.status] ?? g.status}
-                    </span>
-                  </div>
-
-                  <div className="wnioski-card__body">
-                    <div className="wnioski-card__datetime">
-                      <div className="wnioski-card__date">
-                        📅 {date.toLocaleDateString('pl-PL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                      </div>
-                      <div className="wnioski-card__time">
-                        🕐 {date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}
-                        <span className="wnioski-card__duration"> · {g.durationMinutes} min · {(g.priceGrosze / 100).toFixed(2)} zł</span>
-                      </div>
-                    </div>
-                    {g.message && (
-                      <div className="wnioski-card__message">
-                        <strong>Wiadomość:</strong> {g.message}
-                      </div>
-                    )}
-                    {g.rejectionReason && (
-                      <div className="wnioski-card__message">
-                        <strong>Powód odrzucenia:</strong> {g.rejectionReason}
-                      </div>
-                    )}
-                    <div className="wnioski-card__created">
-                      Wysłano: {new Date(g.createdAt).toLocaleString('pl-PL')}
-                    </div>
-                  </div>
-
-                  {g.status === 'paid' && (
-                    <div className="wnioski-card__actions">
-                      {canJoin(g.scheduledAt) ? (
-                        <Link href={`/panel/spotkanie-gosc/${g.id}`}
-                          className="wnioski-card__button wnioski-card__button--meeting">
-                          🎥 Dołącz do spotkania
-                        </Link>
-                      ) : (
-                        <div className="wnioski-card__meeting-wrapper">
-                          <div className="wnioski-card__button wnioski-card__button--meeting-disabled">
-                            🎥 Dołącz do spotkania
-                          </div>
-                          <div className="wnioski-tooltip">
-                            <span className="wnioski-tooltip__icon">ℹ</span>
-                            <span className="wnioski-tooltip__text">Dostępne 5 minut przed rozpoczęciem</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {isPending && (
-                    <div className="wnioski-card__actions">
-                      <button className="wnioski-card__button wnioski-card__button--accept"
-                        onClick={() => handleAcceptGuest(g.id)} disabled={isProc}>
-                        {isProc ? 'Przetwarzanie...' : '✓ Zaakceptuj'}
-                      </button>
-                      <button className="wnioski-card__button wnioski-card__button--reject"
-                        onClick={() => handleRejectGuest(g.id, g)} disabled={isProc}>
-                        ✕ Odrzuć
-                      </button>
-                    </div>
-                  )}
-                  {isAcceptedUnpaidGuest && (
-                    <div className="wnioski-card__actions">
-                      <button className="wnioski-card__button wnioski-card__button--reject"
-                        onClick={() => handleRejectGuest(g.id, g)} disabled={isProc}>
-                        {isProc ? 'Przetwarzanie...' : '✕ Odrzuć rezerwację'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+              })}
+            </tbody>
+          </table>
         )}
+      </div>
 
-        {totalPages > 1 && (
-          <div className="panel-pagination">
-            <div className="panel-pagination__controls">
-              <button className="panel-pagination__btn"
-                onClick={() => setOffset(Math.max(0, offset - limit))}
-                disabled={currentPage === 1}>← Poprzednia</button>
-              <span className="panel-pagination__info">Strona {currentPage} z {totalPages}</span>
-              <button className="panel-pagination__btn"
-                onClick={() => setOffset(offset + limit)}
-                disabled={currentPage === totalPages}>Następna →</button>
-            </div>
-          </div>
-        )}
-      </section>
+      <div className="wnioski-pagination">
+        <div className="wnioski-pagination__per-page">
+          <span className="wnioski-pagination__label">Wierszy:</span>
+          <select
+            className="wnioski-pagination__select"
+            value={limit}
+            onChange={e => { setLimit(Number(e.target.value)); setOffset(0); }}
+          >
+            {PAGE_SIZES.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="wnioski-pagination__nav">
+          <button className="wnioski-pagination__btn"
+            onClick={() => setOffset(0)}
+            disabled={currentPage === 1}>
+            «
+          </button>
+          <button className="wnioski-pagination__btn"
+            onClick={() => setOffset(Math.max(0, offset - limit))}
+            disabled={currentPage === 1}>
+            ‹
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+            .reduce<(number | 'dots')[]>((acc, p, idx, arr) => {
+              if (idx > 0 && p - (arr[idx - 1] ?? 0) > 1) acc.push('dots');
+              acc.push(p);
+              return acc;
+            }, [])
+            .map((item, idx) =>
+              item === 'dots' ? (
+                <span key={`dots-${idx}`} className="wnioski-pagination__dots">…</span>
+              ) : (
+                <button
+                  key={item}
+                  className={`wnioski-pagination__btn${item === currentPage ? ' wnioski-pagination__btn--active' : ''}`}
+                  onClick={() => setOffset((item - 1) * limit)}
+                >
+                  {item}
+                </button>
+              )
+            )}
+
+          <button className="wnioski-pagination__btn"
+            onClick={() => setOffset(offset + limit)}
+            disabled={currentPage === totalPages}>
+            ›
+          </button>
+          <button className="wnioski-pagination__btn"
+            onClick={() => setOffset((totalPages - 1) * limit)}
+            disabled={currentPage === totalPages}>
+            »
+          </button>
+        </div>
+
+        <span className="wnioski-pagination__info">
+          {total > 0 ? `${offset + 1}–${Math.min(offset + limit, total)} z ${total}` : '0 z 0'}
+        </span>
+      </div>
 
       {/* Modal odrzucenia */}
       {rejectModal.open && (
@@ -455,53 +397,23 @@ export default function WnioskiPage() {
               <button className="wnioski-modal__close" onClick={() => setRejectModal(m => ({ ...m, open: false }))}>✕</button>
             </div>
             <div className="wnioski-modal__body">
-              {(rejectModal.kind === 'guest' || rejectModal.requiresReason) ? (
-                <>
-                  <p className="wnioski-modal__desc">
-                    {rejectModal.requiresReason
-                      ? `Zaakceptowany, nieopłacony wniosek – podaj powód odrzucenia (wymagane). ${rejectModal.kind === 'guest' ? 'Gość' : 'Klient'} otrzyma go e-mailem.`
-                      : 'Możesz podać powód odrzucenia – zostanie wysłany e-mailem do gościa.'}
-                  </p>
-                  <textarea
-                    className="wnioski-modal__textarea"
-                    placeholder={rejectModal.requiresReason ? 'Powód odrzucenia (wymagane)...' : 'Powód odrzucenia (opcjonalnie)...'}
-                    rows={4}
-                    value={rejectModal.reason}
-                    onChange={e => setRejectModal(m => ({ ...m, reason: e.target.value }))}
-                    autoFocus
-                  />
-                </>
-              ) : rejectModal.requiresReason ? (
-                <>
-                  <p className="wnioski-modal__desc">
-                    Podaj powód odrzucenia – zostanie wysłany e-mailem do klienta.
-                  </p>
-                  <textarea
-                    className="wnioski-modal__textarea"
-                    placeholder="Powód odrzucenia (wymagane)..."
-                    rows={4}
-                    value={rejectModal.reason}
-                    onChange={e => setRejectModal(m => ({ ...m, reason: e.target.value }))}
-                    autoFocus
-                  />
-                </>
-              ) : (
-                <p className="wnioski-modal__desc">
-                  Czy na pewno chcesz odrzucić ten wniosek? Tej akcji nie można cofnąć.
-                </p>
+              <textarea
+                className={`wnioski-modal__textarea${rejectModal.showError ? ' wnioski-modal__textarea--error' : ''}`}
+                placeholder="Powód odrzucenia..."
+                rows={3}
+                value={rejectModal.reason}
+                onChange={e => setRejectModal(m => ({ ...m, reason: e.target.value, showError: false }))}
+                autoFocus
+              />
+              {rejectModal.showError && (
+                <p className="wnioski-modal__error">Podaj powód odrzucenia</p>
               )}
             </div>
             <div className="wnioski-modal__footer">
-              <button
-                className="wnioski-card__button wnioski-card__button--cancel"
-                onClick={() => setRejectModal(m => ({ ...m, open: false }))}
-              >
+              <button className="wnioski-btn wnioski-btn--cancel" onClick={() => setRejectModal(m => ({ ...m, open: false }))}>
                 Anuluj
               </button>
-              <button
-                className="wnioski-card__button wnioski-card__button--reject"
-                onClick={handleConfirmReject}
-              >
+              <button className="wnioski-btn wnioski-btn--reject" onClick={handleConfirmReject}>
                 ✕ Odrzuć
               </button>
             </div>

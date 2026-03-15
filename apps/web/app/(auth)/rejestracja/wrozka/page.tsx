@@ -11,6 +11,7 @@ import {
   apiUploadWizardApplicationPhoto,
   type TopicDto,
 } from '../../../lib/api';
+import { TopicIcon } from '../../../components/topic-icon/topic-icon';
 import './wrozka-registration.css';
 
 type Step = 'form' | 'success';
@@ -194,7 +195,7 @@ export default function RejestracjaWrozkaPage() {
                 <span className="wrozka-reg__photo-icon">📷</span>
                 <span className="wrozka-reg__photo-hint">
                   Kliknij lub przeciągnij zdjęcie<br />
-                  <small>JPG, PNG, WebP · maks. 5 MB</small>
+                  <small>Maks. 5 MB</small>
                 </span>
               </div>
             )}
@@ -307,6 +308,7 @@ export default function RejestracjaWrozkaPage() {
                   className={`wrozka-reg__topic${selectedTopics.includes(t.id) ? ' wrozka-reg__topic--active' : ''}`}
                   onClick={() => toggleTopic(t.id)}
                 >
+                  <TopicIcon name={t.name} size={15} />
                   {t.name}
                 </button>
               ))}

@@ -5,10 +5,12 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '../../components/layout/header';
 import { Footer } from '../../components/layout/footer';
+import { VantaBackground } from '../../components/vanta-background/vanta-background';
 import { apiGetWizard, apiGetWizardAdvertisements, WizardDto, AdvertisementDto, getUploadUrl } from '../../lib/api';
 import { apiGetWizardReviews, ReviewDto } from '../../lib/api-calendar';
 import Image from 'next/image';
 import { StarRating } from '../../components/star-rating/StarRating';
+import { TopicBadges } from '../../components/topic-badges/topic-badges';
 import './wizard-profile.css';
 import '../../components/star-rating/star-rating.css';
 
@@ -98,8 +100,17 @@ export default function WizardProfilePage() {
 
   return (
     <div className="wizard-page">
+      <VantaBackground>
       <Header />
       <main className="wizard-main">
+        <div className="wizard-nav">
+          <Link href="/ogloszenia" className="wizard-nav__back">← Wróć</Link>
+          <div className="wizard-nav__breadcrumbs">
+            <Link href="/ogloszenia" className="breadcrumb-link">Wróżki</Link>
+            <span className="breadcrumb-separator">/</span>
+            <span className="breadcrumb-current">{wizard.username}</span>
+          </div>
+        </div>
 
         {/* ── Kompaktowy nagłówek wróżki ── */}
         <div className="wizard-hero">
@@ -133,11 +144,7 @@ export default function WizardProfilePage() {
               )}
             </div>
 
-            <div className="wizard-hero__topics">
-              {specializations.map((topic, i) => (
-                <span key={i} className="wizard-hero__topic">{topic}</span>
-              ))}
-            </div>
+            <TopicBadges topics={specializations} />
 
             <div className="wizard-hero__rating">
               {hasRating ? (
@@ -276,6 +283,7 @@ export default function WizardProfilePage() {
         </section>
 
       </main>
+      </VantaBackground>
       <Footer />
 
       {/* ── Modal "Poznaj mnie" ── */}

@@ -1,11 +1,16 @@
+'use client';
+
 import './landing.css';
-import Link from 'next/link';
 import { Header } from './components/layout/header';
 import { Footer } from './components/layout/footer';
 import { AnnouncementsSection } from './components/announcements/announcements-section';
 import { VantaBackground } from './components/vanta-background/vanta-background';
+import { LandingCtas } from './components/landing-ctas/landing-ctas';
+import { useRevealOnScroll } from './hooks/useRevealOnScroll';
 
 export default function HomePage() {
+  const featuresRef = useRevealOnScroll<HTMLDivElement>(150);
+
   return (
     <div className="landing">
       <Header />
@@ -13,22 +18,19 @@ export default function HomePage() {
         <section className="landing__hero">
           <span className="landing__badge">Portal wróżb i konsultacji</span>
           <h1 className="landing__title">
-            Połącz się z <span>wróżką</span> lub przyjmuj klientów online
+            Połącz się z <span>wróżką</span>
+            <br />
+            lub
+            <br />
+            przyjmuj klientów online
           </h1>
           <p className="landing__subtitle">
             eWróżka to miejsce dla wróżek oferujących tarot, horoskopy i runy oraz
             dla klientów szukających rzetelnych konsultacji. Załóż konto i dołącz.
           </p>
-          <div className="landing__ctas">
-            <Link href="/rejestracja" className="landing__cta landing__cta--primary">
-              Załóż konto
-            </Link>
-            <Link href="/login" className="landing__cta landing__cta--secondary">
-              Zaloguj się
-            </Link>
-          </div>
+          <LandingCtas />
         </section>
-        <section className="landing__features">
+        <section className="landing__features" ref={featuresRef}>
           <div className="landing__feature">
             <span className="landing__feature-icon" aria-hidden>
               ✦
@@ -60,8 +62,8 @@ export default function HomePage() {
             </p>
           </div>
         </section>
+        <AnnouncementsSection />
       </VantaBackground>
-      <AnnouncementsSection />
       <Footer />
     </div>
   );

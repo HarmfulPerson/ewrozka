@@ -110,13 +110,50 @@ export class GuestBookingService {
 
   // ── Wróżka: lista wniosków ─────────────────────────────────────────────────
 
-  async getForWizard(wizardId: number) {
-    const bookings = await this.bookingRepo.find({
-      where: { wizardId },
+  async getForWizard(
+    wizardId: number,
+    options: {
+      status?: string;
+      limit?: number;
+      offset?: number;
+      sortBy?: string;
+      order?: string;
+    } = {},
+  ) {
+    const {
+      status,
+      limit = 50,
+      offset = 0,
+      sortBy: rawSortBy,
+      order: rawOrder,
+    } = options;
+
+    const allowedSortBy = ['createdAt', 'scheduledAt', 'status', 'guestName'];
+    const sortBy = allowedSortBy.includes(rawSortBy ?? '')
+      ? (rawSortBy as string)
+      : 'createdAt';
+
+    const allowedOrder = ['ASC', 'DESC'];
+    const order = allowedOrder.includes(rawOrder?.toUpperCase() ?? '')
+      ? (rawOrder!.toUpperCase() as 'ASC' | 'DESC')
+      : 'DESC';
+
+    const where: any = { wizardId };
+
+    if (status) {
+      where.status =
+        status === 'accepted' ? In(['accepted', 'paid']) : status;
+    }
+
+    const [bookings, total] = await this.bookingRepo.findAndCount({
+      where,
       relations: ['advertisement'],
-      order: { createdAt: 'DESC' },
+      order: { [sortBy]: order },
+      take: limit,
+      skip: offset,
     });
-    return bookings.map((b) => this.toRowDto(b));
+
+    return { bookings: bookings.map((b) => this.toRowDto(b)), total };
   }
 
   // ── Wróżka: akceptacja ────────────────────────────────────────────────────

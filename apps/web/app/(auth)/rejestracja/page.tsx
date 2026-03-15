@@ -6,6 +6,7 @@ export default function RejestracjaPage() {
     <AuthFormShell
       title="Dołącz do eWróżka"
       subtitle="Wybierz typ konta i załóż je w kilku krokach"
+      backHref="/"
     >
       <div className="auth-choice">
         <Link href="/rejestracja/wrozka" className="auth-choice__card">

@@ -69,13 +69,15 @@ export async function apiCreateMeetingRequest(
 
 export async function apiGetMyMeetingRequests(
   token: string,
-  options?: { status?: string; limit?: number; offset?: number },
+  options?: { status?: string; limit?: number; offset?: number; sortBy?: string; order?: string },
 ): Promise<{ requests: MeetingRequestDto[]; total: number }> {
   const params = new URLSearchParams();
   if (options?.status) params.append('status', options.status);
   if (options?.limit) params.append('limit', String(options.limit));
   if (options?.offset) params.append('offset', String(options.offset));
-  
+  if (options?.sortBy) params.append('sortBy', options.sortBy);
+  if (options?.order) params.append('order', options.order);
+
   return fetchApi(`meeting-requests/for-my-ads?${params.toString()}`, {
     headers: {
       Authorization: `Token ${token}`,
@@ -85,13 +87,15 @@ export async function apiGetMyMeetingRequests(
 
 export async function apiGetMyClientRequests(
   token: string,
-  options?: { status?: string; limit?: number; offset?: number },
+  options?: { status?: string; limit?: number; offset?: number; sortBy?: string; order?: string },
 ): Promise<{ requests: MeetingRequestDto[]; total: number }> {
   const params = new URLSearchParams();
   if (options?.status) params.append('status', options.status);
   if (options?.limit) params.append('limit', String(options.limit));
   if (options?.offset) params.append('offset', String(options.offset));
-  
+  if (options?.sortBy) params.append('sortBy', options.sortBy);
+  if (options?.order) params.append('order', options.order);
+
   return fetchApi(`meeting-requests/my-requests?${params.toString()}`, {
     headers: {
       Authorization: `Token ${token}`,
@@ -163,8 +167,18 @@ export async function apiCreateGuestBooking(data: {
   });
 }
 
-export async function apiGetWizardGuestBookings(token: string): Promise<{ bookings: GuestBookingDto[] }> {
-  return fetchApi('wizard/guest-bookings', {
+export async function apiGetWizardGuestBookings(
+  token: string,
+  options?: { status?: string; limit?: number; offset?: number; sortBy?: string; order?: string },
+): Promise<{ bookings: GuestBookingDto[]; total: number }> {
+  const params = new URLSearchParams();
+  if (options?.status) params.append('status', options.status);
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset) params.append('offset', String(options.offset));
+  if (options?.sortBy) params.append('sortBy', options.sortBy);
+  if (options?.order) params.append('order', options.order);
+
+  return fetchApi(`wizard/guest-bookings?${params.toString()}`, {
     headers: { Authorization: `Token ${token}` },
   });
 }
@@ -234,4 +248,80 @@ export async function apiGetWizardGuestBookingMeetingRoom(
     throw new Error(j?.message ?? `HTTP ${res.status}`);
   }
   return res.json();
+}
+
+// ── Unified wizard requests ────────────────────────────────────────────────
+
+export interface UnifiedRequestDto {
+  id: string;
+  kind: 'regular' | 'guest';
+  unifiedStatus: string;
+  createdAt: string;
+  scheduledAt: string | null;
+  message: string | null;
+  clientName: string | null;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  advertisementTitle: string | null;
+  advertisementId: number | null;
+  rejectionReason: string | null;
+  appointmentId: number | null;
+  appointmentStatus: string | null;
+  appointmentStartsAt: string | null;
+  meetingToken: string | null;
+  durationMinutes: number | null;
+  priceGrosze: number | null;
+}
+
+export async function apiGetWizardUnifiedRequests(
+  token: string,
+  options?: { status?: string; limit?: number; offset?: number; sortBy?: string; order?: string },
+): Promise<{ items: UnifiedRequestDto[]; total: number }> {
+  const params = new URLSearchParams();
+  if (options?.status) params.append('status', options.status);
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset) params.append('offset', String(options.offset));
+  if (options?.sortBy) params.append('sortBy', options.sortBy);
+  if (options?.order) params.append('order', options.order);
+
+  return fetchApi(`wizard/requests?${params.toString()}`, {
+    headers: { Authorization: `Token ${token}` },
+  });
+}
+
+// ── Client unified requests ────────────────────────────────────────────────
+
+export interface ClientRequestDto {
+  id: string;
+  kind: 'request' | 'appointment';
+  unifiedStatus: string;
+  createdAt: string;
+  scheduledAt: string | null;
+  message: string | null;
+  wrozkaUsername: string | null;
+  advertisementTitle: string | null;
+  advertisementId: number | null;
+  rejectionReason: string | null;
+  appointmentId: number | null;
+  meetingToken: string | null;
+  durationMinutes: number | null;
+  priceGrosze: number | null;
+  rating: number | null;
+  ratingComment: string | null;
+}
+
+export async function apiGetClientUnifiedRequests(
+  token: string,
+  options?: { status?: string; limit?: number; offset?: number; sortBy?: string; order?: string },
+): Promise<{ items: ClientRequestDto[]; total: number }> {
+  const params = new URLSearchParams();
+  if (options?.status) params.append('status', options.status);
+  if (options?.limit) params.append('limit', String(options.limit));
+  if (options?.offset) params.append('offset', String(options.offset));
+  if (options?.sortBy) params.append('sortBy', options.sortBy);
+  if (options?.order) params.append('order', options.order);
+
+  return fetchApi(`client/requests?${params.toString()}`, {
+    headers: { Authorization: `Token ${token}` },
+  });
 }

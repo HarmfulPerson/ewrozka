@@ -6,16 +6,13 @@ import { apiGetUpcomingAppointments, type AppointmentDto } from '../../lib/api-c
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('pl-PL', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
+    weekday: 'short', day: 'numeric', month: 'short',
   });
 }
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('pl-PL', {
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: '2-digit', minute: '2-digit',
   });
 }
 
@@ -39,8 +36,8 @@ export function ClientUpcomingMeetings({ token }: ClientUpcomingMeetingsProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiGetUpcomingAppointments(token, { limit: 20 })
-      .then((res) => setAppointments(res.appointments || []))
+    apiGetUpcomingAppointments(token, { limit: 3 })
+      .then((res) => setAppointments((res.appointments || []).slice(0, 3)))
       .catch(() => setAppointments([]))
       .finally(() => setLoading(false));
   }, [token]);
@@ -52,7 +49,7 @@ export function ClientUpcomingMeetings({ token }: ClientUpcomingMeetingsProps) {
           <span className="dashboard__section-icon">📅</span>
           Nadchodzące spotkania
         </h2>
-        <Link href="/panel/moje-spotkania" className="dashboard__section-link">
+        <Link href="/panel/moje-spotkania?status=paid" className="dashboard__section-link">
           Zobacz wszystkie →
         </Link>
       </div>
@@ -64,7 +61,7 @@ export function ClientUpcomingMeetings({ token }: ClientUpcomingMeetingsProps) {
           <span>Brak nadchodzących spotkań</span>
         </div>
       ) : (
-        <div className="dashboard__list dashboard__list--scroll">
+        <div className="dashboard__card-list">
           {appointments.map((apt) => {
             const now = Date.now();
             const start = new Date(apt.startsAt).getTime();
@@ -75,30 +72,27 @@ export function ClientUpcomingMeetings({ token }: ClientUpcomingMeetingsProps) {
             const isPast = now >= end;
 
             return (
-              <div key={apt.id} className="dashboard__appointment-card">
-                <div className="dashboard__apt-date">
-                  <span className="dashboard__apt-day">{formatDate(apt.startsAt)}</span>
-                  <span className="dashboard__apt-time">{formatTime(apt.startsAt)}</span>
+              <div key={apt.id} className="dashboard__card">
+                <div className="dashboard__card-date">
+                  <span className="dashboard__card-date-day">{formatDate(apt.startsAt)}</span>
+                  <span className="dashboard__card-date-time">{formatTime(apt.startsAt)}</span>
                 </div>
-                <div className="dashboard__apt-info">
-                  <p className="dashboard__apt-client">
+                <div className="dashboard__card-body">
+                  <p className="dashboard__card-title">
                     {apt.advertisementTitle || 'Konsultacja'}
                   </p>
-                  <p className="dashboard__apt-duration">
-                    Wróżka: {apt.wrozkaUsername || '—'} · {duration} min
+                  <p className="dashboard__card-sub">
+                    {apt.wrozkaUsername || '—'} · {duration} min
                   </p>
                 </div>
-                <div className="dashboard__apt-right">
+                <div className="dashboard__card-actions">
                   {!isPast && (
-                    <span className="dashboard__apt-until">
+                    <span className="dashboard__card-meta">
                       {isActive ? '🟢 Trwa' : timeUntil(apt.startsAt)}
                     </span>
                   )}
                   {isActive && apt.meetingToken && (
-                    <Link
-                      href={`/spotkanie/${apt.meetingToken}`}
-                      className="dashboard__apt-join"
-                    >
+                    <Link href={`/spotkanie/${apt.meetingToken}`} className="dashboard__card-btn-join">
                       Dołącz →
                     </Link>
                   )}

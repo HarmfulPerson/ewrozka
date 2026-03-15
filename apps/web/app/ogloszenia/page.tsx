@@ -6,6 +6,7 @@ import { Header } from '../components/layout/header';
 import { Footer } from '../components/layout/footer';
 import { apiGetWizards, apiGetTopics, WizardDto, TopicDto } from '../lib/api';
 import { WizardCard } from '../components/wizard-card/WizardCard';
+import { VantaBackground } from '../components/vanta-background/vanta-background';
 import '../components/page-transition/page-transition.css';
 import './ogloszenia.css';
 
@@ -220,6 +221,7 @@ export default function OgloszeniaPage() {
 
   return (
     <div className="ogloszenia-page">
+      <VantaBackground>
       <Header />
       <main className="ogloszenia-main">
 
@@ -359,6 +361,7 @@ export default function OgloszeniaPage() {
         )}
 
       </main>
+      </VantaBackground>
       <Footer />
     </div>
   );

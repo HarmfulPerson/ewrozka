@@ -56,11 +56,15 @@ export class MeetingRequestController {
     @Query('status') status?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
   ) {
     return this.meetingRequestService.listForMyAds(userId, {
       status,
       limit: limit ? parseInt(limit, 10) : 50,
       offset: offset ? parseInt(offset, 10) : 0,
+      sortBy,
+      order,
     });
   }
 
@@ -71,11 +75,15 @@ export class MeetingRequestController {
     @Query('status') status?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
   ) {
     return this.meetingRequestService.listMyRequests(userId, {
       status,
       limit: limit ? parseInt(limit, 10) : 50,
       offset: offset ? parseInt(offset, 10) : 0,
+      sortBy,
+      order,
     });
   }
 

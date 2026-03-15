@@ -7,11 +7,14 @@
   padding: 2rem 1rem;
   background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--accent-soft) 0%, transparent 50%),
     var(--bg-primary);
+  position: relative;
 }
 
 .auth-layout__inner {
   width: 100%;
   max-width: 440px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Szersza wersja dla strony wyboru konta */
@@ -32,7 +35,7 @@
   text-decoration: none;
   opacity: 1;
   transition: opacity 0.2s;
-  height: 44px;
+  height: 70px;
   overflow: hidden;
 }
 
@@ -42,11 +45,24 @@
 
 .auth-shell__logo img,
 .auth-shell__logo span > img {
-  height: 120px !important;
+  height: 190px !important;
   width: auto !important;
-  /* (120 - 44) / 2 = 38px */
-  margin-top: -38px;
-  margin-bottom: -38px;
+  /* (190 - 70) / 2 = 60px */
+  margin-top: -60px;
+  margin-bottom: -60px;
+}
+
+.auth-back {
+  display: inline-block;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 0.75rem;
+  transition: color 0.15s;
+}
+
+.auth-back:hover {
+  color: var(--accent);
 }
 
 .auth-shell__card {

@@ -522,7 +522,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
         <div className="calendar-week__nav">
           <div className="calendar-week__nav-left">
             {weekOffset !== 0 ? (
-              <button className="calendar-week__nav-btn calendar-week__nav-btn--today" onClick={() => setWeekOffset(0)}>Dziś</button>
+              <button className="calendar-week__nav-btn calendar-week__nav-btn--today calendar-week__nav-btn--today-left" onClick={() => setWeekOffset(0)}>Dziś</button>
             ) : (
               <span className="calendar-week__nav-spacer" />
             )}
@@ -532,7 +532,11 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
             <span className="calendar-week__nav-title">{formatDateRange()}</span>
             <button className="calendar-week__nav-btn" onClick={() => setWeekOffset(weekOffset + 1)} title="Następny tydzień">→</button>
           </div>
-          <div className="calendar-week__nav-right" />
+          <div className="calendar-week__nav-right">
+            {weekOffset !== 0 && (
+              <button className="calendar-week__nav-btn calendar-week__nav-btn--today calendar-week__nav-btn--today-right" onClick={() => setWeekOffset(0)}>Dziś</button>
+            )}
+          </div>
         </div>
 
         <div className="calendar-week__header">

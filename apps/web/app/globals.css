@@ -1,15 +1,15 @@
 /* Tylko zmienne i baza – style komponentów/stron w osobnych plikach */
 :root {
-  --bg-primary: #0a0a1a;
-  --bg-secondary: #1a0a2e;
-  --bg-card: rgba(139, 92, 246, 0.05);
-  --text-primary: #f5f0ff;
-  --text-secondary: #c4b5fd;
-  --text-muted: #a78bfa;
-  --accent: #8b5cf6;
-  --accent-hover: #a78bfa;
-  --accent-soft: rgba(139, 92, 246, 0.15);
-  --border: rgba(139, 92, 246, 0.15);
+  --bg-primary: #060a18;
+  --bg-secondary: #0c1025;
+  --bg-card: rgba(19, 25, 54, 0.4);
+  --text-primary: #e6eaf3;
+  --text-secondary: #8e96b8;
+  --text-muted: #5c6488;
+  --accent: #3a4a8f;
+  --accent-hover: #4f60ad;
+  --accent-soft: rgba(58, 74, 143, 0.25);
+  --border: rgba(142, 150, 184, 0.12);
   --radius: 12px;
   --radius-lg: 20px;
 }

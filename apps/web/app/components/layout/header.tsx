@@ -18,7 +18,9 @@ export function Header() {
 
   const handleLogout = () => {
     clearStoredUser();
+    setUser(null);
     router.push('/');
+    router.refresh();
   };
 
   return (

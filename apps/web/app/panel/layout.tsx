@@ -83,6 +83,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useAdminPendingVideoCount } from '../hooks/useAdminPendingVideoCount';
 import { Toaster } from 'react-hot-toast';
 import 'react-tooltip/dist/react-tooltip.css';
+import { SubtleStars } from '../components/subtle-stars/subtle-stars';
 import './panel.css';
 
 export default function PanelLayout({
@@ -202,6 +203,7 @@ export default function PanelLayout({
 
   return (
     <div className="panel-layout">
+      <SubtleStars count={120} maxOpacity={0.35} />
       <Toaster
         position="bottom-right"
         toastOptions={{

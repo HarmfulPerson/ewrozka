@@ -18,6 +18,7 @@ import { TagModule } from './tag/tag.module';
 import { UserModule } from './user/user.module';
 import { PaymentModule } from './payment/payment.module';
 import { StripeModule } from './stripe/stripe.module';
+import { WizardRequestsModule } from './wizard-requests/wizard-requests.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { StripeModule } from './stripe/stripe.module';
     GuestBookingModule,
     NotificationsModule,
     ContactModule,
+    WizardRequestsModule,
   ],
 })
 export class ApiModule {}
