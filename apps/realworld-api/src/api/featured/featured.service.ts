@@ -102,7 +102,7 @@ export class FeaturedService {
 
     if (!user) throw new NotFoundException('Użytkownik nie istnieje.');
     const isWizard = user.roles?.some((r) => r.name === 'wizard');
-    if (!isWizard) throw new BadRequestException('Tylko wróżki mogą kupić wyróżnienie.');
+    if (!isWizard) throw new BadRequestException('Tylko specjaliści mogą kupić wyróżnienie.');
 
     const { isFeatured } = await this.getWizardFeaturedStatus(wizardId);
     if (isFeatured) {
@@ -116,7 +116,7 @@ export class FeaturedService {
       currency: 'pln',
       payment_method_types: ['card', 'blik', 'p24'],
       receipt_email: wizardEmail,
-      description: `Wyróżnienie wróżki – ${durationHours}h`,
+      description: `Wyróżnienie specjalisty – ${durationHours}h`,
       metadata: {
         type: 'featured',
         wizardId: String(wizardId),

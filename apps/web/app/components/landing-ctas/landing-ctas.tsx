@@ -18,7 +18,7 @@ export function LandingCtas() {
           Przejdź do panelu
         </Link>
         <Link href="/ogloszenia" className="landing__cta landing__cta--secondary">
-          Przeglądaj wróżki
+          Przeglądaj specjalistów
         </Link>
       </div>
     );

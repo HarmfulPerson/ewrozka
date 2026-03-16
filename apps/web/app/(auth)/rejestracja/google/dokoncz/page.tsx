@@ -123,7 +123,7 @@ function DokonczGoogleRejestracjaForm() {
           <div className="wrozka-reg__success-icon">🔮</div>
           <h2 className="wrozka-reg__success-title">Zgłoszenie złożone!</h2>
           <p className="wrozka-reg__success-text">
-            Twój wniosek o konto wróżki został przyjęty i oczekuje na weryfikację.
+            Twój wniosek o konto specjalisty został przyjęty i oczekuje na weryfikację.
           </p>
           <Link href="/login" className="wrozka-reg__success-btn">
             Przejdź do logowania
@@ -174,7 +174,7 @@ function DokonczGoogleRejestracjaForm() {
             <span className="auth-choice__icon">☆</span>
             <h3 className="auth-choice__title">Jestem klientem</h3>
             <p className="auth-choice__desc">
-              Szukam konsultacji z wróżką. Szybka rejestracja, minimum danych.
+              Szukam konsultacji ze specjalistą. Szybka rejestracja, minimum danych.
             </p>
             <span className="auth-choice__cta">Wybierz <span className="auth-choice__arrow">→</span></span>
           </button>
@@ -185,7 +185,7 @@ function DokonczGoogleRejestracjaForm() {
             style={{ border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}
           >
             <span className="auth-choice__icon">✦</span>
-            <h3 className="auth-choice__title">Jestem wróżką</h3>
+            <h3 className="auth-choice__title">Oferuję konsultacje</h3>
             <p className="auth-choice__desc">
               Oferuję konsultacje. Uzupełnij dane – wniosek zostanie zweryfikowany.
             </p>
@@ -203,7 +203,7 @@ function DokonczGoogleRejestracjaForm() {
 
   return (
     <AuthFormShell
-      title={role === 'client' ? 'Rejestracja klienta' : 'Rejestracja wróżki'}
+      title={role === 'client' ? 'Rejestracja klienta' : 'Rejestracja specjalisty'}
       subtitle={
         role === 'client'
           ? 'Uzupełnij dane (opcjonalnie)'

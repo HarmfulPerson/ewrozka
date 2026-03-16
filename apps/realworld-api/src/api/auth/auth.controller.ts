@@ -123,7 +123,7 @@ export class AuthController {
 
   @Post('auth/register-google')
   @ApiPublic({
-    summary: 'Dokończenie rejestracji po Google (wybór: klient lub wróżka)',
+    summary: 'Dokończenie rejestracji po Google (wybór: klient lub specjalista)',
   })
   async completeGoogleRegistration(@Body() dto: CompleteGoogleRegistrationDto) {
     return this.authService.completeGoogleRegistration({

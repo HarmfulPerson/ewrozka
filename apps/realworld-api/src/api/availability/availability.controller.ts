@@ -12,7 +12,7 @@ export class AvailabilityController {
 
   @Post()
   @ApiAuth({
-    summary: 'Dodaj blok dostępności (wróżka)',
+    summary: 'Dodaj blok dostępności (specjalista)',
     statusCode: 201,
   })
   @ApiBody({

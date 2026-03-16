@@ -16,16 +16,16 @@ export default function HomePage() {
       <Header />
       <VantaBackground>
         <section className="landing__hero">
-          <span className="landing__badge">Portal wróżb i konsultacji</span>
+          <span className="landing__badge">Portal konsultacji ezoterycznych</span>
           <h1 className="landing__title">
-            Połącz się z <span>wróżką</span>
+            Połącz się ze <span>specjalistą</span>
             <br />
             lub
             <br />
             przyjmuj klientów online
           </h1>
           <p className="landing__subtitle">
-            eWróżka to miejsce dla wróżek oferujących tarot, horoskopy i runy oraz
+            eWróżka to miejsce dla specjalistów oferujących tarot, horoskopy i runy oraz
             dla klientów szukających rzetelnych konsultacji. Załóż konto i dołącz.
           </p>
           <LandingCtas />
@@ -35,7 +35,7 @@ export default function HomePage() {
             <span className="landing__feature-icon" aria-hidden>
               ✦
             </span>
-            <h3>Dla wróżek</h3>
+            <h3>Dla specjalistów</h3>
             <p>
               Oferuj konsultacje, zarządzaj kalendarzem i łącz się z klientami w
               jednym miejscu.
@@ -47,7 +47,7 @@ export default function HomePage() {
             </span>
             <h3>Dla klientów</h3>
             <p>
-              Znajdź sprawdzone wróżki, umów wizytę online i skorzystaj z tarotu,
+              Znajdź sprawdzonych specjalistów, umów wizytę online i skorzystaj z tarotu,
               run lub horoskopu.
             </p>
           </div>
@@ -57,7 +57,7 @@ export default function HomePage() {
             </span>
             <h3>Bezpiecznie</h3>
             <p>
-              Osobne konta, przejrzyste profile i możliwość łączenia wróżki z
+              Osobne konta, przejrzyste profile i możliwość łączenia specjalisty z
               klientem na jednej platformie.
             </p>
           </div>

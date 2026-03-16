@@ -78,7 +78,7 @@ export class EmailService implements OnModuleInit {
     await this.send({
       type: EmailType.WIZARD_APPLICATION_APPROVED,
       to,
-      subject: '🎉 Twoje konto wróżki zostało zatwierdzone – eWróżka',
+      subject: '🎉 Twoje konto specjalisty zostało zatwierdzone – eWróżka',
       context: { username, loginUrl },
     });
   }

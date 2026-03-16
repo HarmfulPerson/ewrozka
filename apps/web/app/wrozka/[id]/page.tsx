@@ -83,7 +83,7 @@ export default function WizardProfilePage() {
       <div className="wizard-page">
         <Header />
         <main className="wizard-main">
-          <p style={{ textAlign: 'center', padding: '2rem' }}>Wróżka nie znaleziona</p>
+          <p style={{ textAlign: 'center', padding: '2rem' }}>Specjalista nie znaleziony</p>
         </main>
         <Footer />
       </div>
@@ -106,13 +106,13 @@ export default function WizardProfilePage() {
         <div className="wizard-nav">
           <Link href="/ogloszenia" className="wizard-nav__back">← Wróć</Link>
           <div className="wizard-nav__breadcrumbs">
-            <Link href="/ogloszenia" className="breadcrumb-link">Wróżki</Link>
+            <Link href="/ogloszenia" className="breadcrumb-link">Specjaliści</Link>
             <span className="breadcrumb-separator">/</span>
             <span className="breadcrumb-current">{wizard.username}</span>
           </div>
         </div>
 
-        {/* ── Kompaktowy nagłówek wróżki ── */}
+        {/* ── Kompaktowy nagłówek specjalisty ── */}
         <div className="wizard-hero">
           <div className="wizard-hero__avatar">
             <Image
@@ -156,7 +156,7 @@ export default function WizardProfilePage() {
 
             <p className="wizard-hero__bio">
               {wizard.bio ||
-                'Doświadczona wróżka specjalizująca się w różnych formach wróżbiarstwa.'}
+                'Doświadczony specjalista specjalizujący się w różnych formach wróżbiarstwa.'}
             </p>
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function WizardProfilePage() {
           <h2 className="wizard-services__title">Dostępne usługi</h2>
           {advertisements.length === 0 ? (
             <p className="wizard-services__empty">
-              Ta wróżka nie ma jeszcze dostępnych ogłoszeń.
+              Ten specjalista nie ma jeszcze dostępnych ogłoszeń.
             </p>
           ) : (
             <div className="wizard-services__grid">
@@ -213,7 +213,7 @@ export default function WizardProfilePage() {
               <span className="wizard-reviews__spinner" />
             </div>
           ) : reviews.length === 0 ? (
-            <p className="wizard-reviews__empty">Ta wróżka nie ma jeszcze żadnych opinii.</p>
+            <p className="wizard-reviews__empty">Ten specjalista nie ma jeszcze żadnych opinii.</p>
           ) : (
             <>
               <div className="wizard-reviews__list">

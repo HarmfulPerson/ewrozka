@@ -48,9 +48,9 @@ export function AnnouncementsSection() {
     <section className="announcements">
       <div className="announcements__inner">
         <div ref={headerRef} className="announcements__header reveal-header">
-          <h2 className="announcements__title">Nasze wróżki</h2>
+          <h2 className="announcements__title">Nasi specjaliści</h2>
           <p className="announcements__subtitle">
-            Poznaj doświadczone wróżki oferujące różne formy konsultacji
+            Poznaj doświadczonych specjalistów oferujących różne formy konsultacji
           </p>
         </div>
 

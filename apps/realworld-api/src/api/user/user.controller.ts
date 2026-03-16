@@ -148,7 +148,7 @@ export class UserController {
   }
 
   @Post('user/video')
-  @ApiAuth({ summary: 'Wgraj film prezentacyjny wróżki' })
+  @ApiAuth({ summary: 'Wgraj film prezentacyjny specjalisty' })
   @UseInterceptors(
     FileFastifyInterceptor('video', {
       storage: diskStorage({
@@ -188,13 +188,13 @@ export class UserController {
 
   @Delete('user/video')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiAuth({ summary: 'Usuń film prezentacyjny wróżki' })
+  @ApiAuth({ summary: 'Usuń film prezentacyjny specjalisty' })
   async deleteVideo(@CurrentUser('id') userId: number): Promise<void> {
     await this.userService.updateUserVideo(userId, null as any);
   }
 
   @Get('wizards')
-  @ApiPublic({ summary: 'Lista wróżek' })
+  @ApiPublic({ summary: 'Lista specjalistów' })
   async getWizards(
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -218,7 +218,7 @@ export class UserController {
   }
 
   @Get('wizards/:id')
-  @ApiPublic({ summary: 'Profil wróżki po ID' })
+  @ApiPublic({ summary: 'Profil specjalisty po ID' })
   async getWizard(@Param('id', ParseIntPipe) id: number) {
     return this.userService.getWizardById(id);
   }

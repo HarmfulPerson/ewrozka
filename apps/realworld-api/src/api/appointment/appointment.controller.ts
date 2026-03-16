@@ -11,7 +11,7 @@ export class AppointmentController {
   constructor(private readonly appointmentService: AppointmentService) {}
 
   @Get()
-  @ApiAuth({ summary: 'Moje wizyty (jako klient lub wróżka)' })
+  @ApiAuth({ summary: 'Moje wizyty (jako klient lub specjalista)' })
   async listMine(
     @CurrentUser('id') userId: number,
     @Query('status') status?: string,

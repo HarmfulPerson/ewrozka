@@ -55,7 +55,7 @@ export class MeetingRequestService {
     const roles = options?.roles ?? [];
     if (roles.includes('wizard')) {
       throw new ForbiddenException(
-        'Tylko klienci mogą składać prośby o spotkanie. Wróżka nie może aplikować na ogłoszenia.',
+        'Tylko klienci mogą składać prośby o spotkanie. Specjalista nie może aplikować na ogłoszenia.',
       );
     }
 
@@ -322,7 +322,7 @@ export class MeetingRequestService {
     void this.notificationsService.createAndEmit(
       buildRequestStatusChangedNotification({
         clientId: request.userId,
-        wizardName: wizardUser?.username ?? 'Wróżka',
+        wizardName: wizardUser?.username ?? 'Specjalista',
         advertisementTitle: request.advertisement?.title ?? 'Konsultacja',
         newStatus: 'accepted',
         requestId: request.id,
@@ -373,7 +373,7 @@ export class MeetingRequestService {
       const userEmail = (request.user as { email?: string })?.email;
       if (userEmail) {
         const appUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
-        const wizardName = (request.advertisement as { user?: { username?: string } })?.user?.username ?? 'wróżka';
+        const wizardName = (request.advertisement as { user?: { username?: string } })?.user?.username ?? 'specjalista';
         const username = (request.user as { username?: string })?.username ?? 'Użytkownik';
         const requestedPl = request.requestedStartsAt?.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' }) ?? '–';
         void this.emailService
@@ -407,7 +407,7 @@ export class MeetingRequestService {
     void this.notificationsService.createAndEmit(
       buildRequestStatusChangedNotification({
         clientId: request.userId,
-        wizardName: wizardUser?.username ?? 'Wróżka',
+        wizardName: wizardUser?.username ?? 'Specjalista',
         advertisementTitle: request.advertisement?.title ?? 'Konsultacja',
         newStatus: 'rejected',
         requestId: request.id,

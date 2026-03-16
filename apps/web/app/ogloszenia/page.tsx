@@ -226,9 +226,9 @@ export default function OgloszeniaPage() {
       <main className="ogloszenia-main">
 
         <div className="ogloszenia-header">
-          <h1 className="ogloszenia-title">Nasze wróżki</h1>
+          <h1 className="ogloszenia-title">Nasi specjaliści</h1>
           <p className="ogloszenia-subtitle">
-            Poznaj doświadczone wróżki oferujące różne formy konsultacji
+            Poznaj doświadczonych specjalistów oferujących różne formy konsultacji
           </p>
         </div>
 
@@ -306,7 +306,7 @@ export default function OgloszeniaPage() {
           </div>
         </div>
 
-        {/* ── Lista wróżek ──────────────────────────────────────────── */}
+        {/* ── Lista specjalistów ──────────────────────────────────────────── */}
         {loading ? (
           <div className="ogl-eye-wrap">
             <div className="pt-logo">
@@ -319,7 +319,7 @@ export default function OgloszeniaPage() {
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
               <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
             </svg>
-            <p>Brak wróżek pasujących do wybranych filtrów</p>
+            <p>Brak specjalistów pasujących do wybranych filtrów</p>
             {hasActiveFilters && (
               <button className="ogl-filters__clear" onClick={clearAll}>Wyczyść filtry</button>
             )}
@@ -355,7 +355,7 @@ export default function OgloszeniaPage() {
               </div>
             )}
             {!hasMore && wizards.length > 0 && (
-              <p className="ogl-end">Pokazano wszystkie wróżki</p>
+              <p className="ogl-end">Pokazano wszystkich specjalistów</p>
             )}
           </>
         )}

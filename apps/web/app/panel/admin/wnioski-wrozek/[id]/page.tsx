@@ -74,7 +74,7 @@ export default function WniosekDetailPage() {
     setActionLoading(true);
     try {
       await apiApproveWizardApplication(user.token, app.id);
-      toast.success('Konto wróżki zostało zatwierdzone.');
+      toast.success('Konto specjalisty zostało zatwierdzone.');
       setApp((prev) => prev ? { ...prev, wizardApplicationStatus: 'approved' } : prev);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Wystąpił błąd.');
@@ -88,7 +88,7 @@ export default function WniosekDetailPage() {
     setActionLoading(true);
     try {
       await apiRejectWizardApplication(user.token, app.id, rejectReason);
-      toast.success('Wniosek wróżki został odrzucony.');
+      toast.success('Wniosek specjalisty został odrzucony.');
       setApp((prev) =>
         prev
           ? { ...prev, wizardApplicationStatus: 'rejected', rejectionReason: rejectReason || null }
@@ -240,8 +240,8 @@ export default function WniosekDetailPage() {
         <div className="ww-modal" onClick={(e) => e.stopPropagation()}>
           <h3 className="ww-modal__title">Odrzuć wniosek</h3>
           <p className="ww-modal__desc">
-            Odrzucasz wniosek wróżki <strong>{app.username}</strong>.
-            Wróżka będzie mogła złożyć nowy wniosek z tym samym adresem e-mail.
+            Odrzucasz wniosek specjalisty <strong>{app.username}</strong>.
+            Specjalista będzie mógł złożyć nowy wniosek z tym samym adresem e-mail.
           </p>
           <label className="ww-modal__label" htmlFor="reject-reason-detail">
             Powód odrzucenia <span className="ww-modal__optional">(opcjonalnie)</span>

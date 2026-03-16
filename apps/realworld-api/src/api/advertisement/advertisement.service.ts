@@ -39,12 +39,12 @@ export class AdvertisementService {
     });
 
     if (!wizard) {
-      throw new NotFoundException('Wróżka nie znaleziona');
+      throw new NotFoundException('Specjalista nie znaleziony');
     }
 
     const isWizard = wizard.roles?.some((role) => role.name === 'wizard');
     if (!isWizard) {
-      throw new NotFoundException('Użytkownik nie jest wróżką');
+      throw new NotFoundException('Użytkownik nie jest specjalistą');
     }
 
     const advertisements = await this.advertisementRepository.find({
@@ -184,7 +184,7 @@ export class AdvertisementService {
     }
 
     const appUrl = this.config.get('stripe.frontendUrl', { infer: true }) ?? 'http://localhost:4000';
-    const wizardName = (advertisement as { user?: { username?: string } })?.user?.username ?? 'wróżka';
+    const wizardName = (advertisement as { user?: { username?: string } })?.user?.username ?? 'specjalista';
 
     // 1. Wnioski o spotkanie (zalogowani) – odrzuć tylko nieopłacone, wyślij email
     const requestsForAd = await this.meetingRequestRepository.find({
@@ -200,7 +200,7 @@ export class AdvertisementService {
       if (apt && ['paid', 'completed'].includes(apt.status)) continue;
 
       req.status = 'rejected';
-      req.rejectionReason = 'Ogłoszenie zostało usunięte przez wróżkę.';
+      req.rejectionReason = 'Ogłoszenie zostało usunięte przez specjalistę.';
       await this.meetingRequestRepository.save(req);
 
       if (apt && apt.status === 'accepted') {
@@ -239,7 +239,7 @@ export class AdvertisementService {
     const toRejectGuests = guestBookingsForAd.filter((g) => ['pending', 'accepted'].includes(g.status));
     for (const gb of toRejectGuests) {
       gb.status = 'rejected';
-      gb.rejectionReason = 'Ogłoszenie zostało usunięte przez wróżkę.';
+      gb.rejectionReason = 'Ogłoszenie zostało usunięte przez specjalistę.';
       await this.guestBookingRepository.save(gb);
       const scheduledPl = gb.scheduledAt.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' });
       void this.emailService

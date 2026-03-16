@@ -50,7 +50,7 @@ export class AppointmentCronService {
           .sendMeetingCompletedRate(
             client.email,
             client.username ?? client.email.split('@')[0],
-            appointment.wrozka?.username ?? 'wróżka',
+            appointment.wrozka?.username ?? 'specjalista',
             appointment.advertisement?.title ?? 'Konsultacja',
           )
           .catch((err) =>
@@ -84,7 +84,7 @@ export class AppointmentCronService {
         .sendMeetingCompletedGuest(
           booking.guestEmail,
           booking.guestName,
-          booking.wizard?.username ?? 'wróżka',
+          booking.wizard?.username ?? 'specjalista',
         )
         .catch((err) =>
           this.logger.error(`Failed to send guest completed email to ${booking.guestEmail}`, err),

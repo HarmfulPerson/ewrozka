@@ -26,7 +26,7 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('wizard-applications')
-  @ApiAuth({ summary: 'Lista wniosków wróżek (tylko admin)' })
+  @ApiAuth({ summary: 'Lista wniosków specjalistów (tylko admin)' })
   getWizardApplications(
     @Query('status') status?: WizardApplicationStatus,
     @Query('page', new ParseIntPipe({ optional: true })) page?: number,
@@ -40,33 +40,33 @@ export class AdminController {
   }
 
   @Get('wizard-applications/:id')
-  @ApiAuth({ summary: 'Szczegóły wniosku wróżki (tylko admin)' })
+  @ApiAuth({ summary: 'Szczegóły wniosku specjalisty (tylko admin)' })
   getApplication(@Param('id') id: string) {
     return this.adminService.getWizardApplication(id);
   }
 
   @Post('wizard-applications/:id/approve')
-  @ApiAuth({ summary: 'Zatwierdź wniosek wróżki (tylko admin)' })
+  @ApiAuth({ summary: 'Zatwierdź wniosek specjalisty (tylko admin)' })
   @HttpCode(HttpStatus.OK)
   approveApplication(@Param('id') id: string) {
     return this.adminService.approveWizardApplication(id);
   }
 
   @Post('wizard-applications/:id/reject')
-  @ApiAuth({ summary: 'Odrzuć wniosek wróżki (tylko admin)' })
+  @ApiAuth({ summary: 'Odrzuć wniosek specjalisty (tylko admin)' })
   @HttpCode(HttpStatus.OK)
   rejectApplication(@Param('id') id: string, @Body('reason') reason?: string) {
     return this.adminService.rejectWizardApplication(id, reason);
   }
 
   @Get('pending-video-count')
-  @ApiAuth({ summary: 'Liczba wróżek z filmikiem do akceptacji (tylko admin)' })
+  @ApiAuth({ summary: 'Liczba specjalistów z filmikiem do akceptacji (tylko admin)' })
   getPendingVideoCount() {
     return this.adminService.getPendingVideoCount();
   }
 
   @Get('wizards')
-  @ApiAuth({ summary: 'Lista wróżek z filtrami i sortowaniem (tylko admin)' })
+  @ApiAuth({ summary: 'Lista specjalistów z filtrami i sortowaniem (tylko admin)' })
   getWizards(
     @Query('minMeetings', new ParseIntPipe({ optional: true }))
     minMeetings?: number,
@@ -99,13 +99,13 @@ export class AdminController {
   }
 
   @Get('wizards/:id')
-  @ApiAuth({ summary: 'Szczegóły wróżki (tylko admin)' })
+  @ApiAuth({ summary: 'Szczegóły specjalisty (tylko admin)' })
   getWizard(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.getWizardById(id);
   }
 
   @Patch('wizards/:id/platform-fee')
-  @ApiAuth({ summary: 'Zmień prowizję platformy dla wróżki (tylko admin)' })
+  @ApiAuth({ summary: 'Zmień prowizję platformy dla specjalisty (tylko admin)' })
   @HttpCode(HttpStatus.OK)
   updateWizardPlatformFee(
     @Param('id', ParseIntPipe) id: number,
@@ -127,21 +127,21 @@ export class AdminController {
   }
 
   @Post('wizards/:id/featured')
-  @ApiAuth({ summary: 'Ustaw wyróżnienie wróżki bez płatności (tylko admin)' })
+  @ApiAuth({ summary: 'Ustaw wyróżnienie specjalisty bez płatności (tylko admin)' })
   @HttpCode(HttpStatus.OK)
   setWizardFeatured(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.setWizardFeatured(id);
   }
 
   @Post('wizards/:id/video/approve')
-  @ApiAuth({ summary: 'Zatwierdź filmik wróżki (tylko admin)' })
+  @ApiAuth({ summary: 'Zatwierdź filmik specjalisty (tylko admin)' })
   @HttpCode(HttpStatus.OK)
   approveWizardVideo(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.approveWizardVideo(id);
   }
 
   @Post('wizards/:id/video/reject')
-  @ApiAuth({ summary: 'Odrzuć filmik wróżki (tylko admin)' })
+  @ApiAuth({ summary: 'Odrzuć filmik specjalisty (tylko admin)' })
   @HttpCode(HttpStatus.OK)
   rejectWizardVideo(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.rejectWizardVideo(id);

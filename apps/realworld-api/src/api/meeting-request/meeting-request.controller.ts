@@ -50,7 +50,7 @@ export class MeetingRequestController {
   }
 
   @Get('for-my-ads')
-  @ApiAuth({ summary: 'Prośby o spotkanie do moich ogłoszeń (wróżka)' })
+  @ApiAuth({ summary: 'Prośby o spotkanie do moich ogłoszeń (specjalista)' })
   async listForMyAds(
     @CurrentUser('id') userId: number,
     @Query('status') status?: string,
@@ -88,7 +88,7 @@ export class MeetingRequestController {
   }
 
   @Patch(':id/accept')
-  @ApiAuth({ summary: 'Zaakceptuj prośbę (wróżka) – tworzy wizytę' })
+  @ApiAuth({ summary: 'Zaakceptuj prośbę (specjalista) – tworzy wizytę' })
   async accept(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
@@ -97,7 +97,7 @@ export class MeetingRequestController {
   }
 
   @Patch(':id/reject')
-  @ApiAuth({ summary: 'Odrzuć prośbę (wróżka). Dla zaakceptowanego, nieopłaconego – wymagany powód.' })
+  @ApiAuth({ summary: 'Odrzuć prośbę (specjalista). Dla zaakceptowanego, nieopłaconego – wymagany powód.' })
   @ApiBody({
     schema: {
       type: 'object',

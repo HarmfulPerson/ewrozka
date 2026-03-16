@@ -83,8 +83,8 @@ export class StripeService {
           price_data: {
             currency: 'pln',
             product_data: {
-              name: appointment.advertisement?.title || 'Konsultacja z wróżką',
-              description: `Spotkanie z ${appointment.wrozka?.username || 'wróżką'} • ${new Date(appointment.startsAt).toLocaleString('pl-PL')} • ${appointment.durationMinutes} min`,
+              name: appointment.advertisement?.title || 'Konsultacja ze specjalistą',
+              description: `Spotkanie ze ${appointment.wrozka?.username || 'specjalistą'} • ${new Date(appointment.startsAt).toLocaleString('pl-PL')} • ${appointment.durationMinutes} min`,
             },
             unit_amount: priceGrosze,
           },
@@ -791,7 +791,7 @@ export class StripeService {
       }
 
       await this.featuredService.activateFeatured(wizardId, paymentIntentId, durationHours);
-      this.logger.log(`Wyróżnienie aktywowane dla wróżki ${wizardId}`);
+      this.logger.log(`Wyróżnienie aktywowane dla specjalisty ${wizardId}`);
       return;
     }
 

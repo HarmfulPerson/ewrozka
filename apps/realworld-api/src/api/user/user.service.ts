@@ -619,7 +619,7 @@ export class UserService {
     const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['roles'] });
     if (!user) throw new BadRequestException('Użytkownik nie istnieje');
     const isWizard = user.roles?.some((r) => r.name === 'wizard');
-    if (!isWizard) throw new BadRequestException('Tylko wróżki mogą wgrywać filmiki');
+    if (!isWizard) throw new BadRequestException('Tylko specjaliści mogą wgrywać filmiki');
 
     if (videoUrl) {
       user.videoPending = videoUrl;
@@ -1037,7 +1037,7 @@ export class UserService {
 
     if (!wizard) {
 
-      throw new NotFoundException('Wróżka nie istnieje');
+      throw new NotFoundException('Specjalista nie istnieje');
 
     }
 
@@ -1049,7 +1049,7 @@ export class UserService {
 
     if (!isWizard) {
 
-      throw new NotFoundException('Wróżka nie istnieje');
+      throw new NotFoundException('Specjalista nie istnieje');
 
     }
 
