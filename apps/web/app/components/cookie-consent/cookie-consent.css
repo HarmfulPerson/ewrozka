@@ -15,14 +15,13 @@
   pointer-events: all;
   width: 100%;
   max-width: 780px;
-  background: rgba(15, 8, 35, 0.96);
+  background: rgba(12, 16, 37, 0.96);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  border-radius: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   box-shadow:
-    0 -4px 40px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 -4px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -68,27 +67,27 @@
 .cc-title {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #f5f0ff;
+  color: var(--text-primary);
   margin: 0 0 0.4rem;
   letter-spacing: 0.01em;
 }
 
 .cc-desc {
   font-size: 0.825rem;
-  color: #c4b5fd;
+  color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
 }
 
 .cc-link {
-  color: #a78bfa;
+  color: var(--accent-hover);
   text-decoration: underline;
   text-underline-offset: 2px;
   transition: color 0.15s;
 }
 
 .cc-link:hover {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* ── Kategorie ── */
@@ -96,8 +95,8 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  border: 1px solid rgba(139, 92, 246, 0.15);
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -106,7 +105,7 @@
   align-items: center;
   gap: 1rem;
   padding: 0.875rem 1rem;
-  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 
 .cc-category:last-child {
@@ -124,12 +123,12 @@
 .cc-category__name {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #f5f0ff;
+  color: var(--text-primary);
 }
 
 .cc-category__desc {
   font-size: 0.775rem;
-  color: #a78bfa;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
@@ -139,8 +138,8 @@
   width: 44px;
   height: 24px;
   border-radius: 999px;
-  background: rgba(139, 92, 246, 0.15);
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
   position: relative;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
@@ -148,15 +147,15 @@
 }
 
 .cc-toggle--on {
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
-  border-color: transparent;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.45);
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(58, 74, 143, 0.4);
 }
 
 .cc-toggle--locked {
   cursor: not-allowed;
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
-  border-color: transparent;
+  background: var(--accent);
+  border-color: var(--accent);
   opacity: 0.6;
 }
 
@@ -188,7 +187,7 @@
 
 .cc-btn {
   padding: 0.55rem 1.15rem;
-  border-radius: 10px;
+  border-radius: var(--radius);
   font-size: 0.825rem;
   font-weight: 600;
   cursor: pointer;
@@ -206,10 +205,10 @@
   transform: translateY(0);
 }
 
-/* Zarządzaj preferencjami – brak tła */
+/* Zarządzaj preferencjami */
 .cc-btn--ghost {
   background: transparent;
-  color: #a78bfa;
+  color: var(--text-muted);
   text-decoration: underline;
   text-underline-offset: 2px;
   padding-left: 0;
@@ -218,30 +217,32 @@
 }
 
 .cc-btn--ghost:hover {
-  color: #fff;
+  color: var(--text-primary);
   transform: none;
 }
 
 /* Tylko niezbędne */
 .cc-btn--secondary {
-  background: rgba(139, 92, 246, 0.12);
-  color: #c4b5fd;
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
 
 .cc-btn--secondary:hover {
-  background: rgba(139, 92, 246, 0.2);
+  border-color: var(--accent);
+  color: var(--text-primary);
 }
 
 /* Akceptuj wszystkie */
 .cc-btn--primary {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  background: var(--accent);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 2px 10px rgba(58, 74, 143, 0.35);
 }
 
 .cc-btn--primary:hover {
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.55);
+  background: var(--accent-hover);
+  box-shadow: 0 4px 16px rgba(58, 74, 143, 0.5);
 }
 
 /* ── Responsywność ── */
@@ -252,7 +253,7 @@
   }
 
   .cc-box {
-    border-radius: 16px 16px 12px 12px;
+    border-radius: var(--radius-lg) var(--radius-lg) var(--radius) var(--radius);
     padding: 1.25rem 1rem;
     margin-bottom: 0;
   }
