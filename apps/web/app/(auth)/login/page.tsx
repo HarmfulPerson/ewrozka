@@ -21,6 +21,7 @@ function GoogleIcon() {
 
 const ERROR_MESSAGES: Record<string, string> = {
   google_auth_failed: 'Logowanie przez Google nie powiodło się. Spróbuj ponownie.',
+  session_expired: 'Twoja sesja wygasła. Zaloguj się ponownie, aby kontynuować.',
   WIZARD_PENDING:
     'Twoje konto oczekuje na zatwierdzenie przez administratora. Poinformujemy Cię, gdy zostanie aktywowane.',
   WIZARD_REJECTED:

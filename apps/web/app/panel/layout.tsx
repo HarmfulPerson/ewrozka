@@ -80,6 +80,7 @@ import { getUploadUrl } from '../lib/api';
 import { apiGetWallet, apiCheckConnectReady, apiGetMyFeaturedStatus, type FeaturedStatusDto, type CommissionTierDto } from '../lib/api-payment';
 import { apiGetMyAdvertisements } from '../lib/api-advertisements';
 import { useNotifications } from '../hooks/useNotifications';
+import { useSessionManager } from '../hooks/useSessionManager';
 import { useAdminPendingVideoCount } from '../hooks/useAdminPendingVideoCount';
 import { NotificationCenter, NotificationCenterMobile, NotificationMobilePanel, NotificationToastListener } from '../components/notification-center/notification-center';
 import { Toaster } from 'react-hot-toast';
@@ -107,6 +108,7 @@ export default function PanelLayout({
 
   const isWizardRole = user?.roles?.includes('wizard') ?? false;
   const isAdminRole  = user?.roles?.includes('admin') ?? false;
+  useSessionManager();
   const notificationsData = useNotifications(!isAdminRole ? user?.token : null);
   const pendingCount = notificationsData.pendingCount;
   const pendingVideoCount = useAdminPendingVideoCount(isAdminRole ? user?.token : null);
