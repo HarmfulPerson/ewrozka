@@ -10,7 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBody, ApiQuery, ApiTags, getSchemaPath } from '@nestjs/swagger';
-import { ApiPublic } from '@repo/api/decorators/http.decorators';
+import { ApiAuth, ApiPublic } from '@repo/api/decorators/http.decorators';
+import { CurrentUser } from '@repo/api';
 import { AuthGuard } from '@nestjs/passport';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { UserResDto } from '../user/dto/user.dto';
@@ -46,6 +47,15 @@ export class AuthController {
   @SerializeOptions({ type: UserResDto })
   async login(@Body('user') userData: LoginReqDto): Promise<UserResDto> {
     return this.authService.login(userData);
+  }
+
+  @Post('auth/refresh')
+  @ApiAuth({ summary: 'Odśwież token sesji' })
+  async refreshToken(@Req() request: FastifyRequest): Promise<{ token: string }> {
+    const authHeader = request.headers.authorization ?? '';
+    const currentToken = authHeader.replace(/^Token\s+/i, '');
+    const token = await this.authService.refreshToken(currentToken);
+    return { token };
   }
 
   @Get('auth/verify-email')

@@ -179,8 +179,22 @@ export default function PortfelPage() {
 
         {/* Saldo */}
         <div className="portfel-balance-card">
-          <div className="portfel-balance-label">Dostępne środki</div>
-          <div className="portfel-balance-amount">{balanceFormatted}</div>
+          <div className="portfel-balance-label">Saldo Stripe</div>
+          <div className="portfel-balance-amount">
+            {isConnected
+              ? `${((connectStatus?.stripeTotalGrosze ?? 0) / 100).toFixed(2)} zł`
+              : balanceFormatted}
+          </div>
+          {isConnected && (connectStatus?.stripeAvailableGrosze ?? 0) > 0 && (connectStatus?.stripePendingGrosze ?? 0) > 0 && (
+            <div className="portfel-balance-pending">
+              {((connectStatus?.stripeAvailableGrosze ?? 0) / 100).toFixed(2)} zł dostępne · {((connectStatus?.stripePendingGrosze ?? 0) / 100).toFixed(2)} zł oczekujące
+            </div>
+          )}
+          {isConnected && (connectStatus?.stripeAvailableGrosze ?? 0) === 0 && (connectStatus?.stripePendingGrosze ?? 0) > 0 && (
+            <div className="portfel-balance-pending">
+              Wszystkie środki oczekujące (1–2 dni robocze)
+            </div>
+          )}
           {platformFeePercent != null && (
             <div className="portfel-balance-fee">
               Prowizja platformy: {platformFeePercent}%
@@ -206,13 +220,8 @@ export default function PortfelPage() {
               )}
             </div>
           )}
-          {isConnected && (connectStatus?.stripePendingGrosze ?? 0) > 0 && (
-            <div className="portfel-balance-pending">
-              + {((connectStatus?.stripePendingGrosze ?? 0) / 100).toFixed(2)} zł oczekujących
-            </div>
-          )}
           <div className="portfel-balance-info">
-            Aktualizuje się po każdej opłaconej wizycie
+            Dane pobierane bezpośrednio ze Stripe
           </div>
         </div>
 

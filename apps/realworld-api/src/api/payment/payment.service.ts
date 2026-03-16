@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { PlatformRevenueEntity, TransactionEntity, UserEntity, WalletEntity } from '@repo/postgresql-typeorm';
+import { PlatformRevenueEntity, TransactionEntity, UserEntity, WithdrawalEntity } from '@repo/postgresql-typeorm';
 
 import { DataSource, Repository } from 'typeorm';
 
@@ -17,9 +17,6 @@ export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
 
   constructor(
-    @InjectRepository(WalletEntity)
-    private readonly walletRepository: Repository<WalletEntity>,
-
     @InjectRepository(TransactionEntity)
     private readonly transactionRepository: Repository<TransactionEntity>,
 
@@ -28,6 +25,9 @@ export class PaymentService {
 
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+
+    @InjectRepository(WithdrawalEntity)
+    private readonly withdrawalRepository: Repository<WithdrawalEntity>,
 
     private readonly dataSource: DataSource,
 
@@ -44,7 +44,7 @@ export class PaymentService {
     totalAmountGrosze: number,
 
     platformFeePercentOverride?: number,
-  ): Promise<{ transaction: TransactionEntity; wizardBalance: number }> {
+  ): Promise<{ transaction: TransactionEntity }> {
     this.logger.log(
       `Przetwarzanie płatności dla wróżki ${wrozkaId}, wizyta ${appointmentId}, kwota ${totalAmountGrosze}gr`,
     );
@@ -58,49 +58,13 @@ export class PaymentService {
 
     this.logger.log(`Procent prowizji platformy: ${platformFeePercentage}%`);
 
-    // Calculate amounts
-
     const platformFeeGrosze = Math.floor((totalAmountGrosze * platformFeePercentage) / 100);
 
     const wizardAmountGrosze = totalAmountGrosze - platformFeeGrosze;
 
     this.logger.log(`Obliczono: Prowizja platformy: ${platformFeeGrosze}gr, Kwota wróżki: ${wizardAmountGrosze}gr`);
 
-    // Use transaction to ensure atomicity
-
     return await this.dataSource.transaction(async (manager) => {
-      // Find or create wallet for wizard
-
-      let wallet = await manager.findOne(WalletEntity, {
-        where: { userId: wrozkaId },
-      });
-
-      this.logger.log(`Portfel znaleziony: ${!!wallet}`);
-
-      if (!wallet) {
-        this.logger.log(`Tworzenie nowego portfela dla wróżki ${wrozkaId}`);
-
-        wallet = manager.create(WalletEntity, {
-          userId: wrozkaId,
-
-          balance: 0,
-
-          currency: 'PLN',
-        });
-      }
-
-      const oldBalance = Number(wallet.balance);
-
-      // Update wallet balance
-
-      wallet.balance = Number(wallet.balance) + wizardAmountGrosze;
-
-      await manager.save(WalletEntity, wallet);
-
-      this.logger.log(`Saldo portfela zaktualizowane: ${oldBalance}gr -> ${wallet.balance}gr`);
-
-      // Create transaction record
-
       const transaction = manager.create(TransactionEntity, {
         userId: wrozkaId,
 
@@ -157,11 +121,7 @@ export class PaymentService {
         `Płatność przetworzona: ${totalAmountGrosze}gr, Platforma: ${platformFeeGrosze}gr (${platformFeePercentage}%), Wróżka: ${wizardAmountGrosze}gr`,
       );
 
-      return {
-        transaction,
-
-        wizardBalance: Number(wallet.balance),
-      };
+      return { transaction };
     });
   }
 
@@ -185,7 +145,7 @@ export class PaymentService {
 
     const wizardAmountGrosze = totalAmountGrosze - platformFeeGrosze;
 
-    // Rejestruj transakcję dla historii — pieniądze już u wróżki przez Stripe
+    // Rejestruj transakcję dla historii — pieniądze trafiają do wróżki przez Stripe
 
     await this.dataSource.transaction(async (manager) => {
       const transaction = manager.create(TransactionEntity, {
@@ -280,16 +240,26 @@ export class PaymentService {
     };
   }
 
-  async getWalletBalance(userId: number): Promise<number> {
-    this.logger.log(`Pobieranie salda portfela dla użytkownika ${userId}`);
+  /** Oblicza saldo z transakcji minus wypłaty — bez tabeli wallet */
+  async getEarnedBalance(userId: number): Promise<number> {
+    const { earned } = await this.transactionRepository
+      .createQueryBuilder('t')
+      .select('COALESCE(SUM(t.wizardAmount), 0)', 'earned')
+      .where('t.userId = :userId', { userId })
+      .andWhere('t.status = :status', { status: 'completed' })
+      .andWhere('t.type IN (:...types)', { types: ['payment', 'destination_charge'] })
+      .getRawOne();
 
-    const wallet = await this.walletRepository.findOne({
-      where: { userId },
-    });
+    const { withdrawn } = await this.withdrawalRepository
+      .createQueryBuilder('w')
+      .select('COALESCE(SUM(w.amountGrosze), 0)', 'withdrawn')
+      .where('w.userId = :userId', { userId })
+      .andWhere('w.status IN (:...statuses)', { statuses: ['processing', 'completed'] })
+      .getRawOne();
 
-    this.logger.log(`Portfel: ${wallet ? 'znaleziony' : 'brak'}, saldo: ${wallet ? wallet.balance : 0}gr`);
-
-    return wallet ? Number(wallet.balance) : 0;
+    const balance = Number(earned) - Number(withdrawn);
+    this.logger.log(`getEarnedBalance(user=${userId}): earned=${earned}, withdrawn=${withdrawn}, balance=${balance}`);
+    return balance;
   }
 
   async getTransactionHistory(

@@ -176,6 +176,18 @@ export class AuthService {
     return accessToken;
   }
 
+  /**
+   * Odświeża token — generuje nowy z istniejącego (ważnego) tokenu.
+   * Pozwala na sliding session bez refresh tokenów w bazie.
+   */
+  async refreshToken(currentToken: string): Promise<string> {
+    const payload = await this.verifyAccessToken(currentToken);
+    return this.createToken({
+      id: parseInt(String(payload.id), 10),
+      roles: payload.roles ?? [],
+    });
+  }
+
   getGoogleFrontendUrl(): string {
     const google = this.configService.get('auth.google', { infer: true });
     return google?.frontendUrl ?? 'http://localhost:3000';

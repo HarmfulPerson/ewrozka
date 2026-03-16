@@ -77,9 +77,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { clearStoredUser, getStoredUser } from '../lib/auth-mock';
 import { getUploadUrl } from '../lib/api';
-import { apiGetWallet, apiCheckConnectReady, apiGetMyFeaturedStatus, type FeaturedStatusDto, type CommissionTierDto } from '../lib/api-payment';
+import { apiGetWallet, apiGetConnectStatus, apiGetMyFeaturedStatus, type FeaturedStatusDto, type CommissionTierDto } from '../lib/api-payment';
 import { apiGetMyAdvertisements } from '../lib/api-advertisements';
 import { useNotifications } from '../hooks/useNotifications';
+import { useSessionManager } from '../hooks/useSessionManager';
 import { useAdminPendingVideoCount } from '../hooks/useAdminPendingVideoCount';
 import { NotificationCenter, NotificationCenterMobile, NotificationMobilePanel, NotificationToastListener } from '../components/notification-center/notification-center';
 import { Toaster } from 'react-hot-toast';
@@ -107,6 +108,7 @@ export default function PanelLayout({
 
   const isWizardRole = user?.roles?.includes('wizard') ?? false;
   const isAdminRole  = user?.roles?.includes('admin') ?? false;
+  useSessionManager();
   const notificationsData = useNotifications(!isAdminRole ? user?.token : null);
   const pendingCount = notificationsData.pendingCount;
   const pendingVideoCount = useAdminPendingVideoCount(isAdminRole ? user?.token : null);
@@ -173,13 +175,21 @@ export default function PanelLayout({
     if (!token) return;
     try {
       const [connectData, walletData] = await Promise.all([
-        apiCheckConnectReady(token),
+        apiGetConnectStatus(token),
         apiGetWallet(token).catch(() => null),
       ]);
       const configured = connectData.connected && connectData.onboardingCompleted;
       setConnectConfigured(configured);
-      if (walletData) {
+
+      // Saldo ze Stripe (źródło prawdy)
+      if (configured) {
+        const totalGrosze = (connectData.stripeAvailableGrosze ?? 0) + (connectData.stripePendingGrosze ?? 0);
+        setWalletBalance(`${(totalGrosze / 100).toFixed(2)} zł`);
+      } else if (walletData) {
         setWalletBalance(walletData.balanceFormatted);
+      }
+
+      if (walletData) {
         setPlatformFeePercent(walletData.platformFeePercent ?? null);
         setCommissionTier(walletData.commissionTier ?? null);
       }

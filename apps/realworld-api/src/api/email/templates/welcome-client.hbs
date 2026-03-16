@@ -3,126 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Witaj w eWróżce!</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: #0f0e17;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      color: #e2e0f0;
-      padding: 40px 16px;
-    }
-    .wrapper {
-      max-width: 560px;
-      margin: 0 auto;
-      background: #1a1827;
-      border-radius: 16px;
-      border: 1px solid #2e2a45;
-      overflow: hidden;
-    }
-    .header {
-      background: linear-gradient(135deg, #6d28d9 0%, #a855f7 100%);
-      padding: 32px 40px;
-      text-align: center;
-    }
-    .header__logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: -0.5px;
-    }
-    .header__logo span {
-      color: #e9d5ff;
-    }
-    .body {
-      padding: 40px;
-    }
-    .body__greeting {
-      font-size: 1.1rem;
-      color: #c4b5fd;
-      margin-bottom: 16px;
-    }
-    .body__text {
-      font-size: 0.95rem;
-      line-height: 1.7;
-      color: #b0aac8;
-      margin-bottom: 16px;
-    }
-    .body__text strong { color: #e2e0f0; }
-    .highlight {
-      background: rgba(139, 92, 246, 0.1);
-      border: 1px solid rgba(139, 92, 246, 0.25);
-      border-radius: 10px;
-      padding: 16px 20px;
-      margin-bottom: 28px;
-      font-size: 0.9rem;
-      color: #c4b5fd;
-      line-height: 1.6;
-    }
-    .btn-wrapper {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .btn {
-      display: inline-block;
-      background: linear-gradient(135deg, #7c3aed, #a855f7);
-      color: #fff !important;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 1rem;
-      padding: 14px 36px;
-      border-radius: 50px;
-      letter-spacing: 0.3px;
-    }
-    .divider {
-      height: 1px;
-      background: #2e2a45;
-      margin: 0 0 24px;
-    }
-    .fallback {
-      font-size: 0.8rem;
-      color: #6b6585;
-      line-height: 1.6;
-      word-break: break-all;
-    }
-    .fallback a {
-      color: #a78bfa;
-    }
-    .footer {
-      padding: 24px 40px;
-      background: #15121f;
-      font-size: 0.75rem;
-      color: #4a4462;
-      text-align: center;
-      line-height: 1.6;
-    }
-  </style>
+  <title>Witaj w eWrozce!</title>
+  {{> styles}}
 </head>
 <body>
   <div class="wrapper">
-    <div class="header" style="background:linear-gradient(135deg,#6d28d9 0%,#a855f7 100%);color:#ffffff !important;">
-      <div class="header__logo" style="color:#ffffff !important;">e<span style="color:#e9d5ff !important;">Wróżka</span></div>
-    </div>
+    {{> header}}
     <div class="body">
-      <p class="body__greeting" style="color:#c4b5fd;">Witaj, {{username}}! 👋</p>
-      <p class="body__text" style="color:#b0aac8;">
-        Twoje konto w <strong>eWróżce</strong> jest już aktywne. Możesz się zalogować i umówić na konsultację z wybraną wróżką – tarot, horoskopy, runy i wiele więcej.
+      <p class="body__greeting">Witaj, {{username}}! <span class="emoji">💫</span></p>
+      <p class="body__text">
+        Twoje konto w <strong>eWrozce</strong> jest juz aktywne. Mozesz sie zalogowac i umowic na konsultacje z wybrana wrozka - tarot, horoskopy, runy i wiele wiecej.
       </p>
-      <div class="highlight" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);color:#c4b5fd;">
-        Przeglądaj profile wróżek, wybierz odpowiedni termin i połącz się online. Wszystko w jednym miejscu.
+      <div class="highlight">
+        Przegladaj profile wrozek, wybierz odpowiedni termin i polacz sie online. Wszystko w jednym miejscu. <span class="emoji">✨</span>
       </div>
       <div class="btn-wrapper">
-        <a href="{{loginUrl}}" class="btn">Zaloguj się</a>
+        <a href="{{loginUrl}}" class="btn">Zaloguj sie</a>
       </div>
       <div class="divider"></div>
       <p class="fallback">
-        Jeśli przycisk nie działa, skopiuj i wklej link w przeglądarce:<br />
+        Jesli przycisk nie dziala, skopiuj i wklej link w przegladarce:<br />
         <a href="{{loginUrl}}">{{loginUrl}}</a>
       </p>
     </div>
-    <div class="footer">
-      © eWróżka · Wszystkie prawa zastrzeżone
-    </div>
+    {{> footer}}
   </div>
 </body>
 </html>
