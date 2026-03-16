@@ -1,26 +1,40 @@
 <!DOCTYPE html>
 <html lang="pl">
-<head><meta charset="UTF-8"><title>Link do spotkania</title></head>
-<body style="font-family:sans-serif;background:#0d0a1a;color:#e2d9f3;padding:2rem;">
-  <div style="max-width:540px;margin:0 auto;background:#1a1030;border-radius:12px;padding:2rem;border:1px solid #3a2a5e;">
-    <h1 style="color:#ffffff;margin-top:0;">eWróżka</h1>
-    <h2 style="color:#e2d9f3;">Płatność potwierdzona – Twój link do spotkania ✨</h2>
-    <p style="color:#e2d9f3;">Cześć <strong style="color:#e2d9f3;">{{guestName}}</strong>,</p>
-    <p style="color:#e2d9f3;">Twoja płatność za spotkanie z <strong style="color:#e2d9f3;">{{wizardName}}</strong> została potwierdzona.</p>
-    <table style="background:#0d0a1a;border-radius:8px;padding:1rem;width:100%;margin:1rem 0;">
-      <tr><td style="color:#a78bfa;padding:4px 0;">Termin:</td><td style="color:#e2e0f0;"><strong>{{scheduledAt}}</strong></td></tr>
-      <tr><td style="color:#a78bfa;padding:4px 0;">Czas trwania:</td><td style="color:#e2e0f0;">{{durationMinutes}} minut</td></tr>
-    </table>
-    <p style="color:#e2e0f0;"><strong>⚠️ Ważne:</strong> Poniższy link jest przeznaczony tylko dla Ciebie. Nie udostępniaj go nikomu.</p>
-    <a href="{{meetingUrl}}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;padding:0.75rem 2rem;border-radius:8px;text-decoration:none;font-weight:600;margin:1rem 0;">
-      Dołącz do spotkania
-    </a>
-    <p style="color:#9ca3af;font-size:0.85rem;">
-      Link będzie aktywny 5 minut przed planowaną godziną spotkania.<br>
-      Adres: <a href="{{meetingUrl}}" style="color:#a78bfa;">{{meetingUrl}}</a>
-    </p>
-    <hr style="border-color:#3a2a5e;margin:1.5rem 0;">
-    <p style="color:#6b7280;font-size:0.8rem;">eWróżka · <a href="{{appUrl}}" style="color:#a78bfa;">{{appUrl}}</a></p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Platnosc potwierdzona</title>
+  {{> styles}}
+</head>
+<body>
+  <div class="wrapper">
+    {{> header}}
+    <div class="body">
+      <p class="body__greeting">Platnosc potwierdzona, {{guestName}}! <span class="emoji">✨</span></p>
+      <p class="body__text">
+        Twoja platnosc za spotkanie z <strong>{{wizardName}}</strong> zostala potwierdzona. Ponizej znajdziesz szczegoly:
+      </p>
+      <div class="info-box">
+        <div class="info-box__label">Termin</div>
+        <div class="info-box__value">{{scheduledAt}}</div>
+      </div>
+      <div class="info-box">
+        <div class="info-box__label">Czas trwania</div>
+        <div class="info-box__value">{{durationMinutes}} minut</div>
+      </div>
+      <div class="highlight">
+        <strong>Wazne:</strong> Ponizszy link jest przeznaczony tylko dla Ciebie. Nie udostepniaj go nikomu. Link bedzie aktywny 5 minut przed planowana godzina spotkania.
+      </div>
+      <div class="btn-wrapper">
+        <a href="{{meetingUrl}}" class="btn">Dolacz do spotkania</a>
+      </div>
+      <div class="divider"></div>
+      <p class="fallback">
+        Adres spotkania:<br />
+        <a href="{{meetingUrl}}">{{meetingUrl}}</a>
+      </p>
+    </div>
+    {{> footer}}
   </div>
 </body>
 </html>

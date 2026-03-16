@@ -226,10 +226,29 @@ export class EmailService implements OnModuleInit {
 
   // ─── Internal ─────────────────────────────────────────────────────────────
 
+  private partialsRegistered = false;
+
+  private registerPartials() {
+    if (this.partialsRegistered) return;
+    const partialsDir = path.join(__dirname, 'templates', 'partials');
+    if (fs.existsSync(partialsDir)) {
+      for (const file of fs.readdirSync(partialsDir)) {
+        if (file.endsWith('.hbs')) {
+          const name = file.replace('.hbs', '');
+          const source = fs.readFileSync(path.join(partialsDir, file), 'utf8');
+          handlebars.registerPartial(name, source);
+        }
+      }
+    }
+    this.partialsRegistered = true;
+  }
+
   private async renderTemplate(
     type: EmailType,
     context: Record<string, unknown>,
   ): Promise<string> {
+    this.registerPartials();
+
     if (!this.templateCache.has(type)) {
       const templatePath = path.join(__dirname, 'templates', `${type}.hbs`);
 
@@ -242,6 +261,7 @@ export class EmailService implements OnModuleInit {
     }
 
     const compile = this.templateCache.get(type)!;
-    return compile(context);
+    const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
+    return compile({ ...context, appUrl: frontendUrl });
   }
 }

@@ -1,21 +1,31 @@
 <!DOCTYPE html>
 <html lang="pl">
-<head><meta charset="UTF-8"><title>Termin odwołany</title></head>
-<body style="font-family:sans-serif;background:#0d0a1a;color:#e2d9f3;padding:2rem;">
-  <div style="max-width:540px;margin:0 auto;background:#1a1030;border-radius:12px;padding:2rem;border:1px solid #3a2a5e;">
-    <h1 style="color:#ffffff;margin-top:0;">eWróżka</h1>
-    <h2 style="color:#e2d9f3;">Termin spotkania został odwołany</h2>
-    <p style="color:#e2d9f3;">Cześć <strong style="color:#e2d9f3;">{{guestName}}</strong>,</p>
-    <p style="color:#e2d9f3;">Wróżka <strong style="color:#e2d9f3;">{{wizardName}}</strong> odwołała wybrany termin. Nie możesz już opłacić tej rezerwacji.</p>
-    <div style="background:#0d0a1a;border-left:3px solid #a78bfa;padding:0.75rem 1rem;margin:1rem 0;border-radius:4px;">
-      <p style="margin:0;color:#c4b5fd;"><strong>Termin:</strong> {{scheduledAt}}</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Termin odwolany</title>
+  {{> styles}}
+</head>
+<body>
+  <div class="wrapper">
+    {{> header}}
+    <div class="body">
+      <p class="body__greeting">Czesc, {{guestName}}</p>
+      <p class="body__text">
+        Wrozka <strong>{{wizardName}}</strong> odwolala wybrany termin. Nie mozesz juz oplacic tej rezerwacji.
+      </p>
+      <div class="info-box">
+        <div class="info-box__label">Termin</div>
+        <div class="info-box__value">{{scheduledAt}}</div>
+      </div>
+      <div class="highlight">
+        Mozesz wybrac inny termin u tej samej wrozki lub przegladac oferty innych wrozek. <span class="emoji">💫</span>
+      </div>
+      <div class="btn-wrapper">
+        <a href="{{appUrl}}/ogloszenia" class="btn">Przegladaj wrozki</a>
+      </div>
     </div>
-    <p style="color:#e2e0f0;">Możesz wybrać inny termin u tej samej wróżki lub przeglądać oferty innych wróżek.</p>
-    <a href="{{appUrl}}/ogloszenia" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;padding:0.75rem 2rem;border-radius:8px;text-decoration:none;font-weight:600;margin:1rem 0;">
-      Przeglądaj wróżki
-    </a>
-    <hr style="border-color:#3a2a5e;margin:1.5rem 0;">
-    <p style="color:#6b7280;font-size:0.8rem;">eWróżka · <a href="{{appUrl}}" style="color:#a78bfa;">{{appUrl}}</a></p>
+    {{> footer}}
   </div>
 </body>
 </html>
