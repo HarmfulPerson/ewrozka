@@ -792,11 +792,11 @@ export class AdminService {
 
     });
 
-    if (!user) throw new NotFoundException('Wróżka nie istnieje.');
+    if (!user) throw new NotFoundException('Specjalista nie istnieje.');
 
     const isWizard = user.roles?.some((r) => r.name === 'wizard');
 
-    if (!isWizard) throw new NotFoundException('Użytkownik nie jest wróżką.');
+    if (!isWizard) throw new NotFoundException('Użytkownik nie jest specjalistą.');
 
 
 
@@ -935,11 +935,11 @@ export class AdminService {
 
     const user = await this.userRepo.findOne({ where: { id: wizardId }, relations: ['roles'] });
 
-    if (!user) throw new NotFoundException('Wróżka nie istnieje.');
+    if (!user) throw new NotFoundException('Specjalista nie istnieje.');
 
     if (!user.roles?.some((r) => r.name === 'wizard')) {
 
-      throw new NotFoundException('Użytkownik nie jest wróżką.');
+      throw new NotFoundException('Użytkownik nie jest specjalistą.');
 
     }
 
@@ -969,11 +969,11 @@ export class AdminService {
 
     const user = await this.userRepo.findOne({ where: { id: wizardId }, relations: ['roles'] });
 
-    if (!user) throw new NotFoundException('Wróżka nie istnieje.');
+    if (!user) throw new NotFoundException('Specjalista nie istnieje.');
 
     if (!user.roles?.some((r) => r.name === 'wizard')) {
 
-      throw new NotFoundException('Użytkownik nie jest wróżką.');
+      throw new NotFoundException('Użytkownik nie jest specjalistą.');
 
     }
 
@@ -1013,11 +1013,11 @@ export class AdminService {
 
     });
 
-    if (!user) throw new NotFoundException('Wróżka nie istnieje.');
+    if (!user) throw new NotFoundException('Specjalista nie istnieje.');
 
     const isWizard = user.roles?.some((r) => r.name === 'wizard');
 
-    if (!isWizard) throw new NotFoundException('Użytkownik nie jest wróżką.');
+    if (!isWizard) throw new NotFoundException('Użytkownik nie jest specjalistą.');
 
     if (platformFeePercent < 0 || platformFeePercent > 100) {
 
@@ -1031,7 +1031,7 @@ export class AdminService {
 
     this.logger.log(
 
-      `Admin ustawił prowizję dla wróżki ${id} na ${platformFeePercent}%`,
+      `Admin ustawił prowizję dla specjalisty ${id} na ${platformFeePercent}%`,
 
     );
 
@@ -1039,7 +1039,7 @@ export class AdminService {
 
 
 
-  /** Czyści override prowizji – wróżka przechodzi na prowizję z progów. */
+  /** Czyści override prowizji – specjalista przechodzi na prowizję z progów. */
 
   async resetWizardPlatformFeeToTier(id: number): Promise<void> {
 
@@ -1051,11 +1051,11 @@ export class AdminService {
 
     });
 
-    if (!user) throw new NotFoundException('Wróżka nie istnieje.');
+    if (!user) throw new NotFoundException('Specjalista nie istnieje.');
 
     const isWizard = user.roles?.some((r) => r.name === 'wizard');
 
-    if (!isWizard) throw new NotFoundException('Użytkownik nie jest wróżką.');
+    if (!isWizard) throw new NotFoundException('Użytkownik nie jest specjalistą.');
 
     user.platformFeePercent = null;
 
@@ -1063,7 +1063,7 @@ export class AdminService {
 
     this.logger.log(
 
-      `Admin zresetował prowizję wróżki ${id} – używana prowizja z progów`,
+      `Admin zresetował prowizję specjalisty ${id} – używana prowizja z progów`,
 
     );
 
@@ -1081,11 +1081,11 @@ export class AdminService {
 
     });
 
-    if (!user) throw new NotFoundException('Wróżka nie istnieje.');
+    if (!user) throw new NotFoundException('Specjalista nie istnieje.');
 
     const isWizard = user.roles?.some((r) => r.name === 'wizard');
 
-    if (!isWizard) throw new NotFoundException('Użytkownik nie jest wróżką.');
+    if (!isWizard) throw new NotFoundException('Użytkownik nie jest specjalistą.');
 
 
 
@@ -1094,7 +1094,7 @@ export class AdminService {
 
     if (isFeatured) {
 
-      throw new BadRequestException('Wróżka ma już aktywne wyróżnienie.');
+      throw new BadRequestException('Specjalista ma już aktywne wyróżnienie.');
 
     }
 
@@ -1107,7 +1107,7 @@ export class AdminService {
     await this.featuredService.activateFeatured(id, null, durationHours);
 
     this.logger.log(
-      `Admin ustawił wyróżnienie dla wróżki ${id} (bez płatności)`,
+      `Admin ustawił wyróżnienie dla specjalisty ${id} (bez płatności)`,
     );
 
   }

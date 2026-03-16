@@ -54,7 +54,7 @@ export class StripeController {
   // ── Stripe Connect ──
 
   @Get('connect/quick-check')
-  @ApiAuth({ summary: 'Szybkie sprawdzenie czy wróżka ma aktywne Stripe Connect' })
+  @ApiAuth({ summary: 'Szybkie sprawdzenie czy specjalista ma aktywne Stripe Connect' })
   async connectQuickCheck(@CurrentUser('id') userId: number) {
     return this.stripeService.quickCheckConnect(userId);
   }
@@ -81,7 +81,7 @@ export class StripeController {
   }
 
   @Post('connect/onboard')
-  @ApiAuth({ summary: 'Rozpocznij onboarding Stripe Connect dla wróżki' })
+  @ApiAuth({ summary: 'Rozpocznij onboarding Stripe Connect dla specjalisty' })
   async connectOnboard(
     @CurrentUser('id') userId: number,
     @CurrentUser('email') email: string,

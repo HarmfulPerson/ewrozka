@@ -23,7 +23,7 @@ export function WizardCard({ wizard }: { wizard: WizardDto }) {
       {wizard.isFeatured && (
         <div className="wizard-card__featured-badge">
           <span className="wizard-card__featured-icon">✦</span>
-          Wyróżniona
+          Wyróżniony
         </div>
       )}
       <div className="wizard-card__avatar">
@@ -56,7 +56,7 @@ export function WizardCard({ wizard }: { wizard: WizardDto }) {
           ))}
         </div>
         <p className="wizard-card__desc">
-          {wizard.bio || 'Doświadczona wróżka specjalizująca się w różnych formach wróżbiarstwa'}
+          {wizard.bio || 'Doświadczony specjalista specjalizujący się w różnych formach wróżbiarstwa'}
         </p>
       </div>
     </article>

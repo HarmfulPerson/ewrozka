@@ -229,7 +229,7 @@ export default function AdvertisementPage() {
         message: '',
       });
       closeBookingModal();
-      toast.success('Wniosek wysłany! Wróżka musi go zaakceptować.');
+      toast.success('Wniosek wysłany! Specjalista musi go zaakceptować.');
     } catch (error) {
       toast.error('Nie udało się wysłać wniosku: ' + (error instanceof Error ? error.message : 'Błąd'));
     } finally {
@@ -306,7 +306,7 @@ export default function AdvertisementPage() {
         <div className="advertisement-topnav">
           <Link href={`/wrozka/${advertisement.wizard.id}`} className="advertisement-topnav__back">← Wróć</Link>
           <div className="advertisement-topnav__breadcrumbs">
-            <Link href="/ogloszenia" className="breadcrumb-link">Wróżki</Link>
+            <Link href="/ogloszenia" className="breadcrumb-link">Specjaliści</Link>
             <span className="breadcrumb-separator">/</span>
             <Link href={`/wrozka/${advertisement.wizard.id}`} className="breadcrumb-link">
               {advertisement.wizard.username}
@@ -379,7 +379,7 @@ export default function AdvertisementPage() {
                 </button>
               ) : isOtherWizard ? (
                 <p className="advertisement-details__wizard-notice">
-                  Jesteś wróżką — nie możesz umawiać się na konsultacje.
+                  Jesteś specjalistą — nie możesz umawiać się na konsultacje.
                 </p>
               ) : (
                 <button
@@ -661,7 +661,7 @@ export default function AdvertisementPage() {
                   <polyline points="9 12 11 14 15 10"/>
                 </svg>
                 <h3>Wniosek wysłany!</h3>
-                <p>Wróżka sprawdzi Twój wniosek i – jeśli zaakceptuje – wyślemy Ci e-mail z linkiem do płatności.</p>
+                <p>Specjalista sprawdzi Twój wniosek i – jeśli zaakceptuje – wyślemy Ci e-mail z linkiem do płatności.</p>
                 <button className="modal-button modal-button--primary" onClick={closeBookingModal}>Zamknij</button>
               </div>
             )}

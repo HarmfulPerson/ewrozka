@@ -23,9 +23,9 @@ const cinzelDecorative = Cinzel_Decorative({
 });
 
 export const metadata: Metadata = {
-  title: 'eWróżka.pl — Portal wróżb i konsultacji',
+  title: 'eWróżka.pl — Portal konsultacji ezoterycznych',
   description:
-    'Połącz się z wróżkami lub oferuj konsultacje. Tarot, horoskopy, runy — jeden portal dla wróżek i klientów.',
+    'Połącz się ze specjalistami lub oferuj konsultacje. Tarot, horoskopy, runy — jeden portal dla specjalistów i klientów.',
   icons: {
     icon: '/icon-purple.svg',
     shortcut: '/icon-purple.svg',

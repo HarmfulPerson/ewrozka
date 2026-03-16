@@ -44,7 +44,7 @@ export default function AdminWizardProfilePage() {
     apiGetAdminWizard(user.token, id)
       .then(setWizard)
       .catch((err) => {
-        toast.error(err instanceof Error ? err.message : 'Nie udało się pobrać danych wróżki.');
+        toast.error(err instanceof Error ? err.message : 'Nie udało się pobrać danych specjalisty.');
         router.replace('/panel/admin/wrozki');
       })
       .finally(() => setLoading(false));
@@ -88,7 +88,7 @@ export default function AdminWizardProfilePage() {
     setResetToTierLoading(true);
     try {
       await apiResetWizardPlatformFeeToTier(user.token, wizard.id);
-      toast.success('Prowizja z progów. Wróżka używa teraz naliczania z liczby spotkań.');
+      toast.success('Prowizja z progów. Specjalista używa teraz naliczania z liczby spotkań.');
       const updated = await apiGetAdminWizard(user.token, wizard.id);
       setWizard(updated);
       setFeePercent(String(updated.tierBasedFee?.feePercent ?? 20));
@@ -188,13 +188,13 @@ export default function AdminWizardProfilePage() {
             )}
           </div>
           {wizard.isFeatured && (
-            <span className="aw-profile__featured-badge">✦ Wyróżniona</span>
+            <span className="aw-profile__featured-badge">✦ Wyróżniony</span>
           )}
         </div>
         <div className="aw-profile__info">
           <h1 className="aw-profile__name">{wizard.username}</h1>
           <p className="aw-profile__joined">
-            Dołączyła: {formatDate(wizard.createdAt)}
+            Dołączył: {formatDate(wizard.createdAt)}
           </p>
           {(wizard.topicNames ?? []).length > 0 && (
             <div className="aw-profile__topics">
@@ -235,7 +235,7 @@ export default function AdminWizardProfilePage() {
             <span className="aw-profile__label">Ogłoszenia:</span> {wizard.announcementsCount}
           </p>
           <p className="aw-profile__card-row">
-            <span className="aw-profile__label">Dostępna teraz:</span>{' '}
+            <span className="aw-profile__label">Dostępny teraz:</span>{' '}
             {wizard.isAvailableNow ? 'Tak' : 'Nie'}
           </p>
           {wizard.isFeatured && wizard.featuredExpiresAt && (
@@ -332,7 +332,7 @@ export default function AdminWizardProfilePage() {
               className="aw-profile__btn aw-profile__btn--secondary"
               onClick={handleResetToTier}
               disabled={resetToTierLoading || wizard.platformFeePercent == null}
-              title={wizard.platformFeePercent == null ? 'Wróżka już używa progów' : 'Usuń override, oblicz prowizję z progów'}
+              title={wizard.platformFeePercent == null ? 'Specjalista już używa progów' : 'Usuń override, oblicz prowizję z progów'}
             >
               {resetToTierLoading ? '…' : 'Oblicz z progów'}
             </button>

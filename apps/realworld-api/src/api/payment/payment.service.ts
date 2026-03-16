@@ -46,7 +46,7 @@ export class PaymentService {
     platformFeePercentOverride?: number,
   ): Promise<{ transaction: TransactionEntity }> {
     this.logger.log(
-      `Przetwarzanie płatności dla wróżki ${wrozkaId}, wizyta ${appointmentId}, kwota ${totalAmountGrosze}gr`,
+      `Przetwarzanie płatności dla specjalisty ${wrozkaId}, wizyta ${appointmentId}, kwota ${totalAmountGrosze}gr`,
     );
 
     const platformFeePercentage =
@@ -62,7 +62,7 @@ export class PaymentService {
 
     const wizardAmountGrosze = totalAmountGrosze - platformFeeGrosze;
 
-    this.logger.log(`Obliczono: Prowizja platformy: ${platformFeeGrosze}gr, Kwota wróżki: ${wizardAmountGrosze}gr`);
+    this.logger.log(`Obliczono: Prowizja platformy: ${platformFeeGrosze}gr, Kwota specjalisty: ${wizardAmountGrosze}gr`);
 
     return await this.dataSource.transaction(async (manager) => {
       const transaction = manager.create(TransactionEntity, {
@@ -118,7 +118,7 @@ export class PaymentService {
       await manager.save(PlatformRevenueEntity, revenue);
 
       this.logger.log(
-        `Płatność przetworzona: ${totalAmountGrosze}gr, Platforma: ${platformFeeGrosze}gr (${platformFeePercentage}%), Wróżka: ${wizardAmountGrosze}gr`,
+        `Płatność przetworzona: ${totalAmountGrosze}gr, Platforma: ${platformFeeGrosze}gr (${platformFeePercentage}%), Specjalista: ${wizardAmountGrosze}gr`,
       );
 
       return { transaction };
@@ -200,7 +200,7 @@ export class PaymentService {
     });
 
     this.logger.log(
-      `Zarejestrowano płatność (destination charge): ${totalAmountGrosze}gr, Platforma: ${platformFeeGrosze}gr, Wróżka przez Stripe: ${wizardAmountGrosze}gr`,
+      `Zarejestrowano płatność (destination charge): ${totalAmountGrosze}gr, Platforma: ${platformFeeGrosze}gr, Specjalista przez Stripe: ${wizardAmountGrosze}gr`,
     );
   }
 

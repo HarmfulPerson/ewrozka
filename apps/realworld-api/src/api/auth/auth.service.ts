@@ -52,13 +52,13 @@ export class AuthService {
 
     if (user.wizardApplicationStatus === 'pending') {
       throw new ForbiddenException(
-        'Twoja aplikacja jako wróżka jest w trakcie rozpatrywania.',
+        'Twoja aplikacja jako specjalista jest w trakcie rozpatrywania.',
       );
     }
 
     if (user.wizardApplicationStatus === 'rejected') {
       throw new ForbiddenException(
-        'Twoja aplikacja jako wróżka została odrzucona.',
+        'Twoja aplikacja jako specjalista została odrzucona.',
       );
     }
 

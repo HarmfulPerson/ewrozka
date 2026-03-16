@@ -25,7 +25,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   WIZARD_PENDING:
     'Twoje konto oczekuje na zatwierdzenie przez administratora. Poinformujemy Cię, gdy zostanie aktywowane.',
   WIZARD_REJECTED:
-    'Niestety Twój wniosek o konto wróżki został odrzucony. Skontaktuj się z nami, aby uzyskać więcej informacji.',
+    'Niestety Twój wniosek o konto specjalisty został odrzucony. Skontaktuj się z nami, aby uzyskać więcej informacji.',
 };
 
 function LoginForm() {
@@ -59,7 +59,7 @@ function LoginForm() {
       if (msg.includes('WIZARD_PENDING')) {
         setError('Twoje konto oczekuje na zatwierdzenie przez administratora. Poinformujemy Cię, gdy zostanie aktywowane.');
       } else if (msg.includes('WIZARD_REJECTED')) {
-        setError('Niestety Twój wniosek o konto wróżki został odrzucony. Skontaktuj się z nami, aby uzyskać więcej informacji.');
+        setError('Niestety Twój wniosek o konto specjalisty został odrzucony. Skontaktuj się z nami, aby uzyskać więcej informacji.');
       } else {
         setError(msg);
       }

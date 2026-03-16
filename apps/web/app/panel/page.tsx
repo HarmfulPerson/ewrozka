@@ -499,7 +499,7 @@ function PanelPage() {
       {showFeaturedModal && user && featuredConfig && (
         <PaymentModal
           token={user.token}
-          title={`Wyróżnienie wróżki – ${featuredConfig.durationHours}h`}
+          title={`Wyróżnienie specjalisty – ${featuredConfig.durationHours}h`}
           amountZl={`${(featuredConfig.priceGrosze / 100).toFixed(2).replace('.', ',')} zł`}
           onClose={() => setShowFeaturedModal(false)}
           onSuccess={handleFeaturedSuccess}

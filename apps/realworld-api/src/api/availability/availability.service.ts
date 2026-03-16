@@ -136,7 +136,7 @@ export class AvailabilityService {
 
     for (const gb of toCancelGuest) {
         gb.status = 'rejected';
-        gb.rejectionReason = 'Termin został odwołany przez wróżkę.';
+        gb.rejectionReason = 'Termin został odwołany przez specjalistę.';
         await this.guestBookingRepository.save(gb);
         const scheduledPl = gb.scheduledAt.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' });
         this.emailService
@@ -146,7 +146,7 @@ export class AvailabilityService {
             type: EmailType.GUEST_BOOKING_CANCELLED_BY_BLOCK,
             context: {
               guestName: gb.guestName,
-              wizardName: gb.wizard?.username ?? wizard?.username ?? 'wróżka',
+              wizardName: gb.wizard?.username ?? wizard?.username ?? 'specjalista',
               scheduledAt: scheduledPl,
               appUrl,
             },
@@ -192,7 +192,7 @@ export class AvailabilityService {
         const userEmail = req.user?.email;
         if (userEmail) {
           const requestedPl = req.requestedStartsAt!.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' });
-          const wizardName = (req.advertisement as { user?: { username?: string } })?.user?.username ?? 'wróżka';
+          const wizardName = (req.advertisement as { user?: { username?: string } })?.user?.username ?? 'specjalista';
           this.emailService
             .send({
               to: userEmail,

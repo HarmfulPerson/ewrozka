@@ -81,7 +81,7 @@ export class GuestBookingService {
     });
     if (existing) {
       throw new BadRequestException(
-        'Masz już rezerwację na ten termin. Poczekaj na odpowiedź wróżki lub wybierz inny slot.',
+        'Masz już rezerwację na ten termin. Poczekaj na odpowiedź specjalisty lub wybierz inny slot.',
       );
     }
 
@@ -205,7 +205,7 @@ export class GuestBookingService {
       type: EmailType.GUEST_BOOKING_ACCEPTED,
       context: {
         guestName: booking.guestName,
-        wizardName: wizard?.username ?? 'Wróżka',
+        wizardName: wizard?.username ?? 'Specjalista',
         scheduledAt: scheduledPl,
         durationMinutes: booking.durationMinutes,
         priceZl: (booking.priceGrosze / 100).toFixed(2),
@@ -237,7 +237,7 @@ export class GuestBookingService {
       amount: booking.priceGrosze,
       currency: 'pln',
       payment_method_types: ['card', 'blik', 'p24'],
-      description: `${ad?.title ?? 'Konsultacja'} z ${wizard?.username ?? 'wróżką'}`,
+      description: `${ad?.title ?? 'Konsultacja'} ze ${wizard?.username ?? 'specjalistą'}`,
       metadata: {
         bookingType: 'guest',
         guestBookingId: booking.id,
@@ -288,7 +288,7 @@ export class GuestBookingService {
     return {
       id: booking.id,
       guestName: booking.guestName,
-      wizardName: booking.wizard?.username ?? 'Wróżka',
+      wizardName: booking.wizard?.username ?? 'Specjalista',
       advertisementTitle: booking.advertisement?.title ?? 'Konsultacja',
       scheduledAt: booking.scheduledAt,
       durationMinutes: booking.durationMinutes,
@@ -325,7 +325,7 @@ export class GuestBookingService {
       type: EmailType.GUEST_BOOKING_REJECTED,
       context: {
         guestName: booking.guestName,
-        wizardName: wizard?.username ?? 'Wróżka',
+        wizardName: wizard?.username ?? 'Specjalista',
         rejectionReason: reason ?? null,
         appUrl,
       },
@@ -387,7 +387,7 @@ export class GuestBookingService {
       type: EmailType.GUEST_BOOKING_PAID,
       context: {
         guestName: booking.guestName,
-        wizardName: wizard?.username ?? 'Wróżka',
+        wizardName: wizard?.username ?? 'Specjalista',
         scheduledAt: scheduledPl,
         durationMinutes: booking.durationMinutes,
         meetingUrl,
@@ -431,7 +431,7 @@ export class GuestBookingService {
       roomUrl: `https://${this.config.get('daily.domain', { infer: true }) ?? 'ewrozka.daily.co'}/${roomName}`,
       token,
       booking: {
-        wizardName: booking.wizard?.username ?? 'Wróżka',
+        wizardName: booking.wizard?.username ?? 'Specjalista',
         scheduledAt: booking.scheduledAt,
         durationMinutes: booking.durationMinutes,
         guestName: booking.guestName,
@@ -504,8 +504,8 @@ export class GuestBookingService {
           price_data: {
             currency: 'pln',
             product_data: {
-              name: ad?.title ?? 'Konsultacja z wróżką',
-              description: `Spotkanie z ${wizard?.username ?? 'wróżką'} • ${scheduledPl} • ${booking.durationMinutes} min`,
+              name: ad?.title ?? 'Konsultacja ze specjalistą',
+              description: `Spotkanie ze ${wizard?.username ?? 'specjalistą'} • ${scheduledPl} • ${booking.durationMinutes} min`,
             },
             unit_amount: booking.priceGrosze,
           },

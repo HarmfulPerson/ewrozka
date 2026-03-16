@@ -56,14 +56,14 @@ export class WizardApplicationController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiPublic({ summary: 'Złóż wniosek o konto wróżki' })
+  @ApiPublic({ summary: 'Złóż wniosek o konto specjalisty' })
   async submit(@Body() dto: SubmitWizardApplicationDto): Promise<{ id: string }> {
     return this.service.create(dto);
   }
 
   @Post(':id/photo')
   @HttpCode(HttpStatus.OK)
-  @ApiPublic({ summary: 'Prześlij zdjęcie do wniosku wróżki' })
+  @ApiPublic({ summary: 'Prześlij zdjęcie do wniosku specjalisty' })
   @UseInterceptors(
     FileFastifyInterceptor('photo', {
       storage: diskStorage({

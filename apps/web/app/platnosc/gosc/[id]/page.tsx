@@ -231,7 +231,7 @@ export default function GuestPaymentPage() {
       <div className="gp-state">
         <div className="gp-state__icon">❌</div>
         <h2>Rezerwacja została anulowana</h2>
-        <p>Termin został odwołany przez wróżkę. Nie możesz już opłacić tej rezerwacji. Wybierz inny termin.</p>
+        <p>Termin został odwołany przez specjalistę. Nie możesz już opłacić tej rezerwacji. Wybierz inny termin.</p>
       </div>
     );
 
@@ -257,7 +257,7 @@ export default function GuestPaymentPage() {
               <strong>{booking?.advertisementTitle}</strong>
             </div>
             <div className="gp-detail-row">
-              <span>Wróżka</span>
+              <span>Specjalista</span>
               <strong>{booking?.wizardName}</strong>
             </div>
             <div className="gp-detail-row">

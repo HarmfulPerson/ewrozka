@@ -18,14 +18,14 @@ export class FeaturedController {
 
   /** Sprawdza status wyróżnienia zalogowanej wróżki */
   @Get('my-status')
-  @ApiAuth({ summary: 'Status wyróżnienia zalogowanej wróżki' })
+  @ApiAuth({ summary: 'Status wyróżnienia zalogowanego specjalisty' })
   async getMyStatus(@CurrentUser('id') userId: number) {
     return this.featuredService.getWizardFeaturedStatus(userId);
   }
 
   /** Tworzy Stripe PaymentIntent dla wyróżnienia (inline Payment Element) */
   @Post('payment-intent')
-  @ApiAuth({ summary: 'Utwórz Stripe PaymentIntent dla wyróżnienia wróżki' })
+  @ApiAuth({ summary: 'Utwórz Stripe PaymentIntent dla wyróżnienia specjalisty' })
   @HttpCode(HttpStatus.OK)
   async paymentIntent(
     @CurrentUser('id') userId: number,

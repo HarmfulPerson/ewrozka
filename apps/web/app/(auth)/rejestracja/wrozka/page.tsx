@@ -142,11 +142,11 @@ export default function RejestracjaWrozkaPage() {
           <div className="wrozka-reg__success-icon">🔮</div>
           <h2 className="wrozka-reg__success-title">Zgłoszenie złożone!</h2>
           <p className="wrozka-reg__success-text">
-            Twój wniosek o konto wróżki został przyjęty i oczekuje na weryfikację przez
+            Twój wniosek o konto specjalisty został przyjęty i oczekuje na weryfikację przez
             administratora.
           </p>
           <p className="wrozka-reg__success-text wrozka-reg__success-text--muted">
-            Gdy Twoje konto zostanie zaakceptowane, będziesz mogła się zalogować.
+            Gdy Twoje konto zostanie zaakceptowane, będziesz mógł się zalogować.
             Czas rozpatrzenia wniosku: do&nbsp;48&nbsp;godzin.
           </p>
           <Link href="/login" className="wrozka-reg__success-btn">
@@ -159,7 +159,7 @@ export default function RejestracjaWrozkaPage() {
 
   return (
     <AuthFormShell
-      title="Rejestracja wróżki"
+      title="Rejestracja specjalisty"
       subtitle="Wypełnij wszystkie pola – Twój profil zostanie zweryfikowany przez administratora"
     >
       <form className="auth-form wrozka-reg__form" onSubmit={handleSubmit}>
@@ -226,7 +226,7 @@ export default function RejestracjaWrozkaPage() {
           <input
             id="username"
             type="text"
-            placeholder="np. Wróżka Luna"
+            placeholder="np. Specjalista Luna"
             minLength={3}
             maxLength={60}
             required

@@ -13,12 +13,12 @@ export default function RejestracjaPage() {
           <span className="auth-choice__icon" aria-hidden>
             ✦
           </span>
-          <h3 className="auth-choice__title">Jestem wróżką</h3>
+          <h3 className="auth-choice__title">Oferuję konsultacje</h3>
           <p className="auth-choice__desc">
             Oferuję konsultacje, tarot lub horoskopy. Chcę przyjmować klientów
             przez portal.
           </p>
-          <span className="auth-choice__cta">Załóż konto wróżki <span className="auth-choice__arrow">→</span></span>
+          <span className="auth-choice__cta">Załóż konto specjalisty <span className="auth-choice__arrow">→</span></span>
         </Link>
         <Link href="/rejestracja/klient" className="auth-choice__card">
           <span className="auth-choice__icon" aria-hidden>
@@ -26,8 +26,8 @@ export default function RejestracjaPage() {
           </span>
           <h3 className="auth-choice__title">Jestem klientem</h3>
           <p className="auth-choice__desc">
-            Szukam konsultacji z wróżką, tarotu lub horoskopu. Chcę znaleźć
-            sprawdzone wróżki.
+            Szukam konsultacji ze specjalistą, tarotu lub horoskopu. Chcę znaleźć
+            sprawdzonych specjalistów.
           </p>
           <span className="auth-choice__cta">Załóż konto klienta <span className="auth-choice__arrow">→</span></span>
         </Link>

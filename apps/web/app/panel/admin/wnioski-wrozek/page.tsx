@@ -83,7 +83,7 @@ export default function AdminWniosikiWrozekPage() {
     setActionLoading(id);
     try {
       await apiApproveWizardApplication(user.token, id);
-      toast.success('Konto wróżki zostało zatwierdzone. Wysłano e-mail z powiadomieniem.');
+      toast.success('Konto specjalisty zostało zatwierdzone. Wysłano e-mail z powiadomieniem.');
       fetchApplications(page);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Wystąpił błąd.');
@@ -102,7 +102,7 @@ export default function AdminWniosikiWrozekPage() {
     setActionLoading(rejectModal.id);
     try {
       await apiRejectWizardApplication(user.token, rejectModal.id, rejectReason);
-      toast.success('Wniosek odrzucony. Wysłano e-mail do wróżki.');
+      toast.success('Wniosek odrzucony. Wysłano e-mail do specjalisty.');
       setRejectModal(null);
       fetchApplications(page);
     } catch (err) {
@@ -116,9 +116,9 @@ export default function AdminWniosikiWrozekPage() {
     <div className="ww-page">
       <div className="ww-header">
         <div>
-          <h1 className="ww-title">Wnioski wróżek</h1>
+          <h1 className="ww-title">Wnioski specjalistów</h1>
           <p className="ww-subtitle">
-            Przeglądaj i zatwierdzaj zgłoszenia nowych wróżek
+            Przeglądaj i zatwierdzaj zgłoszenia nowych specjalistów
           </p>
         </div>
         <div className="ww-filters">
@@ -141,9 +141,9 @@ export default function AdminWniosikiWrozekPage() {
           <path d="M12 8v4"/>
           <path d="M12 16h.01"/>
         </svg>
-        Zatwierdzone wróżki są dostępne w zakładce{' '}
+        Zatwierdzeni specjaliści są dostępni w zakładce{' '}
         <Link href="/panel/admin/wrozki" className="ww-approved-info__link">
-          Wróżki →
+          Specjaliści →
         </Link>
       </div>
 
@@ -284,8 +284,8 @@ export default function AdminWniosikiWrozekPage() {
           <div className="ww-modal" onClick={(e) => e.stopPropagation()}>
             <h3 className="ww-modal__title">Odrzuć wniosek</h3>
             <p className="ww-modal__desc">
-              Odrzucasz wniosek wróżki <strong>{rejectModal.username}</strong>.
-              Wróżka będzie mogła złożyć nowy wniosek z tym samym adresem e-mail.
+              Odrzucasz wniosek specjalisty <strong>{rejectModal.username}</strong>.
+              Specjalista będzie mógł złożyć nowy wniosek z tym samym adresem e-mail.
             </p>
             <label className="ww-modal__label" htmlFor="reject-reason">
               Powód odrzucenia <span className="ww-modal__optional">(opcjonalnie)</span>

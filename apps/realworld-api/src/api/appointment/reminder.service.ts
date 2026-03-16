@@ -104,7 +104,7 @@ export class ReminderService {
       const to = apt.client?.email;
       if (!to) continue;
 
-      const wizardName = apt.wrozka?.username ?? 'wróżka';
+      const wizardName = apt.wrozka?.username ?? 'specjalista';
       const adTitle = apt.advertisement?.title ?? 'Konsultacja';
       const scheduledAt = apt.startsAt.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' });
 
@@ -194,7 +194,7 @@ export class ReminderService {
       const recipientName = bk.guestName;
       const to = bk.guestEmail;
 
-      const wizardName = bk.wizard?.username ?? 'wróżka';
+      const wizardName = bk.wizard?.username ?? 'specjalista';
       const adTitle = bk.advertisement?.title ?? 'Konsultacja';
       const scheduledAt = bk.scheduledAt.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' });
 
