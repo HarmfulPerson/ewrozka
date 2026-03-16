@@ -223,6 +223,18 @@
   gap: 0.5rem;
 }
 
+/* Dzwoneczek w sidebarze: mobilka widoczny, desktop ukryty */
+.panel-sidebar__notif {
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .panel-sidebar__notif {
+    display: none;
+  }
+}
+
 .panel-sidebar__user {
   display: flex;
   align-items: center;

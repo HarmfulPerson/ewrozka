@@ -5,6 +5,7 @@ import {
   AppointmentEntity,
   MeetingRequestEntity,
   MeetingRoomEntity,
+  UserEntity,
 } from '@repo/postgresql-typeorm';
 import { AvailabilityModule } from '../availability/availability.module';
 import { EmailModule } from '../email/email.module';
@@ -21,6 +22,7 @@ import { MeetingRequestService } from './meeting-request.service';
       AdvertisementEntity,
       AppointmentEntity,
       MeetingRoomEntity,
+      UserEntity,
     ]),
     AvailabilityModule,
     EmailModule,

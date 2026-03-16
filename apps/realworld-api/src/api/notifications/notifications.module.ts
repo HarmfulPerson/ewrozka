@@ -4,6 +4,7 @@ import {
   AdvertisementEntity,
   GuestBookingEntity,
   MeetingRequestEntity,
+  NotificationEntity,
   UserEntity,
 } from '@repo/postgresql-typeorm';
 import { AuthModule } from '../auth/auth.module';
@@ -13,7 +14,7 @@ import { NotificationsService } from './notifications.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([MeetingRequestEntity, GuestBookingEntity, AdvertisementEntity, UserEntity]),
+    TypeOrmModule.forFeature([MeetingRequestEntity, GuestBookingEntity, AdvertisementEntity, UserEntity, NotificationEntity]),
     AuthModule,
   ],
   controllers: [NotificationsController],

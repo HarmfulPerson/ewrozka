@@ -23,3 +23,4 @@ export * from './wizard-application.entity';
 export * from './guest-booking.entity';
 export * from './reminder-config.entity';
 export * from './reminder-log.entity';
+export * from './notification.entity';
