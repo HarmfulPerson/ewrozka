@@ -65,7 +65,7 @@ export interface ConnectStatusDto {
   stripeAccountId?: string;
   stripeAvailableGrosze?: number;
   stripePendingGrosze?: number;
-  walletBalance?: number;
+  stripeTotalGrosze?: number;
   withdrawableGrosze?: number;
 }
 

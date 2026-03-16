@@ -17,7 +17,7 @@ export class PaymentController {
   @ApiAuth({ summary: 'Moje saldo portfela' })
   async getWalletBalance(@CurrentUser('id') userId: number) {
     const [balance, platformFeePercent, commissionTierStatus] = await Promise.all([
-      this.paymentService.getWalletBalance(userId),
+      this.paymentService.getEarnedBalance(userId),
 
       this.paymentService.getPlatformFeePercentForUser(userId),
 

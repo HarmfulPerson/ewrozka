@@ -75,10 +75,9 @@ export class StripeController {
   async refreshStatus(@CurrentUser('id') userId: number) {
     await this.stripeService.refreshConnectStatus(userId);
     const status = await this.stripeService.getConnectAccountStatus(userId);
-    const walletBalance = await this.stripeService.getWalletBalance(userId);
     const stripeAvail = status.stripeAvailableGrosze ?? 0;
-    const withdrawableGrosze = Math.min(stripeAvail, walletBalance);
-    return { ...status, walletBalance, withdrawableGrosze };
+    const stripePending = status.stripePendingGrosze ?? 0;
+    return { ...status, withdrawableGrosze: stripeAvail, stripeTotalGrosze: stripeAvail + stripePending };
   }
 
   @Post('connect/onboard')
@@ -94,13 +93,10 @@ export class StripeController {
   @ApiAuth({ summary: 'Status konta Stripe Connect' })
   async connectStatus(@CurrentUser('id') userId: number) {
     const status = await this.stripeService.getConnectAccountStatus(userId);
-    const walletBalance = await this.stripeService.getWalletBalance(userId);
-
-    // Dostępne do wypłaty = min(saldo Stripe, saldo portfela po prowizji)
     const stripeAvail = status.stripeAvailableGrosze ?? 0;
-    const withdrawableGrosze = Math.min(stripeAvail, walletBalance);
-
-    return { ...status, walletBalance, withdrawableGrosze };
+    const stripePending = status.stripePendingGrosze ?? 0;
+    // Dostępne do wypłaty = saldo available w Stripe (źródło prawdy)
+    return { ...status, withdrawableGrosze: stripeAvail, stripeTotalGrosze: stripeAvail + stripePending };
   }
 
   @Post('connect/withdraw')

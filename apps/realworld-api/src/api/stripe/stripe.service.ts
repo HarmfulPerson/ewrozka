@@ -7,11 +7,10 @@ import {
   AppointmentEntity,
   GuestBookingEntity,
   StripeConnectAccountEntity,
-  WalletEntity,
   WithdrawalEntity,
 } from '@repo/postgresql-typeorm';
 import Stripe from 'stripe';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { FeaturedService } from '../featured/featured.service';
 import { GuestBookingService } from '../guest-booking/guest-booking.service';
 import { MeetingRoomService } from '../meeting-room/meeting-room.service';
@@ -34,9 +33,6 @@ export class StripeService {
     private readonly connectAccountRepository: Repository<StripeConnectAccountEntity>,
     @InjectRepository(WithdrawalEntity)
     private readonly withdrawalRepository: Repository<WithdrawalEntity>,
-    @InjectRepository(WalletEntity)
-    private readonly walletRepository: Repository<WalletEntity>,
-    private readonly dataSource: DataSource,
     private readonly paymentService: PaymentService,
     private readonly meetingRoomService: MeetingRoomService,
     private readonly featuredService: FeaturedService,
@@ -353,8 +349,8 @@ export class StripeService {
 
   // ── Stripe Connect ──────────────────────────────────────────────────
 
-  async getWalletBalance(userId: number): Promise<number> {
-    return this.paymentService.getWalletBalance(userId);
+  async getEarnedBalance(userId: number): Promise<number> {
+    return this.paymentService.getEarnedBalance(userId);
   }
 
   async createAccountSession(userId: number, email: string): Promise<{ clientSecret: string; accountId: string }> {
@@ -410,6 +406,18 @@ export class StripeService {
       connectAccount.chargesEnabled = account.charges_enabled;
       connectAccount.payoutsEnabled = account.payouts_enabled;
       await this.connectAccountRepository.save(connectAccount);
+
+      // Non-prod: ustaw natychmiastową dostępność środków
+      const nodeEnv = this.configService.get('app.nodeEnv', { infer: true });
+      if (nodeEnv !== Environment.PRODUCTION) {
+        await this.stripe.accounts.update(connectAccount.stripeAccountId, {
+          settings: {
+            payouts: {
+              schedule: { delay_days: 'minimum' as unknown as number },
+            },
+          },
+        }).catch(() => {});
+      }
     } catch (err) {
       this.logger.warn(`refreshConnectStatus nie powiodło się: ${err}`);
     }
@@ -584,64 +592,38 @@ export class StripeService {
       );
     }
 
-    // Sprawdź wewnętrzne saldo portfela — cap na zarobioną kwotę (po prowizji)
-    const wallet = await this.walletRepository.findOne({ where: { userId } });
-    const walletBalance = wallet ? Number(wallet.balance) : 0;
+    // Utwórz payout na connected account wróżki
+    let stripeTransferId: string | null = null;
+    let failureReason: string | null = null;
 
-    if (walletBalance < amountGrosze) {
-      const available = (walletBalance / 100).toFixed(2);
-      throw new BadRequestException(`Kwota przekracza Twoje zarobki. Maksymalna wypłata: ${available} zł.`);
+    try {
+      const payout = await this.stripe.payouts.create(
+        {
+          amount: amountGrosze,
+          currency: 'pln',
+          description: `Wypłata eWróżka (user ${userId})`,
+        },
+        { stripeAccount: connectAccount.stripeAccountId },
+      );
+      stripeTransferId = payout.id;
+      this.logger.log(`Wypłata Stripe utworzona: ${payout.id} dla użytkownika ${userId}`);
+    } catch (err: any) {
+      failureReason = err.message;
+      this.logger.error(`Wypłata Stripe nie powiodła się dla użytkownika ${userId}: ${err.message}`);
+      throw new BadRequestException(`Błąd wypłaty: ${err.message}`);
     }
 
-    return await this.dataSource.transaction(async (manager) => {
-      // Odejmij z portfela
-      const walletInTx = await manager.findOne(WalletEntity, {
-        where: { userId },
-      });
-      if (walletInTx) {
-        walletInTx.balance = Number(walletInTx.balance) - amountGrosze;
-        await manager.save(WalletEntity, walletInTx);
-      }
-
-      // Utwórz payout na connected account wróżki
-      let stripeTransferId: string | null = null;
-      let status = 'processing';
-      let failureReason: string | null = null;
-
-      try {
-        const payout = await this.stripe.payouts.create(
-          {
-            amount: amountGrosze,
-            currency: 'pln',
-            description: `Wypłata eWróżka (user ${userId})`,
-          },
-          { stripeAccount: connectAccount.stripeAccountId },
-        );
-        stripeTransferId = payout.id;
-        status = 'processing';
-        this.logger.log(`Wypłata Stripe utworzona: ${payout.id} dla użytkownika ${userId}`);
-      } catch (err: any) {
-        failureReason = err.message;
-        status = 'failed';
-        // Jeśli payout się nie powiódł — zwróć saldo
-        wallet!.balance = Number(wallet!.balance) + amountGrosze;
-        await manager.save(WalletEntity, wallet);
-        this.logger.error(`Wypłata Stripe nie powiodła się dla użytkownika ${userId}: ${err.message}`);
-        throw new BadRequestException(`Błąd wypłaty: ${err.message}`);
-      }
-
-      const withdrawal = manager.create(WithdrawalEntity, {
-        userId,
-        amountGrosze,
-        stripeAccountId: connectAccount.stripeAccountId,
-        stripeTransferId,
-        status,
-        failureReason,
-      });
-      await manager.save(WithdrawalEntity, withdrawal);
-
-      return withdrawal;
+    const withdrawal = this.withdrawalRepository.create({
+      userId,
+      amountGrosze,
+      stripeAccountId: connectAccount.stripeAccountId,
+      stripeTransferId,
+      status: 'processing',
+      failureReason,
     });
+    await this.withdrawalRepository.save(withdrawal);
+
+    return withdrawal;
   }
 
   async getWithdrawals(
@@ -685,24 +667,21 @@ export class StripeService {
       });
       if (!connectAccount?.onboardingCompleted) return;
 
+      // W test mode: ustaw natychmiastową dostępność środków na connected account
+      await this.stripe.accounts.update(connectAccount.stripeAccountId, {
+        settings: {
+          payouts: {
+            schedule: { delay_days: 'minimum' as unknown as number },
+          },
+        },
+      }).catch(() => {});
+
       await this.stripe.transfers.create({
         amount: wizardAmountGrosze,
         currency: 'pln',
         destination: connectAccount.stripeAccountId,
         description: 'Transfer eWróżka (non-prod)',
       });
-      let wallet = await this.walletRepository.findOne({
-        where: { userId: wrozkaId },
-      });
-      if (!wallet) {
-        wallet = this.walletRepository.create({
-          userId: wrozkaId,
-          balance: 0,
-          currency: 'PLN',
-        });
-      }
-      wallet.balance = Number(wallet.balance) + wizardAmountGrosze;
-      await this.walletRepository.save(wallet);
       this.logger.log(`Non-prod: top-up ${totalAmountGrosze}gr, transfer ${wizardAmountGrosze}gr → wizard ${wrozkaId}`);
     } catch (err) {
       this.logger.warn(

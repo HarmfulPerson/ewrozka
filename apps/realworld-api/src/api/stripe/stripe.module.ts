@@ -5,7 +5,6 @@ import {
   GuestBookingEntity,
   StripeConnectAccountEntity,
   WithdrawalEntity,
-  WalletEntity,
 } from '@repo/postgresql-typeorm';
 import { FeaturedModule } from '../featured/featured.module';
 import { GuestBookingModule } from '../guest-booking/guest-booking.module';
@@ -22,7 +21,6 @@ import { StripeService } from './stripe.service';
       GuestBookingEntity,
       StripeConnectAccountEntity,
       WithdrawalEntity,
-      WalletEntity,
     ]),
     FeaturedModule,
     PaymentModule,
