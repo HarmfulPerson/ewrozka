@@ -11,20 +11,18 @@ function getServerBaseUrl() {
   return base.endsWith('/api') ? base.replace(/\/api\/?$/, '') : base;
 }
 
+const PAGE_SIZE = 5;
+
 export interface UseNotificationsResult {
-  /** Legacy: pending request count for wizard badge */
   pendingCount: number;
-  /** Unread notification count */
   unreadCount: number;
-  /** Recent notifications */
   notifications: NotificationDto[];
-  /** Loading state */
   loading: boolean;
-  /** Mark single notification as read */
+  loadingMore: boolean;
+  hasMore: boolean;
   markAsRead: (id: number) => Promise<void>;
-  /** Mark all as read */
   markAllAsRead: () => Promise<void>;
-  /** Refresh notifications list */
+  loadMore: () => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -32,15 +30,20 @@ export function useNotifications(token: string | null | undefined): UseNotificat
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+
+  const hasMore = notifications.length < total;
 
   const fetchNotifications = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const data = await apiGetNotifications(token, { limit: 20 });
+      const data = await apiGetNotifications(token, { limit: PAGE_SIZE, offset: 0 });
       setNotifications(data.notifications);
+      setTotal(data.total);
       setUnreadCount(data.unreadCount);
     } catch {
       // ignore
@@ -48,6 +51,21 @@ export function useNotifications(token: string | null | undefined): UseNotificat
       setLoading(false);
     }
   }, [token]);
+
+  const loadMore = useCallback(async () => {
+    if (!token || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const data = await apiGetNotifications(token, { limit: PAGE_SIZE, offset: notifications.length });
+      setNotifications(prev => [...prev, ...data.notifications]);
+      setTotal(data.total);
+      setUnreadCount(data.unreadCount);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [token, loadingMore, hasMore, notifications.length]);
 
   const markAsRead = useCallback(async (id: number) => {
     if (!token) return;
@@ -88,7 +106,6 @@ export function useNotifications(token: string | null | undefined): UseNotificat
       socket.emit('auth', { token });
     });
 
-    // Legacy: pending count for wizard badge
     socket.on('pending_count', (data: { count: number }) => {
       setPendingCount(data.count);
       if (typeof window !== 'undefined') {
@@ -96,17 +113,15 @@ export function useNotifications(token: string | null | undefined): UseNotificat
       }
     });
 
-    // Unread count update on auth
     socket.on('unread_count', (data: { count: number }) => {
       setUnreadCount(data.count);
     });
 
-    // New notification arrives
     socket.on('notification', (notification: NotificationDto) => {
-      setNotifications(prev => [notification, ...prev].slice(0, 20));
+      setNotifications(prev => [notification, ...prev]);
+      setTotal(prev => prev + 1);
       setUnreadCount(prev => prev + 1);
 
-      // Dispatch event for toast
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('ewrozka:notification', { detail: notification }));
       }
@@ -123,8 +138,11 @@ export function useNotifications(token: string | null | undefined): UseNotificat
     unreadCount,
     notifications,
     loading,
+    loadingMore,
+    hasMore,
     markAsRead,
     markAllAsRead,
+    loadMore,
     refresh: fetchNotifications,
   };
 }

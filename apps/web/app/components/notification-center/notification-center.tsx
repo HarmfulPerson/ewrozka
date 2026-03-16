@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import type { NotificationDto } from '../../lib/api-notifications';
@@ -27,17 +27,88 @@ function timeAgo(iso: string): string {
   return `${days} d temu`;
 }
 
-interface NotificationCenterProps {
+/* ── Shared list (used by both desktop dropdown and mobile panel) ── */
+function NotificationList({
+  notifications, onClose,
+}: {
   notifications: UseNotificationsResult;
-}
-
-export function NotificationCenter({ notifications }: NotificationCenterProps) {
-  const { unreadCount, notifications: items, markAsRead, markAllAsRead, loading } = notifications;
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  onClose: () => void;
+}) {
+  const { notifications: items, unreadCount, markAsRead, markAllAsRead, loading, loadingMore, hasMore, loadMore } = notifications;
+  const listRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Close on click outside
+  useEffect(() => {
+    if (!hasMore) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && hasMore && !loadingMore) loadMore();
+      },
+      { root: listRef.current, threshold: 0.1 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loadMore]);
+
+  const handleClick = async (item: NotificationDto) => {
+    if (!item.isRead) await markAsRead(item.id);
+    if (item.link) { router.push(item.link); onClose(); }
+  };
+
+  return (
+    <>
+      <div className="notif-center__header">
+        <span className="notif-center__title">Powiadomienia</span>
+        <div className="notif-center__header-actions">
+          {unreadCount > 0 && (
+            <button className="notif-center__mark-all" onClick={markAllAsRead}>Przeczytaj wszystkie</button>
+          )}
+          <button className="notif-center__close" onClick={onClose} aria-label="Zamknij">✕</button>
+        </div>
+      </div>
+      <div className="notif-center__list" ref={listRef}>
+        {loading && items.length === 0 ? (
+          <div className="notif-center__empty">Ładowanie...</div>
+        ) : items.length === 0 ? (
+          <div className="notif-center__empty">Brak powiadomień</div>
+        ) : (
+          <>
+            {items.map(item => (
+              <button
+                key={item.id}
+                className={`notif-center__item${!item.isRead ? ' notif-center__item--unread' : ''}`}
+                onClick={() => handleClick(item)}
+              >
+                <span className="notif-center__item-icon">{TYPE_ICONS[item.type] ?? '🔔'}</span>
+                <div className="notif-center__item-body">
+                  <span className="notif-center__item-title">{item.title}</span>
+                  {item.body && <span className="notif-center__item-text">{item.body}</span>}
+                  <span className="notif-center__item-time">{timeAgo(item.createdAt)}</span>
+                </div>
+                {!item.isRead && <span className="notif-center__item-dot" />}
+              </button>
+            ))}
+            {hasMore && (
+              <div ref={sentinelRef} className="notif-center__sentinel">
+                {loadingMore && <span className="notif-center__loading-more">Ładowanie...</span>}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+/* ── Desktop: bell + absolute dropdown ── */
+export function NotificationCenter({ notifications }: { notifications: UseNotificationsResult }) {
+  const { unreadCount } = notifications;
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -47,7 +118,61 @@ export function NotificationCenter({ notifications }: NotificationCenterProps) {
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  // Toast on new notification
+  return (
+    <div className="notif-center notif-center--desktop" ref={ref}>
+      <NotificationBell unreadCount={unreadCount} onClick={() => setOpen(!open)} />
+      {open && (
+        <div className="notif-center__dropdown">
+          <NotificationList notifications={notifications} onClose={() => setOpen(false)} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Mobile: bell toggles a collapsible panel (like nav) ── */
+export function NotificationCenterMobile({ notifications, open, onToggle }: {
+  notifications: UseNotificationsResult;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <NotificationBell unreadCount={notifications.unreadCount} onClick={onToggle} />
+  );
+}
+
+/** The expandable panel rendered separately in the sidebar */
+export function NotificationMobilePanel({ notifications, open, onClose }: {
+  notifications: UseNotificationsResult;
+  open: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <div className={`notif-mobile-panel${open ? ' notif-mobile-panel--open' : ''}`}>
+      {open && <NotificationList notifications={notifications} onClose={onClose} />}
+    </div>
+  );
+}
+
+/* ── Bell icon ── */
+function NotificationBell({ unreadCount, onClick }: { unreadCount: number; onClick: () => void }) {
+  return (
+    <button className="notif-center__bell" onClick={onClick}
+      aria-label={`Powiadomienia${unreadCount > 0 ? ` (${unreadCount})` : ''}`}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </svg>
+      {unreadCount > 0 && (
+        <span className="notif-center__badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+      )}
+    </button>
+  );
+}
+
+/* ── Toast listener (mount once) ── */
+export function NotificationToastListener() {
   useEffect(() => {
     const handler = (e: Event) => {
       const notification = (e as CustomEvent<NotificationDto>).detail;
@@ -59,73 +184,5 @@ export function NotificationCenter({ notifications }: NotificationCenterProps) {
     window.addEventListener('ewrozka:notification', handler);
     return () => window.removeEventListener('ewrozka:notification', handler);
   }, []);
-
-  const handleClick = async (item: NotificationDto) => {
-    if (!item.isRead) await markAsRead(item.id);
-    if (item.link) {
-      router.push(item.link);
-      setOpen(false);
-    }
-  };
-
-  return (
-    <div className="notif-center" ref={ref}>
-      <button
-        className="notif-center__bell"
-        onClick={() => setOpen(!open)}
-        aria-label={`Powiadomienia${unreadCount > 0 ? ` (${unreadCount} nieprzeczytanych)` : ''}`}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-        </svg>
-        {unreadCount > 0 && (
-          <span className="notif-center__badge">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {open && (
-        <div className="notif-center__dropdown">
-          <div className="notif-center__header">
-            <span className="notif-center__title">Powiadomienia</span>
-            {unreadCount > 0 && (
-              <button className="notif-center__mark-all" onClick={markAllAsRead}>
-                Przeczytaj wszystkie
-              </button>
-            )}
-          </div>
-
-          <div className="notif-center__list">
-            {loading && items.length === 0 ? (
-              <div className="notif-center__empty">Ładowanie...</div>
-            ) : items.length === 0 ? (
-              <div className="notif-center__empty">Brak powiadomień</div>
-            ) : (
-              items.map(item => (
-                <button
-                  key={item.id}
-                  className={`notif-center__item${!item.isRead ? ' notif-center__item--unread' : ''}`}
-                  onClick={() => handleClick(item)}
-                >
-                  <span className="notif-center__item-icon">
-                    {TYPE_ICONS[item.type] ?? '🔔'}
-                  </span>
-                  <div className="notif-center__item-body">
-                    <span className="notif-center__item-title">{item.title}</span>
-                    {item.body && (
-                      <span className="notif-center__item-text">{item.body}</span>
-                    )}
-                    <span className="notif-center__item-time">{timeAgo(item.createdAt)}</span>
-                  </div>
-                  {!item.isRead && <span className="notif-center__item-dot" />}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return null;
 }

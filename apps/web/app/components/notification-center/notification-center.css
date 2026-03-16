@@ -49,10 +49,10 @@
   right: 0;
   width: 340px;
   max-height: 420px;
-  background: var(--bg-secondary);
+  background: #0c1025;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -78,6 +78,29 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.notif-center__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notif-center__close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.125rem 0.25rem;
+  border-radius: 6px;
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.notif-center__close:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .notif-center__mark-all {
@@ -202,18 +225,56 @@
   margin-top: 4px;
 }
 
+/* ── Infinite scroll sentinel ── */
+
+.notif-center__sentinel {
+  padding: 0.75rem;
+  text-align: center;
+  min-height: 20px;
+}
+
+.notif-center__loading-more {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 /* ── Mobile ── */
 
-@media (max-width: 480px) {
-  .notif-center__dropdown {
-    position: fixed;
-    top: 57px;
-    left: 0;
-    right: 0;
-    width: auto;
-    max-height: calc(100vh - 57px);
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
+/* Desktop only */
+.notif-center--desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .notif-center--desktop {
+    display: flex;
   }
+}
+
+/* ── Mobile collapsible panel (like sidebar nav) ── */
+.notif-mobile-panel {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.28s ease, opacity 0.2s ease;
+  background: rgba(12, 16, 37, 0.6);
+  border-radius: var(--radius);
+}
+
+.notif-mobile-panel--open {
+  max-height: 400px;
+  opacity: 1;
+}
+
+.notif-mobile-panel .notif-center__list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notif-mobile-panel .notif-center__header {
+  padding: 0.625rem 0.75rem;
+}
+
+.notif-mobile-panel .notif-center__item {
+  padding: 0.625rem 0.75rem;
 }

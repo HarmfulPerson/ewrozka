@@ -81,7 +81,7 @@ import { apiGetWallet, apiCheckConnectReady, apiGetMyFeaturedStatus, type Featur
 import { apiGetMyAdvertisements } from '../lib/api-advertisements';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAdminPendingVideoCount } from '../hooks/useAdminPendingVideoCount';
-import { NotificationCenter } from '../components/notification-center/notification-center';
+import { NotificationCenter, NotificationCenterMobile, NotificationMobilePanel, NotificationToastListener } from '../components/notification-center/notification-center';
 import { Toaster } from 'react-hot-toast';
 import 'react-tooltip/dist/react-tooltip.css';
 import { SubtleStars } from '../components/subtle-stars/subtle-stars';
@@ -101,6 +101,7 @@ export default function PanelLayout({
   const [commissionTier, setCommissionTier] = useState<CommissionTierDto | null>(null);
   const [connectConfigured, setConnectConfigured] = useState<boolean | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
   const [featuredStatus, setFeaturedStatus] = useState<FeaturedStatusDto | null>(null);
   const [adsCount, setAdsCount] = useState<number | null>(null);
 
@@ -206,6 +207,7 @@ export default function PanelLayout({
   return (
     <div className="panel-layout">
       <SubtleStars count={120} maxOpacity={0.35} />
+      <NotificationToastListener />
       <Toaster
         position="bottom-right"
         toastOptions={{
@@ -305,12 +307,20 @@ export default function PanelLayout({
                 )}
               </div>
             </div>
-            {!isAdmin && <NotificationCenter notifications={notificationsData} />}
+            {!isAdmin && (
+              <div className="panel-sidebar__notif">
+                <NotificationCenterMobile
+                  notifications={notificationsData}
+                  open={mobileNotifOpen}
+                  onToggle={() => { setMobileNotifOpen(v => !v); setMobileNavOpen(false); }}
+                />
+              </div>
+            )}
             <button
               className="panel-sidebar__burger"
               aria-label="Menu nawigacyjne"
               aria-expanded={mobileNavOpen}
-              onClick={() => setMobileNavOpen((v) => !v)}
+              onClick={() => { setMobileNavOpen((v) => !v); setMobileNotifOpen(false); }}
             >
               <span className="panel-sidebar__burger-bar" />
               <span className="panel-sidebar__burger-bar" />
@@ -318,6 +328,15 @@ export default function PanelLayout({
             </button>
           </div>
         </div>
+
+        {/* Mobile notification panel — rozwija się jak nav */}
+        {!isAdmin && (
+          <NotificationMobilePanel
+            notifications={notificationsData}
+            open={mobileNotifOpen}
+            onClose={() => setMobileNotifOpen(false)}
+          />
+        )}
 
         <nav
           className={`panel-sidebar__nav${mobileNavOpen ? ' panel-sidebar__nav--open' : ''}`}
@@ -508,6 +527,14 @@ export default function PanelLayout({
                   </Link>
                 </>
               )}
+              {!isAdmin && <NotificationCenter notifications={notificationsData} />}
+            </div>
+          </div>
+        )}
+        {!isWizard && !isAdmin && (
+          <div className="panel-balance-bar panel-balance-bar--main">
+            <div className="panel-balance-bar__content">
+              <NotificationCenter notifications={notificationsData} />
             </div>
           </div>
         )}
