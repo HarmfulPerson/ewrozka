@@ -37,11 +37,14 @@ export class NotificationsGateway implements OnGatewayInit {
       emitAdminPendingVideoCount: (count) => {
         this.server.to('admin').emit('pending_video_count', { count });
       },
+      emitNotification: (userId, notification) => {
+        this.server.to(`user:${userId}`).emit('notification', notification);
+      },
     });
     this.logger.log('NotificationsGateway initialized');
   }
 
-  /** Klient uwierzytelnia się po połączeniu, dołącza do swojego pokoju (wizard lub admin). */
+  /** Klient uwierzytelnia się po połączeniu, dołącza do swoich pokojów. */
   @SubscribeMessage('auth')
   async handleAuth(
     @MessageBody() data: { token: string },
@@ -53,6 +56,9 @@ export class NotificationsGateway implements OnGatewayInit {
       if (!userId) throw new Error('brak userId');
 
       const roles = (payload as { roles?: string[] }).roles ?? [];
+
+      // Każdy użytkownik dołącza do pokoju user:X (powiadomienia ogólne)
+      client.join(`user:${userId}`);
 
       // Wróżka – pokój wizard:X, licznik wniosków
       if (roles.includes('wizard')) {
@@ -69,6 +75,10 @@ export class NotificationsGateway implements OnGatewayInit {
         const videoCount = await this.notificationsService.getAdminPendingVideoCount();
         client.emit('pending_video_count', { count: videoCount });
       }
+
+      // Wyślij liczbę nieprzeczytanych powiadomień
+      const unreadCount = await this.notificationsService.getUnreadCount(userId);
+      client.emit('unread_count', { count: unreadCount });
 
       return { success: true };
     } catch {

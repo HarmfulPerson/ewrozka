@@ -10,6 +10,7 @@ import {
   AppointmentEntity,
   MeetingRequestEntity,
   MeetingRoomEntity,
+  UserEntity,
 } from '@repo/postgresql-typeorm';
 import { In, IsNull, Repository } from 'typeorm';
 import type { AllConfigType } from '@/config/config.type';
@@ -18,6 +19,7 @@ import { AvailabilityService } from '../availability/availability.service';
 import { EmailService } from '../email/email.service';
 import { EmailType } from '../email/email-type.enum';
 import { NotificationsService } from '../notifications/notifications.service';
+import { buildNewRequestNotification, buildRequestStatusChangedNotification } from '../notifications/handlers';
 import { CreateMeetingRequestReqDto } from './dto/create-meeting-request.dto';
 
 @Injectable()
@@ -31,6 +33,8 @@ export class MeetingRequestService {
     private readonly appointmentRepository: Repository<AppointmentEntity>,
     @InjectRepository(MeetingRoomEntity)
     private readonly meetingRoomRepository: Repository<MeetingRoomEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     private readonly availabilityService: AvailabilityService,
     private readonly emailService: EmailService,
     private readonly notificationsService: NotificationsService,
@@ -118,6 +122,18 @@ export class MeetingRequestService {
 
     // Powiadom wróżkę przez WebSocket o nowym wniosku
     void this.notificationsService.notifyWizard(ad.userId);
+
+    // Powiadomienie persystentne
+    const client = await this.userRepository.findOne({ where: { id: userId }, select: { username: true } });
+    void this.notificationsService.createAndEmit(
+      buildNewRequestNotification({
+        wizardId: ad.userId,
+        clientName: client?.username ?? 'Klient',
+        advertisementTitle: ad.title,
+        requestId: saved.id,
+        isGuest: false,
+      }),
+    );
 
     return {
       id: saved.id,
@@ -301,6 +317,18 @@ export class MeetingRequestService {
 
     void this.notificationsService.notifyWizard(wrozkaUserId);
 
+    // Powiadom klienta o akceptacji
+    const wizardUser = request.advertisement?.user;
+    void this.notificationsService.createAndEmit(
+      buildRequestStatusChangedNotification({
+        clientId: request.userId,
+        wizardName: wizardUser?.username ?? 'Wróżka',
+        advertisementTitle: request.advertisement?.title ?? 'Konsultacja',
+        newStatus: 'accepted',
+        requestId: request.id,
+      }),
+    );
+
     return {
       appointmentId: appointment.id,
       startsAt: appointment.startsAt.toISOString(),
@@ -373,6 +401,19 @@ export class MeetingRequestService {
     await this.meetingRequestRepository.save(request);
 
     void this.notificationsService.notifyWizard(wrozkaUserId);
+
+    // Powiadom klienta o odrzuceniu
+    const wizardUser = request.advertisement?.user;
+    void this.notificationsService.createAndEmit(
+      buildRequestStatusChangedNotification({
+        clientId: request.userId,
+        wizardName: wizardUser?.username ?? 'Wróżka',
+        advertisementTitle: request.advertisement?.title ?? 'Konsultacja',
+        newStatus: 'rejected',
+        requestId: request.id,
+        rejectionReason: reason,
+      }),
+    );
 
     return { status: 'rejected' };
   }

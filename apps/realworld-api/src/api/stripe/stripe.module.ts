@@ -10,6 +10,7 @@ import {
 import { FeaturedModule } from '../featured/featured.module';
 import { GuestBookingModule } from '../guest-booking/guest-booking.module';
 import { MeetingRoomModule } from '../meeting-room/meeting-room.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PaymentModule } from '../payment/payment.module';
 import { StripeController } from './stripe.controller';
 import { StripeService } from './stripe.service';
@@ -27,6 +28,7 @@ import { StripeService } from './stripe.service';
     PaymentModule,
     MeetingRoomModule,
     GuestBookingModule,
+    NotificationsModule,
   ],
   controllers: [StripeController],
   providers: [StripeService],

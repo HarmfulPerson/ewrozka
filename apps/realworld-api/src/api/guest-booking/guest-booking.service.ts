@@ -20,6 +20,7 @@ import { EmailType } from '../email/email-type.enum';
 import { EmailService } from '../email/email.service';
 import { DailyCoService } from '../meeting-room/daily-co.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { buildNewRequestNotification } from '../notifications/handlers';
 
 export interface CreateGuestBookingDto {
   advertisementId: number;
@@ -104,6 +105,16 @@ export class GuestBookingService {
 
     // Powiadom wróżkę przez WebSocket o nowym wniosku gościa
     void this.notificationsService.notifyWizard(ad.userId);
+
+    void this.notificationsService.createAndEmit(
+      buildNewRequestNotification({
+        wizardId: ad.userId,
+        clientName: dto.guestName,
+        advertisementTitle: ad.title,
+        requestId: booking.id,
+        isGuest: true,
+      }),
+    );
 
     return { id: booking.id };
   }

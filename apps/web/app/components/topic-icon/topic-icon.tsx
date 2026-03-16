@@ -2,6 +2,7 @@
  * Ikony specjalizacji wróżek — cienka linia, 16×16, styl aplikacji.
  * Użycie: <TopicIcon name="Tarot" /> lub <TopicIcon name="Astrologia" size={20} />
  */
+import React from 'react';
 
 const svgProps = (size: number) => ({
   width: size,
@@ -302,7 +303,7 @@ function IconDefault(size: number) {
   );
 }
 
-const ICON_MAP: Record<string, (size: number) => JSX.Element> = {
+const ICON_MAP: Record<string, (size: number) => React.ReactElement> = {
   'tarot': IconTarot,
   'karty tarota': IconTarot,
   'astrologia': IconAstrologia,

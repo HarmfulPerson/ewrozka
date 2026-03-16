@@ -81,6 +81,7 @@ import { apiGetWallet, apiCheckConnectReady, apiGetMyFeaturedStatus, type Featur
 import { apiGetMyAdvertisements } from '../lib/api-advertisements';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAdminPendingVideoCount } from '../hooks/useAdminPendingVideoCount';
+import { NotificationCenter } from '../components/notification-center/notification-center';
 import { Toaster } from 'react-hot-toast';
 import 'react-tooltip/dist/react-tooltip.css';
 import { SubtleStars } from '../components/subtle-stars/subtle-stars';
@@ -105,7 +106,8 @@ export default function PanelLayout({
 
   const isWizardRole = user?.roles?.includes('wizard') ?? false;
   const isAdminRole  = user?.roles?.includes('admin') ?? false;
-  const pendingCount = useNotifications(isWizardRole && !isAdminRole ? user?.token : null);
+  const notificationsData = useNotifications(!isAdminRole ? user?.token : null);
+  const pendingCount = notificationsData.pendingCount;
   const pendingVideoCount = useAdminPendingVideoCount(isAdminRole ? user?.token : null);
 
   useEffect(() => {
@@ -303,6 +305,7 @@ export default function PanelLayout({
                 )}
               </div>
             </div>
+            {!isAdmin && <NotificationCenter notifications={notificationsData} />}
             <button
               className="panel-sidebar__burger"
               aria-label="Menu nawigacyjne"

@@ -15,6 +15,8 @@ import { DataSource, Repository } from 'typeorm';
 import { FeaturedService } from '../featured/featured.service';
 import { GuestBookingService } from '../guest-booking/guest-booking.service';
 import { MeetingRoomService } from '../meeting-room/meeting-room.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { buildMeetingPaidNotification } from '../notifications/handlers';
 import { PaymentService } from '../payment/payment.service';
 
 @Injectable()
@@ -39,6 +41,7 @@ export class StripeService {
     private readonly meetingRoomService: MeetingRoomService,
     private readonly featuredService: FeaturedService,
     private readonly guestBookingService: GuestBookingService,
+    private readonly notificationsService: NotificationsService,
   ) {
     this.stripe = new Stripe(this.configService.get('stripe.secretKey', { infer: true })!);
   }
@@ -267,6 +270,23 @@ export class StripeService {
     await this.appointmentRepository.save(appointment);
 
     await this.meetingRoomService.createForAppointment(appointmentId);
+
+    // Powiadom wróżkę o opłaceniu spotkania
+    const paidAppVerify = await this.appointmentRepository.findOne({
+      where: { id: appointmentId },
+      relations: ['advertisement', 'client'],
+    });
+    if (paidAppVerify) {
+      void this.notificationsService.createAndEmit(
+        buildMeetingPaidNotification({
+          wizardId: wrozkaId,
+          clientName: paidAppVerify.client?.username ?? 'Klient',
+          advertisementTitle: paidAppVerify.advertisement?.title ?? 'Konsultacja',
+          appointmentId,
+          startsAt: paidAppVerify.startsAt?.toISOString?.() ?? '',
+        }),
+      );
+    }
 
     this.logger.log(`Wizyta ${appointmentId} opłacona pomyślnie przez verify-session`);
     return { success: true, appointmentId };
@@ -744,6 +764,23 @@ export class StripeService {
     await this.appointmentRepository.save(appointment);
     await this.meetingRoomService.createForAppointment(appointmentId);
 
+    // Powiadom wróżkę o opłaceniu spotkania
+    const paidAppointment = await this.appointmentRepository.findOne({
+      where: { id: appointmentId },
+      relations: ['advertisement', 'client'],
+    });
+    if (paidAppointment) {
+      void this.notificationsService.createAndEmit(
+        buildMeetingPaidNotification({
+          wizardId: wrozkaId,
+          clientName: paidAppointment.client?.username ?? 'Klient',
+          advertisementTitle: paidAppointment.advertisement?.title ?? 'Konsultacja',
+          appointmentId,
+          startsAt: paidAppointment.startsAt?.toISOString?.() ?? '',
+        }),
+      );
+    }
+
     await this.ensureFundsAvailableNonProd(wrozkaId, priceGrosze, feePercent);
 
     this.logger.log(`Wizyta ${appointmentId} opłacona przez payment_intent.succeeded`);
@@ -820,6 +857,23 @@ export class StripeService {
 
     // Create meeting room
     await this.meetingRoomService.createForAppointment(appointmentId);
+
+    // Powiadom wróżkę o opłaceniu spotkania
+    const paidAppCheckout = await this.appointmentRepository.findOne({
+      where: { id: appointmentId },
+      relations: ['advertisement', 'client'],
+    });
+    if (paidAppCheckout) {
+      void this.notificationsService.createAndEmit(
+        buildMeetingPaidNotification({
+          wizardId: wrozkaId,
+          clientName: paidAppCheckout.client?.username ?? 'Klient',
+          advertisementTitle: paidAppCheckout.advertisement?.title ?? 'Konsultacja',
+          appointmentId,
+          startsAt: paidAppCheckout.startsAt?.toISOString?.() ?? '',
+        }),
+      );
+    }
 
     await this.ensureFundsAvailableNonProd(wrozkaId, priceGrosze, feePercent);
 
