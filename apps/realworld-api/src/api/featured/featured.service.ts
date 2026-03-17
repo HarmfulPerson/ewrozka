@@ -11,6 +11,7 @@ import { LessThan, Repository } from 'typeorm';
 export class FeaturedService {
   private readonly stripe: Stripe;
   private readonly logger = new Logger(FeaturedService.name);
+  private readonly currency: string;
 
   constructor(
     private readonly configService: ConfigService<AllConfigType>,
@@ -22,6 +23,7 @@ export class FeaturedService {
     this.stripe = new Stripe(
       this.configService.get('stripe.secretKey', { infer: true })!,
     );
+    this.currency = this.configService.get('stripe.currency', { infer: true }) ?? 'pln';
   }
 
   // ─── Konfiguracja ────────────────────────────────────────────────────────────
@@ -113,7 +115,7 @@ export class FeaturedService {
 
     const intent = await this.stripe.paymentIntents.create({
       amount: priceGrosze,
-      currency: 'pln',
+      currency: this.currency,
       payment_method_types: ['card', 'blik', 'p24'],
       receipt_email: wizardEmail,
       description: `Wyróżnienie specjalisty – ${durationHours}h`,

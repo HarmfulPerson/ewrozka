@@ -35,6 +35,7 @@ export interface CreateGuestBookingDto {
 export class GuestBookingService {
   private readonly logger = new Logger(GuestBookingService.name);
   private readonly stripe: Stripe;
+  private readonly currency: string;
 
   constructor(
     @InjectRepository(GuestBookingEntity)
@@ -52,6 +53,7 @@ export class GuestBookingService {
     this.stripe = new Stripe(
       this.config.get('stripe.secretKey', { infer: true })!,
     );
+    this.currency = this.config.get('stripe.currency', { infer: true }) ?? 'pln';
   }
 
   // ── Tworzenie rezerwacji przez gościa ──────────────────────────────────────
@@ -235,7 +237,7 @@ export class GuestBookingService {
 
     const intent = await this.stripe.paymentIntents.create({
       amount: booking.priceGrosze,
-      currency: 'pln',
+      currency: this.currency,
       payment_method_types: ['card', 'blik', 'p24'],
       description: `${ad?.title ?? 'Konsultacja'} ze ${wizard?.username ?? 'specjalistą'}`,
       metadata: {
@@ -502,7 +504,7 @@ export class GuestBookingService {
       line_items: [
         {
           price_data: {
-            currency: 'pln',
+            currency: this.currency,
             product_data: {
               name: ad?.title ?? 'Konsultacja ze specjalistą',
               description: `Spotkanie ze ${wizard?.username ?? 'specjalistą'} • ${scheduledPl} • ${booking.durationMinutes} min`,

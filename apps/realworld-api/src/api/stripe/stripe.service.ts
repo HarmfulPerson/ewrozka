@@ -22,6 +22,8 @@ import { PaymentService } from '../payment/payment.service';
 export class StripeService {
   private readonly stripe: Stripe;
   private readonly logger = new Logger(StripeService.name);
+  private readonly currency: string;
+  private readonly instantPayouts: boolean;
 
   constructor(
     private readonly configService: ConfigService<AllConfigType>,
@@ -40,6 +42,8 @@ export class StripeService {
     private readonly notificationsService: NotificationsService,
   ) {
     this.stripe = new Stripe(this.configService.get('stripe.secretKey', { infer: true })!);
+    this.currency = this.configService.get('stripe.currency', { infer: true }) ?? 'pln';
+    this.instantPayouts = this.configService.get('stripe.instantPayouts', { infer: true }) ?? false;
   }
 
   async createCheckoutSession(
@@ -81,7 +85,7 @@ export class StripeService {
       line_items: [
         {
           price_data: {
-            currency: 'pln',
+            currency: this.currency,
             product_data: {
               name: appointment.advertisement?.title || 'Konsultacja ze specjalistą',
               description: `Spotkanie ze ${appointment.wrozka?.username || 'specjalistą'} • ${new Date(appointment.startsAt).toLocaleString('pl-PL')} • ${appointment.durationMinutes} min`,
@@ -146,7 +150,7 @@ export class StripeService {
 
     const intentParams: Stripe.PaymentIntentCreateParams = {
       amount: priceGrosze,
-      currency: 'pln',
+      currency: this.currency,
       payment_method_types: ['card', 'blik', 'p24'],
       metadata: {
         appointmentId: String(appointmentId),
@@ -537,8 +541,8 @@ export class StripeService {
         const balance = await this.stripe.balance.retrieve({
           stripeAccount: connectAccount.stripeAccountId,
         });
-        const pln = balance.available.find((b) => b.currency === 'pln');
-        const pending = balance.pending.find((b) => b.currency === 'pln');
+        const pln = balance.available.find((b) => b.currency === this.currency);
+        const pending = balance.pending.find((b) => b.currency === this.currency);
         stripeAvailableGrosze = pln?.amount ?? 0;
         stripePendingGrosze = pending?.amount ?? 0;
       } catch (err) {
@@ -579,7 +583,7 @@ export class StripeService {
       const balance = await this.stripe.balance.retrieve({
         stripeAccount: connectAccount.stripeAccountId,
       });
-      const pln = balance.available.find((b) => b.currency === 'pln');
+      const pln = balance.available.find((b) => b.currency === this.currency);
       stripeAvailableGrosze = pln?.amount ?? 0;
     } catch (err: any) {
       throw new BadRequestException(`Nie można pobrać salda Stripe: ${err.message}`);
@@ -600,8 +604,9 @@ export class StripeService {
       const payout = await this.stripe.payouts.create(
         {
           amount: amountGrosze,
-          currency: 'pln',
+          currency: this.currency,
           description: `Wypłata eWróżka (user ${userId})`,
+          ...(this.instantPayouts ? { method: 'instant' as const } : {}),
         },
         { stripeAccount: connectAccount.stripeAccountId },
       );
@@ -658,7 +663,7 @@ export class StripeService {
     try {
       await this.stripe.topups.create({
         amount: totalAmountGrosze,
-        currency: 'pln',
+        currency: this.currency,
         source: 'tok_bypassPending' as string,
         description: 'Top-up eWróżka (non-prod)',
       });
@@ -678,7 +683,7 @@ export class StripeService {
 
       await this.stripe.transfers.create({
         amount: wizardAmountGrosze,
-        currency: 'pln',
+        currency: this.currency,
         destination: connectAccount.stripeAccountId,
         description: 'Transfer eWróżka (non-prod)',
       });
