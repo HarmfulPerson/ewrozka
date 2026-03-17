@@ -466,6 +466,14 @@ export class GuestBookingService {
       );
     }
 
+    // Zablokuj dostęp do pokoju po zakończeniu spotkania (+ 30 min bufor)
+    const meetingEnd = new Date(
+      booking.scheduledAt.getTime() + (booking.durationMinutes + 30) * 60_000,
+    );
+    if (new Date() > meetingEnd) {
+      throw new BadRequestException('Spotkanie już się zakończyło');
+    }
+
     const roomName = `ewrozka-guest-${booking.id}`;
     await this.dailyCo.ensureRoom(roomName);
     const endsAt = new Date(

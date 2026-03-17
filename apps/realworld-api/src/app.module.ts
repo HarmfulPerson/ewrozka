@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { appConfig } from '@repo/api';
 import {
   AsyncContextProvider,
@@ -78,7 +79,18 @@ const i18nModule = I18nModule.forRootAsync({
 });
 
 @Module({
-  imports: [configModule, dbModule, i18nModule, ScheduleModule.forRoot(), ApiModule],
+  imports: [
+    configModule,
+    dbModule,
+    i18nModule,
+    ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([
+      { name: 'short', ttl: 1000, limit: 5 },    // 5 req/s
+      { name: 'medium', ttl: 10_000, limit: 30 }, // 30 req/10s
+      { name: 'long', ttl: 60_000, limit: 100 },  // 100 req/min
+    ]),
+    ApiModule,
+  ],
   controllers: [AppController],
   providers: [AppService, AsyncContextProvider, FastifyPinoLogger],
   exports: [AsyncContextProvider],

@@ -7,7 +7,7 @@ import { AdminModule } from './admin/admin.module';
 import { WizardApplicationModule } from './wizard-application/wizard-application.module';
 import { FeaturedModule } from './featured/featured.module';
 import { AppointmentModule } from './appointment/appointment.module';
-import { ArticleModule } from './article/article.module';
+
 import { AuthModule } from './auth/auth.module';
 import { AvailabilityModule } from './availability/availability.module';
 import { EmailModule } from './email/email.module';
@@ -26,7 +26,6 @@ import { WizardRequestsModule } from './wizard-requests/wizard-requests.module';
     UserModule,
     AuthModule,
     ProfileModule,
-    ArticleModule,
     TagModule,
     AvailabilityModule,
     AdvertisementModule,

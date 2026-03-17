@@ -31,6 +31,7 @@ import { AuthService } from './api/auth/auth.service';
 import { AppModule } from './app.module';
 import { AllConfigType } from './config/config.type';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { setupSwagger } from './utils/setup-swagger';
@@ -220,6 +221,7 @@ async function bootstrap() {
 
 
   app.useGlobalGuards(
+    app.get(ThrottlerGuard),
     new AuthGuard(reflector, app.get(AuthService)),
     new RolesGuard(reflector),
   );

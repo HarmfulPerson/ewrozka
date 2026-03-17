@@ -8,6 +8,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '@repo/nest-common';
 import { CurrentUser } from '@repo/api';
@@ -21,6 +22,7 @@ export class StripeController {
 
   @Post('webhook')
   @Public()
+  @SkipThrottle()
   @HttpCode(HttpStatus.OK)
   async webhook(@Req() req: any) {
     await this.stripeService.handleWebhook(req);
@@ -29,6 +31,7 @@ export class StripeController {
 
   @Post('verify-session')
   @Public()
+  @Throttle({ short: { ttl: 60_000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   async verifySession(@Body() body: { sessionId: string }) {
     return this.stripeService.verifySession(body.sessionId);
@@ -46,6 +49,7 @@ export class StripeController {
 
   @Post('verify-payment-intent')
   @Public()
+  @Throttle({ short: { ttl: 60_000, limit: 10 } })
   @HttpCode(HttpStatus.OK)
   async verifyPaymentIntent(@Body() body: { paymentIntentId: string }) {
     return this.stripeService.verifyPaymentIntent(body.paymentIntentId);
@@ -101,6 +105,7 @@ export class StripeController {
 
   @Post('connect/withdraw')
   @ApiAuth({ summary: 'Wystąp o wypłatę na połączone konto Stripe' })
+  @Throttle({ short: { ttl: 60_000, limit: 3 } })
   @HttpCode(HttpStatus.OK)
   async withdraw(
     @CurrentUser('id') userId: number,

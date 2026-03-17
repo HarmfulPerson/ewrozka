@@ -63,7 +63,11 @@ export class AdvertisementController {
         if (part.fieldname === 'durationMinutes')
           durationMinutes = parseInt(fieldValue);
       } else if (part.type === 'file' && part.fieldname === 'image') {
-        const ext = path.extname(part.filename);
+        const ALLOWED_IMG_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+        const ext = path.extname(part.filename).toLowerCase();
+        if (!ALLOWED_IMG_EXT.includes(ext)) {
+          throw new BadRequestException('Dozwolone formaty zdjęć: JPG, PNG, GIF, WebP');
+        }
         const timestamp = Date.now();
         const filename = `ad_${timestamp}${ext}`;
         const uploadPath = path.join(

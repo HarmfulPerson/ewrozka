@@ -13,7 +13,9 @@ import { NotificationsService } from './notifications.service';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:3000', 'https://ewrozka.dev'],
+    origin: (process.env.APP_CORS_ORIGIN || 'http://localhost:3000,https://ewrozka.dev')
+      .split(',')
+      .map((o) => o.trim()),
     credentials: true,
   },
   namespace: '/notifications',

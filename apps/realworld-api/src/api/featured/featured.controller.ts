@@ -42,18 +42,6 @@ export class FeaturedController {
     return this.featuredService.verifyFeaturedPaymentIntent(body.paymentIntentId);
   }
 
-  /** Webhook – wywoływany przez StripeService po pomyślnej płatności */
-  @Post('activate')
-  @ApiPublic({ summary: 'Wewnętrzny – aktywacja wyróżnienia po płatności (przez StripeService)' })
-  @HttpCode(HttpStatus.OK)
-  async activate(
-    @Body() body: { wizardId: number; paymentIntentId: string | null; durationHours: number },
-  ) {
-    await this.featuredService.activateFeatured(
-      body.wizardId,
-      body.paymentIntentId,
-      body.durationHours,
-    );
-    return { activated: true };
-  }
+  // Endpoint /featured/activate usunięty — aktywacja odbywa się wyłącznie
+  // przez verifyFeaturedPaymentIntent (polling) i webhook Stripe (handleCheckoutCompleted).
 }

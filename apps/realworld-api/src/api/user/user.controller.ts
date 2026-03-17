@@ -16,6 +16,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFastifyInterceptor, diskStorage } from 'fastify-file-interceptor';
+import { Throttle } from '@nestjs/throttler';
 import { ApiBody, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { CurrentUser } from '@repo/api';
 import { ApiAuth, ApiPublic } from '@repo/api/decorators/http.decorators';
@@ -48,6 +49,7 @@ export class UserController {
   }
 
   @Post('users')
+  @Throttle({ short: { ttl: 60_000, limit: 3 } })
   @ApiPublic({
     type: UserResDto,
     summary: 'Rejestracja',
@@ -98,6 +100,7 @@ export class UserController {
 
   @Post('user/change-password')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @ApiAuth({ summary: 'Zmień hasło' })
   async changePassword(
     @CurrentUser('id') userId: number,
@@ -120,13 +123,18 @@ export class UserController {
           cb(null, uploadPath);
         },
         filename: (req, file, cb) => {
-          const ext = path.extname(file.originalname);
+          const ALLOWED_IMG_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+          const ext = path.extname(file.originalname).toLowerCase();
+          if (!ALLOWED_IMG_EXT.includes(ext)) {
+            return cb(new Error('Dozwolone formaty: JPG, PNG, GIF, WebP'), '');
+          }
           const timestamp = Date.now();
           cb(null, `photo_${timestamp}${ext}`);
         },
       }),
       fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
+        const ALLOWED_IMG_MIME = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (ALLOWED_IMG_MIME.includes(file.mimetype)) {
           cb(null, true);
         } else {
           cb(null, false);
@@ -159,12 +167,17 @@ export class UserController {
           cb(null, uploadPath);
         },
         filename: (_req, file, cb) => {
-          const ext = path.extname(file.originalname) || '.mp4';
+          const ALLOWED_VID_EXT = ['.mp4', '.mov', '.webm', '.avi'];
+          const ext = (path.extname(file.originalname) || '.mp4').toLowerCase();
+          if (!ALLOWED_VID_EXT.includes(ext)) {
+            return cb(new Error('Dozwolone formaty: MP4, MOV, WebM, AVI'), '');
+          }
           cb(null, `intro_${Date.now()}${ext}`);
         },
       }),
       fileFilter: (_req, file, cb) => {
-        if (file.mimetype.startsWith('video/')) {
+        const ALLOWED_VID_MIME = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo'];
+        if (ALLOWED_VID_MIME.includes(file.mimetype)) {
           cb(null, true);
         } else {
           cb(null, false);

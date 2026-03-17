@@ -9,6 +9,7 @@ import {
   SerializeOptions,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiBody, ApiQuery, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { ApiAuth, ApiPublic } from '@repo/api/decorators/http.decorators';
 import { CurrentUser } from '@repo/api';
@@ -27,6 +28,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('users/login')
+  @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @ApiPublic({
     type: UserResDto,
     summary: 'Sign in',
