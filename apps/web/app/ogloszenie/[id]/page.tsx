@@ -353,12 +353,10 @@ export default function AdvertisementPage() {
     if (dateStep === 'day') {
       return (
         <div className="booking-step">
-          <div className="booking-step__header">
-            {canGoBackMonth && (
-              <button className="booking-step__back" onClick={handleDateStepBack}>← Wróć</button>
-            )}
-            <h4 className="booking-step__title">{formatMonthName(selectedMonth!)}</h4>
-          </div>
+          {canGoBackMonth && (
+            <button className="booking-step__back" onClick={handleDateStepBack}>← Wróć</button>
+          )}
+          <h4 className="booking-step__title">{formatMonthName(selectedMonth!)}</h4>
           <div className="booking-month__dates">
             {datesForSelectedMonth.map((dateStr) => {
               const date = new Date(dateStr);
@@ -384,10 +382,8 @@ export default function AdvertisementPage() {
       const dateLabel = dateObj.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
       return (
         <div className="booking-step">
-          <div className="booking-step__header">
-            <button className="booking-step__back" onClick={handleDateStepBack}>← Wróć</button>
-            <h4 className="booking-step__title">{dateLabel}</h4>
-          </div>
+          <button className="booking-step__back" onClick={handleDateStepBack}>← Wróć</button>
+          <h4 className="booking-step__title">{dateLabel}</h4>
           {loadingSlots ? (
             <p className="booking-slots__loading">Ładowanie godzin...</p>
           ) : availableSlots.length === 0 ? (
