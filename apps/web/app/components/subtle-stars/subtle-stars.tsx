@@ -89,26 +89,29 @@ export function SubtleStars({ count = 60, maxOpacity = 0.45 }: SubtleStarsProps)
     });
     ro.observe(canvas.parentElement!);
 
-    let frame = 0;
     let animId: number;
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-    const draw = () => {
+    const draw = (now: number) => {
+      // Na mobilce: wolniejsza animacja (co ~50ms zamiast co klatkę)
       ctx.clearRect(0, 0, w, h);
-      frame++;
+      const t = now * 0.001; // czas w sekundach
 
       for (const s of stars) {
-        const alpha = ((Math.sin(frame * s.speed + s.phase) + 1) / 2) * s.maxAlpha;
+        const alpha = ((Math.sin(t * s.speed * 60 + s.phase) + 1) / 2) * s.maxAlpha;
         if (alpha < 0.01) continue;
 
-        // glow
-        const glowR = s.size * 2.5;
-        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, glowR);
-        grad.addColorStop(0, `rgba(167, 139, 250, ${alpha * 0.4})`);
-        grad.addColorStop(1, 'rgba(167, 139, 250, 0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, glowR, 0, Math.PI * 2);
-        ctx.fill();
+        if (!isMobile) {
+          // glow — tylko na desktopie (ciężkie na mobilce)
+          const glowR = s.size * 2.5;
+          const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, glowR);
+          grad.addColorStop(0, `rgba(167, 139, 250, ${alpha * 0.4})`);
+          grad.addColorStop(1, 'rgba(167, 139, 250, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, glowR, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
         // 4-pointed star
         ctx.fillStyle = `rgba(230, 234, 243, ${alpha})`;
@@ -118,7 +121,7 @@ export function SubtleStars({ count = 60, maxOpacity = 0.45 }: SubtleStarsProps)
 
       animId = requestAnimationFrame(draw);
     };
-    draw();
+    animId = requestAnimationFrame(draw);
 
     return () => {
       cancelAnimationFrame(animId);
