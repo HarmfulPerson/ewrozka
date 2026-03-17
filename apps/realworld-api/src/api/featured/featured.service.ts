@@ -26,7 +26,7 @@ export class FeaturedService {
     this.currency = this.configService.get('stripe.currency', { infer: true }) ?? 'pln';
   }
 
-  private get paymentMethods(): Stripe.PaymentIntentCreateParams.PaymentMethodType[] {
+  private get paymentMethods(): string[] {
     return this.currency === 'pln' ? ['card', 'blik', 'p24'] : ['card'];
   }
 
