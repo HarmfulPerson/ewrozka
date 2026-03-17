@@ -587,7 +587,7 @@
   padding: 0.25rem 0;
   transition: opacity 0.2s;
   font-family: inherit;
-  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .booking-step__back:hover {
