@@ -5,11 +5,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--accent-soft) 0%, transparent 50%),
     var(--bg-primary);
   position: relative;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .auth-layout {
+    overflow: auto;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
 }
 
 .auth-layout__inner {
@@ -28,7 +37,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 1.25rem;
 }
 
 .auth-shell__logo {
