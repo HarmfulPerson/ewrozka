@@ -18,6 +18,10 @@ export type StripeConfig = {
   frontendUrl: string;
   connectReturnUrl: string;
   connectRefreshUrl: string;
+  /** Waluta transakcji Stripe — 'eur' w non-prod (instant payouts), 'pln' w prod */
+  currency: string;
+  /** Czy używać instant payouts (tylko EUR, non-prod) */
+  instantPayouts: boolean;
 };
 
 export type AllConfigType = {
