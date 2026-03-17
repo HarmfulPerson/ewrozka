@@ -56,6 +56,10 @@ export class GuestBookingService {
     this.currency = this.config.get('stripe.currency', { infer: true }) ?? 'pln';
   }
 
+  private get paymentMethods(): string[] {
+    return this.currency === 'pln' ? ['card', 'blik', 'p24'] : ['card'];
+  }
+
   // ── Tworzenie rezerwacji przez gościa ──────────────────────────────────────
 
   async create(dto: CreateGuestBookingDto): Promise<{ id: string }> {
@@ -238,7 +242,7 @@ export class GuestBookingService {
     const intent = await this.stripe.paymentIntents.create({
       amount: booking.priceGrosze,
       currency: this.currency,
-      payment_method_types: ['card', 'blik', 'p24'],
+      payment_method_types: this.paymentMethods,
       description: `${ad?.title ?? 'Konsultacja'} ze ${wizard?.username ?? 'specjalistą'}`,
       metadata: {
         bookingType: 'guest',
@@ -498,7 +502,7 @@ export class GuestBookingService {
     });
 
     const session = await this.stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'blik', 'p24'],
+      payment_method_types: this.paymentMethods,
       mode: 'payment',
       customer_email: booking.guestEmail,
       line_items: [
