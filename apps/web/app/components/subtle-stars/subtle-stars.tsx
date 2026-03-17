@@ -43,6 +43,11 @@ function drawStar4(
   ctx.closePath();
 }
 
+function isTouchDevice() {
+  if (typeof window === 'undefined') return false;
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
 export function SubtleStars({ count = 60, maxOpacity = 0.45 }: SubtleStarsProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -52,6 +57,7 @@ export function SubtleStars({ count = 60, maxOpacity = 0.45 }: SubtleStarsProps)
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    const mobile = isTouchDevice();
     let w = 0;
     let h = 0;
     let stars: Star[] = [];
@@ -80,38 +86,53 @@ export function SubtleStars({ count = 60, maxOpacity = 0.45 }: SubtleStarsProps)
       }
     };
 
+    const drawStaticFrame = () => {
+      ctx.clearRect(0, 0, w, h);
+      for (const s of stars) {
+        const alpha = s.maxAlpha * 0.6;
+        if (alpha < 0.01) continue;
+        ctx.fillStyle = `rgba(230, 234, 243, ${alpha})`;
+        drawStar4(ctx, s.x, s.y, s.size, s.size * 0.3, s.rotation);
+        ctx.fill();
+      }
+    };
+
     resize();
     createStars();
 
     const ro = new ResizeObserver(() => {
       resize();
       createStars();
+      if (mobile) drawStaticFrame();
     });
     ro.observe(canvas.parentElement!);
 
+    // Mobile: render once, no animation
+    if (mobile) {
+      drawStaticFrame();
+      return () => { ro.disconnect(); };
+    }
+
+    // Desktop: animated with glow
     let animId: number;
-    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
     const draw = (now: number) => {
-      // Na mobilce: wolniejsza animacja (co ~50ms zamiast co klatkę)
       ctx.clearRect(0, 0, w, h);
-      const t = now * 0.001; // czas w sekundach
+      const t = now * 0.001;
 
       for (const s of stars) {
         const alpha = ((Math.sin(t * s.speed * 60 + s.phase) + 1) / 2) * s.maxAlpha;
         if (alpha < 0.01) continue;
 
-        if (!isMobile) {
-          // glow — tylko na desktopie (ciężkie na mobilce)
-          const glowR = s.size * 2.5;
-          const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, glowR);
-          grad.addColorStop(0, `rgba(167, 139, 250, ${alpha * 0.4})`);
-          grad.addColorStop(1, 'rgba(167, 139, 250, 0)');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, glowR, 0, Math.PI * 2);
-          ctx.fill();
-        }
+        // glow
+        const glowR = s.size * 2.5;
+        const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, glowR);
+        grad.addColorStop(0, `rgba(167, 139, 250, ${alpha * 0.4})`);
+        grad.addColorStop(1, 'rgba(167, 139, 250, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, glowR, 0, Math.PI * 2);
+        ctx.fill();
 
         // 4-pointed star
         ctx.fillStyle = `rgba(230, 234, 243, ${alpha})`;
