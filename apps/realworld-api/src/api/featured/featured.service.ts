@@ -26,6 +26,10 @@ export class FeaturedService {
     this.currency = this.configService.get('stripe.currency', { infer: true }) ?? 'pln';
   }
 
+  private get paymentMethods(): string[] {
+    return this.currency === 'pln' ? ['card', 'blik', 'p24'] : ['card'];
+  }
+
   // ─── Konfiguracja ────────────────────────────────────────────────────────────
 
   getFeaturedConfig() {
@@ -116,7 +120,7 @@ export class FeaturedService {
     const intent = await this.stripe.paymentIntents.create({
       amount: priceGrosze,
       currency: this.currency,
-      payment_method_types: ['card', 'blik', 'p24'],
+      payment_method_types: this.paymentMethods,
       receipt_email: wizardEmail,
       description: `Wyróżnienie specjalisty – ${durationHours}h`,
       metadata: {

@@ -46,6 +46,13 @@ export class StripeService {
     this.instantPayouts = this.configService.get('stripe.instantPayouts', { infer: true }) ?? false;
   }
 
+  /** Metody płatności zależne od waluty — BLIK/P24 tylko PLN, Apple/Google Pay przez 'card' */
+  private get paymentMethods(): string[] {
+    return this.currency === 'pln'
+      ? ['card', 'blik', 'p24']
+      : ['card'];
+  }
+
   async createCheckoutSession(
     appointmentId: number,
     clientUserId: number,
@@ -79,7 +86,7 @@ export class StripeService {
     const platformFeeGrosze = Math.floor((priceGrosze * platformFeePercentage) / 100);
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      payment_method_types: ['card', 'blik', 'p24'],
+      payment_method_types: this.paymentMethods,
       mode: 'payment',
       customer_email: clientEmail,
       line_items: [
@@ -151,7 +158,7 @@ export class StripeService {
     const intentParams: Stripe.PaymentIntentCreateParams = {
       amount: priceGrosze,
       currency: this.currency,
-      payment_method_types: ['card', 'blik', 'p24'],
+      payment_method_types: this.paymentMethods,
       metadata: {
         appointmentId: String(appointmentId),
         clientUserId: String(clientUserId),
