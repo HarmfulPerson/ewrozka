@@ -47,7 +47,7 @@ export class StripeService {
   }
 
   /** Metody płatności zależne od waluty — BLIK/P24 tylko PLN, Apple/Google Pay przez 'card' */
-  private get paymentMethods(): string[] {
+  private get paymentMethods(): Stripe.Checkout.SessionCreateParams.PaymentMethodType[] {
     return this.currency === 'pln'
       ? ['card', 'blik', 'p24']
       : ['card'];
