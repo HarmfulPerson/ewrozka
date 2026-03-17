@@ -12,7 +12,7 @@ export default registerAs<StripeConfig>('stripe', () => {
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
     connectReturnUrl: process.env.STRIPE_CONNECT_RETURN_URL || 'http://localhost:3000/panel/portfel',
     connectRefreshUrl: process.env.STRIPE_CONNECT_REFRESH_URL || 'http://localhost:3000/panel/portfel',
-    currency: isProduction ? 'pln' : 'eur',
+    currency: 'pln',
     instantPayouts: !isProduction,
   };
 });
