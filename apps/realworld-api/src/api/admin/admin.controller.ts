@@ -183,7 +183,14 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   updateReminderConfig(
     @Body()
-    body: { enabled48h?: boolean; enabled24h?: boolean; enabled1h?: boolean },
+    body: {
+      enabled48h?: boolean;
+      enabled24h?: boolean;
+      enabled1h?: boolean;
+      hoursSlot1?: number;
+      hoursSlot2?: number;
+      hoursSlot3?: number;
+    },
   ) {
     return this.adminService.updateReminderConfig(body);
   }

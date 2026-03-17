@@ -20,6 +20,15 @@ export class ReminderConfigEntity {
   @Column({ name: 'enabled_1h', type: 'boolean', default: true })
   enabled1h!: boolean;
 
+  @Column({ name: 'hours_slot1', type: 'int', default: 48 })
+  hoursSlot1!: number;
+
+  @Column({ name: 'hours_slot2', type: 'int', default: 24 })
+  hoursSlot2!: number;
+
+  @Column({ name: 'hours_slot3', type: 'int', default: 1 })
+  hoursSlot3!: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

@@ -13,7 +13,7 @@ import { EmailService } from '../email/email.service';
 import { MeetingRoomService } from '../meeting-room/meeting-room.service';
 import { StripeService } from '../stripe/stripe.service';
 
-const REMINDER_HOURS = [48, 24, 1] as const;
+// Domyślne godziny — nadpisywane konfiguracją z bazy
 
 @Injectable()
 export class ReminderService {
@@ -47,29 +47,32 @@ export class ReminderService {
     const minMinutesAhead = 45; // Nigdy nie wysyłaj przypomnienia gdy spotkanie za <45 min
     const cutoffTime = new Date(now.getTime() + minMinutesAhead * 60 * 1000);
 
-    // Okna NIE NAKŁADAJĄCE SIĘ – każde przypomnienie tylko gdy spotkanie w swoim przedziale:
-    // 48h: spotkanie za 47–49h (tylko gdy rezerwacja była na >48h – np. rezerwacja 36h nie dostanie 48h)
-    // 24h: spotkanie za 23–25h
-    // 1h:  spotkanie za 55–65 min
-    const WINDOWS: Array<{ hours: number; fromMinutes: number; toMinutes: number }> = [
-      { hours: 48, fromMinutes: 47 * 60 + 30, toMinutes: 48 * 60 + 30 },
-      { hours: 24, fromMinutes: 23 * 60 + 30, toMinutes: 24 * 60 + 30 },
-      { hours: 1, fromMinutes: 55, toMinutes: 65 },
+    // Konfigurowalne sloty — godziny z bazy, okno ±30 min (lub ±5 min dla <2h)
+    const slots: Array<{ enabled: boolean; hours: number }> = [
+      { enabled: config.enabled48h, hours: config.hoursSlot1 ?? 48 },
+      { enabled: config.enabled24h, hours: config.hoursSlot2 ?? 24 },
+      { enabled: config.enabled1h, hours: config.hoursSlot3 ?? 1 },
     ];
 
-    for (const w of WINDOWS) {
-      const enabled =
-        w.hours === 48 ? config.enabled48h : w.hours === 24 ? config.enabled24h : config.enabled1h;
-      if (!enabled) continue;
+    for (const slot of slots) {
+      if (!slot.enabled) continue;
 
-      const windowStart = new Date(now.getTime() + w.fromMinutes * 60 * 1000);
-      const windowEnd = new Date(now.getTime() + w.toMinutes * 60 * 1000);
+      const halfWindow = slot.hours >= 2 ? 30 : 5; // ±30 min dla >=2h, ±5 min dla <2h
+      const centerMinutes = slot.hours * 60;
+      const fromMinutes = centerMinutes - halfWindow;
+      const toMinutes = centerMinutes + halfWindow;
 
-      const hoursLabel =
-        w.hours === 48 ? '48 godzin' : w.hours === 24 ? '24 godziny' : '1 godzinę';
+      const windowStart = new Date(now.getTime() + fromMinutes * 60 * 1000);
+      const windowEnd = new Date(now.getTime() + toMinutes * 60 * 1000);
 
-      await this.sendAppointmentReminders(w.hours, windowStart, windowEnd, hoursLabel, cutoffTime);
-      await this.sendGuestBookingReminders(w.hours, windowStart, windowEnd, hoursLabel, cutoffTime);
+      const hoursLabel = slot.hours >= 2
+        ? `${slot.hours} godzin`
+        : slot.hours === 1
+          ? '1 godzinę'
+          : `${slot.hours * 60} minut`;
+
+      await this.sendAppointmentReminders(slot.hours, windowStart, windowEnd, hoursLabel, cutoffTime);
+      await this.sendGuestBookingReminders(slot.hours, windowStart, windowEnd, hoursLabel, cutoffTime);
     }
   }
 
