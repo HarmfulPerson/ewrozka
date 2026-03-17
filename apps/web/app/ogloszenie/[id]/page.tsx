@@ -35,6 +35,8 @@ export default function AdvertisementPage() {
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [loadingDates, setLoadingDates] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [dateStep, setDateStep] = useState<'month' | 'day' | 'time'>('month');
   const [availableSlots, setAvailableSlots] = useState<SlotDto[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<SlotDto | null>(null);
@@ -138,6 +140,16 @@ export default function AdvertisementPage() {
       };
       const uniqueDates = [...new Set(response.slots.map(slot => toLocalDateStr(slot.startsAt)))];
       setAvailableDates(uniqueDates);
+
+      // Jeśli jest tylko 1 miesiąc, pomiń wybór miesiąca
+      const months = new Set(uniqueDates.map(d => d.substring(0, 7)));
+      if (months.size === 1) {
+        const onlyMonth = [...months][0]!;
+        setSelectedMonth(onlyMonth);
+        setDateStep('day');
+      } else {
+        setDateStep('month');
+      }
     } catch (error) {
       console.error('Error fetching available dates:', error);
       setAvailableDates([]);
@@ -150,6 +162,8 @@ export default function AdvertisementPage() {
     setBookingModalOpen(false);
     setBookingStep('choice');
     setSelectedDate(null);
+    setSelectedMonth(null);
+    setDateStep('month');
     setAvailableSlots([]);
     setSelectedSlot(null);
     setAvailableDates([]);
@@ -195,11 +209,19 @@ export default function AdvertisementPage() {
     }
   };
 
+  const handleMonthSelect = (monthKey: string) => {
+    setSelectedMonth(monthKey);
+    setSelectedDate(null);
+    setSelectedSlot(null);
+    setDateStep('day');
+  };
+
   const handleDateSelect = async (dateStr: string) => {
     if (!advertisement) return;
     setSelectedDate(dateStr);
     setLoadingSlots(true);
     setSelectedSlot(null);
+    setDateStep('time');
     try {
       const date = new Date(dateStr);
       const nextDay = new Date(date.getTime() + 24 * 60 * 60 * 1000);
@@ -217,6 +239,20 @@ export default function AdvertisementPage() {
 
   const handleSlotSelect = (slot: SlotDto) => {
     setSelectedSlot(slot);
+  };
+
+  const handleDateStepBack = () => {
+    if (dateStep === 'time') {
+      setSelectedDate(null);
+      setSelectedSlot(null);
+      setDateStep('day');
+    } else if (dateStep === 'day') {
+      const months = new Set(availableDates.map(d => d.substring(0, 7)));
+      if (months.size > 1) {
+        setSelectedMonth(null);
+        setDateStep('month');
+      }
+    }
   };
 
   const handleConfirmBooking = async () => {
@@ -283,6 +319,98 @@ export default function AdvertisementPage() {
   }
 
   const groupedDates = groupDatesByMonth();
+  const datesForSelectedMonth = selectedMonth ? (groupedDates[selectedMonth] ?? []) : [];
+  const monthKeys = Object.keys(groupedDates);
+  const canGoBackMonth = monthKeys.length > 1;
+
+  /** Krokowy picker daty — współdzielony między slots i guest-form */
+  const renderDatePicker = () => {
+    if (loadingDates) return <p className="booking-loading">Ładowanie dostępnych terminów...</p>;
+    if (availableDates.length === 0) return <p className="booking-empty">Brak dostępnych terminów w najbliższych miesiącach</p>;
+
+    // Krok 1: Wybór miesiąca
+    if (dateStep === 'month') {
+      return (
+        <div className="booking-step">
+          <h4 className="booking-step__title">Wybierz miesiąc</h4>
+          <div className="booking-months-grid">
+            {monthKeys.map((monthKey) => (
+              <button
+                key={monthKey}
+                className="booking-month-btn"
+                onClick={() => handleMonthSelect(monthKey)}
+              >
+                <span className="booking-month-btn__name">{formatMonthName(monthKey)}</span>
+                <span className="booking-month-btn__count">{groupedDates[monthKey]!.length} dni</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Krok 2: Wybór dnia
+    if (dateStep === 'day') {
+      return (
+        <div className="booking-step">
+          <div className="booking-step__header">
+            {canGoBackMonth && (
+              <button className="booking-step__back" onClick={handleDateStepBack}>← Wróć</button>
+            )}
+            <h4 className="booking-step__title">{formatMonthName(selectedMonth!)}</h4>
+          </div>
+          <div className="booking-month__dates">
+            {datesForSelectedMonth.map((dateStr) => {
+              const date = new Date(dateStr);
+              return (
+                <button
+                  key={dateStr}
+                  className="booking-date"
+                  onClick={() => handleDateSelect(dateStr)}
+                >
+                  <span className="booking-date__day">{date.toLocaleDateString('pl-PL', { weekday: 'short' })}</span>
+                  <span className="booking-date__num">{date.getDate()}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // Krok 3: Wybór godziny
+    if (dateStep === 'time') {
+      const dateObj = new Date(selectedDate!);
+      const dateLabel = dateObj.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
+      return (
+        <div className="booking-step">
+          <div className="booking-step__header">
+            <button className="booking-step__back" onClick={handleDateStepBack}>← Wróć</button>
+            <h4 className="booking-step__title">{dateLabel}</h4>
+          </div>
+          {loadingSlots ? (
+            <p className="booking-slots__loading">Ładowanie godzin...</p>
+          ) : availableSlots.length === 0 ? (
+            <p className="booking-slots__empty">Brak dostępnych godzin w tym dniu</p>
+          ) : (
+            <div className="booking-slots__grid">
+              {availableSlots.map((slot, i) => (
+                <button
+                  key={i}
+                  className={`booking-slot ${selectedSlot?.startsAt === slot.startsAt ? 'booking-slot--selected' : ''}`}
+                  onClick={() => handleSlotSelect(slot)}
+                >
+                  {formatSlotTime(slot.startsAt)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="advertisement-page">
@@ -474,7 +602,11 @@ export default function AdvertisementPage() {
           <div className="modal-content modal-content--booking" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3 className="modal-title">
-                {bookingStep === 'choice' ? 'Umów konsultację' : bookingStep === 'guest-form' ? 'Rezerwacja jako gość' : 'Wybierz termin'}
+                {bookingStep === 'choice'
+                  ? 'Umów konsultację'
+                  : bookingStep === 'guest-form'
+                    ? (selectedSlot ? 'Twoje dane' : dateStep === 'month' ? 'Wybierz miesiąc' : dateStep === 'day' ? 'Wybierz dzień' : 'Wybierz godzinę')
+                    : dateStep === 'month' ? 'Wybierz miesiąc' : dateStep === 'day' ? 'Wybierz dzień' : 'Wybierz godzinę'}
               </h3>
               <button className="modal-close" onClick={closeBookingModal}>✕</button>
             </div>
@@ -506,117 +638,20 @@ export default function AdvertisementPage() {
             {/* ── Krok 2a: Wybór terminu (zalogowany) ── */}
             {bookingStep === 'slots' && (
               <div className="modal-body">
-                {loadingDates ? (
-                  <p className="booking-loading">Ładowanie dostępnych terminów...</p>
-                ) : availableDates.length === 0 ? (
-                  <p className="booking-empty">Brak dostępnych terminów w najbliższych miesiącach</p>
-                ) : (
-                  <>
-                    <div className="booking-dates">
-                      <h4 className="booking-dates__title">Dostępne dni</h4>
-                      {Object.entries(groupedDates).map(([monthKey, dates]) => (
-                        <div key={monthKey} className="booking-month">
-                          <h5 className="booking-month__name">{formatMonthName(monthKey)}</h5>
-                          <div className="booking-month__dates">
-                            {dates.map((dateStr) => {
-                              const date = new Date(dateStr);
-                              const isSelected = dateStr === selectedDate;
-                              return (
-                                <button
-                                  key={dateStr}
-                                  className={`booking-date ${isSelected ? 'booking-date--selected' : ''}`}
-                                  onClick={() => handleDateSelect(dateStr)}
-                                >
-                                  <span className="booking-date__day">{date.toLocaleDateString('pl-PL', { weekday: 'short' })}</span>
-                                  <span className="booking-date__num">{date.getDate()}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {selectedDate && (
-                      <div className="booking-slots">
-                        <h4 className="booking-slots__title">Dostępne godziny</h4>
-                        {loadingSlots ? (
-                          <p className="booking-slots__loading">Ładowanie...</p>
-                        ) : availableSlots.length === 0 ? (
-                          <p className="booking-slots__empty">Brak dostępnych terminów w tym dniu</p>
-                        ) : (
-                          <div className="booking-slots__grid">
-                            {availableSlots.map((slot, i) => (
-                              <button
-                                key={i}
-                                className={`booking-slot ${selectedSlot?.startsAt === slot.startsAt ? 'booking-slot--selected' : ''}`}
-                                onClick={() => handleSlotSelect(slot)}
-                              >
-                                {formatSlotTime(slot.startsAt)}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
+                {renderDatePicker()}
               </div>
             )}
 
             {/* ── Krok 2b: Formularz gościa ── */}
             {bookingStep === 'guest-form' && !guestSuccess && (
               <div className="modal-body">
-                {/* Wybór terminu */}
                 {!selectedSlot ? (
-                  loadingDates ? (
-                    <p className="booking-loading">Ładowanie terminów...</p>
-                  ) : availableDates.length === 0 ? (
-                    <p className="booking-empty">Brak dostępnych terminów</p>
-                  ) : (
-                    <>
-                      <p className="guest-form__label" style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Wybierz termin:</p>
-                      <div className="booking-dates">
-                        {Object.entries(groupedDates).map(([monthKey, dates]) => (
-                          <div key={monthKey} className="booking-month">
-                            <h5 className="booking-month__name">{formatMonthName(monthKey)}</h5>
-                            <div className="booking-month__dates">
-                              {dates.map((dateStr) => (
-                                <button
-                                  key={dateStr}
-                                  className={`booking-date ${dateStr === selectedDate ? 'booking-date--selected' : ''}`}
-                                  onClick={() => handleDateSelect(dateStr)}
-                                >
-                                  <span className="booking-date__day">{new Date(dateStr).toLocaleDateString('pl-PL', { weekday: 'short' })}</span>
-                                  <span className="booking-date__num">{new Date(dateStr).getDate()}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      {selectedDate && (
-                        <div className="booking-slots">
-                          {loadingSlots ? <p className="booking-slots__loading">Ładowanie...</p> : (
-                            <div className="booking-slots__grid">
-                              {availableSlots.map((slot: SlotDto, i) => (
-                                <button key={i}
-                                  className="booking-slot"
-                                  onClick={() => handleSlotSelect(slot)}>
-                                  {formatSlotTime(slot.startsAt)}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  )
+                  renderDatePicker()
                 ) : (
-                  /* Formularz danych gościa */
                   <div className="guest-form">
                     <p className="guest-form__slot">
                       Wybrany termin: <strong>{new Date(selectedSlot.startsAt).toLocaleString('pl-PL', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })}</strong>
-                      <button className="guest-form__change-slot" onClick={() => setSelectedSlot(null)}>Zmień</button>
+                      <button className="guest-form__change-slot" onClick={() => { setSelectedSlot(null); setDateStep('time'); }}>Zmień</button>
                     </p>
                     <div className="guest-form__field">
                       <label>Imię i nazwisko *</label>

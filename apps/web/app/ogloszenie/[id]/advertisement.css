@@ -569,6 +569,82 @@
   }
 }
 
+/* ── Booking step navigation ──────────────────────────────────────────────── */
+
+.booking-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.booking-step__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.booking-step__back {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0;
+  transition: opacity 0.2s;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.booking-step__back:hover {
+  opacity: 0.75;
+}
+
+.booking-step__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.booking-months-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.booking-month-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.booking-month-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg-secondary);
+}
+
+.booking-month-btn__name {
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.booking-month-btn__count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 /* ── Modal: wybór gość / zaloguj się ───────────────────────────────────────── */
 
 .booking-choice {
