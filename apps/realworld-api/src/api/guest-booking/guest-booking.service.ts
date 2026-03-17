@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   AdvertisementEntity,
   GuestBookingEntity,
+  StripeConnectAccountEntity,
   UserEntity,
 } from '@repo/postgresql-typeorm';
 import { randomUUID } from 'crypto';
@@ -21,6 +22,7 @@ import { EmailService } from '../email/email.service';
 import { DailyCoService } from '../meeting-room/daily-co.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { buildMeetingPaidNotification, buildNewRequestNotification } from '../notifications/handlers';
+import { PaymentService } from '../payment/payment.service';
 
 export interface CreateGuestBookingDto {
   advertisementId: number;
@@ -44,11 +46,14 @@ export class GuestBookingService {
     private readonly adRepo: Repository<AdvertisementEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+    @InjectRepository(StripeConnectAccountEntity)
+    private readonly connectAccountRepo: Repository<StripeConnectAccountEntity>,
     private readonly availabilityService: AvailabilityService,
     private readonly emailService: EmailService,
     private readonly dailyCo: DailyCoService,
     private readonly config: ConfigService<AllConfigType>,
     private readonly notificationsService: NotificationsService,
+    private readonly paymentService: PaymentService,
   ) {
     this.stripe = new Stripe(
       this.config.get('stripe.secretKey', { infer: true })!,
@@ -239,7 +244,16 @@ export class GuestBookingService {
     const ad = booking.advertisement;
     const wizard = booking.wizard;
 
-    const intent = await this.stripe.paymentIntents.create({
+    // Sprawdź czy wróżka ma aktywne Stripe Connect
+    const connectAccount = await this.connectAccountRepo.findOne({
+      where: { userId: booking.wizardId },
+    });
+    const hasActiveConnect = !!(connectAccount?.onboardingCompleted && connectAccount?.payoutsEnabled);
+
+    const platformFeePercentage = await this.paymentService.getPlatformFeePercentForUser(booking.wizardId);
+    const platformFeeGrosze = Math.floor((booking.priceGrosze * platformFeePercentage) / 100);
+
+    const intentParams: Stripe.PaymentIntentCreateParams = {
       amount: booking.priceGrosze,
       currency: this.currency,
       payment_method_types: this.paymentMethods,
@@ -247,8 +261,24 @@ export class GuestBookingService {
       metadata: {
         bookingType: 'guest',
         guestBookingId: booking.id,
+        wizardId: String(booking.wizardId),
+        priceGrosze: String(booking.priceGrosze),
+        platformFeePercent: String(platformFeePercentage),
+        isDestinationCharge: hasActiveConnect ? 'true' : 'false',
       },
-    });
+    };
+
+    if (hasActiveConnect) {
+      intentParams.application_fee_amount = platformFeeGrosze;
+      intentParams.transfer_data = {
+        destination: connectAccount!.stripeAccountId,
+      };
+      this.logger.log(
+        `Guest PaymentIntent (destination): ${booking.priceGrosze}gr → ${connectAccount!.stripeAccountId}, prowizja: ${platformFeeGrosze}gr`,
+      );
+    }
+
+    const intent = await this.stripe.paymentIntents.create(intentParams);
 
     return { clientSecret: intent.client_secret! };
   }
@@ -515,7 +545,16 @@ export class GuestBookingService {
       timeZone: 'Europe/Warsaw',
     });
 
-    const session = await this.stripe.checkout.sessions.create({
+    // Sprawdź czy wróżka ma aktywne Stripe Connect
+    const connectAccount = await this.connectAccountRepo.findOne({
+      where: { userId: booking.wizardId },
+    });
+    const hasActiveConnect = !!(connectAccount?.onboardingCompleted && connectAccount?.payoutsEnabled);
+
+    const platformFeePercentage = await this.paymentService.getPlatformFeePercentForUser(booking.wizardId);
+    const platformFeeGrosze = Math.floor((booking.priceGrosze * platformFeePercentage) / 100);
+
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: this.paymentMethods,
       mode: 'payment',
       customer_email: booking.guestEmail,
@@ -535,10 +574,28 @@ export class GuestBookingService {
       metadata: {
         bookingType: 'guest',
         guestBookingId: booking.id,
+        wizardId: String(booking.wizardId),
+        priceGrosze: String(booking.priceGrosze),
+        platformFeePercent: String(platformFeePercentage),
+        isDestinationCharge: hasActiveConnect ? 'true' : 'false',
       },
       success_url: `${appUrl}/guest/platnosc/sukces?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/ogloszenie/${booking.advertisementId}?payment=cancelled`,
-    });
+    };
+
+    if (hasActiveConnect) {
+      sessionParams.payment_intent_data = {
+        application_fee_amount: platformFeeGrosze,
+        transfer_data: {
+          destination: connectAccount!.stripeAccountId,
+        },
+      };
+      this.logger.log(
+        `Guest checkout (destination): ${booking.priceGrosze}gr → ${connectAccount!.stripeAccountId}, prowizja: ${platformFeeGrosze}gr`,
+      );
+    }
+
+    const session = await this.stripe.checkout.sessions.create(sessionParams);
 
     booking.stripeSessionId = session.id;
     await this.bookingRepo.save(booking);

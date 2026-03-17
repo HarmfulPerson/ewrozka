@@ -708,12 +708,20 @@ export class StripeService {
       const guestBookingId = intent.metadata.guestBookingId;
       if (guestBookingId) {
         await this.guestBookingService.handlePaymentSuccessById(guestBookingId);
-        const booking = await this.guestBookingRepository.findOne({
-          where: { id: guestBookingId },
-          select: ['wizardId', 'priceGrosze'],
-        });
-        if (booking) {
-          await this.ensureFundsAvailableNonProd(booking.wizardId, booking.priceGrosze);
+        const wizardId = parseInt(intent.metadata?.wizardId || '0', 10);
+        const priceGrosze = parseInt(intent.metadata?.priceGrosze || '0', 10);
+        const isDestCharge = intent.metadata?.isDestinationCharge === 'true';
+        const feePercent = intent.metadata?.platformFeePercent
+          ? parseInt(intent.metadata.platformFeePercent, 10)
+          : undefined;
+
+        if (wizardId && priceGrosze) {
+          if (isDestCharge) {
+            await this.paymentService.recordDestinationCharge(wizardId, 0, priceGrosze, feePercent);
+          } else {
+            await this.paymentService.processPayment(wizardId, 0, priceGrosze, feePercent);
+          }
+          await this.ensureFundsAvailableNonProd(wizardId, priceGrosze, feePercent);
         }
         this.logger.log(`Rezerwacja gościa ${guestBookingId} opłacona przez payment_intent.succeeded`);
       }
@@ -781,12 +789,20 @@ export class StripeService {
     // ── Rezerwacja gościa ───────────────────────────────────────────────────
     if (session.metadata?.bookingType === 'guest') {
       await this.guestBookingService.handlePaymentSuccess(session.id);
-      const booking = await this.guestBookingRepository.findOne({
-        where: { stripeSessionId: session.id },
-        select: ['wizardId', 'priceGrosze'],
-      });
-      if (booking) {
-        await this.ensureFundsAvailableNonProd(booking.wizardId, booking.priceGrosze);
+      const wizardId = parseInt(session.metadata?.wizardId || '0', 10);
+      const priceGrosze = parseInt(session.metadata?.priceGrosze || '0', 10);
+      const isDestCharge = session.metadata?.isDestinationCharge === 'true';
+      const feePercent = session.metadata?.platformFeePercent
+        ? parseInt(session.metadata.platformFeePercent, 10)
+        : undefined;
+
+      if (wizardId && priceGrosze) {
+        if (isDestCharge) {
+          await this.paymentService.recordDestinationCharge(wizardId, 0, priceGrosze, feePercent);
+        } else {
+          await this.paymentService.processPayment(wizardId, 0, priceGrosze, feePercent);
+        }
+        await this.ensureFundsAvailableNonProd(wizardId, priceGrosze, feePercent);
       }
       return;
     }
