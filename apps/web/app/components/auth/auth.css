@@ -1,5 +1,6 @@
 /* Auth layout + form + topic-select + auth choice */
 .auth-layout {
+  min-height: 100vh;
   min-height: 100svh;
   display: flex;
   align-items: center;
@@ -8,6 +9,7 @@
   background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--accent-soft) 0%, transparent 50%),
     var(--bg-primary);
   position: relative;
+  box-sizing: border-box;
 }
 
 .auth-layout__inner {
