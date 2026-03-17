@@ -146,10 +146,20 @@ export default function PanelLayout({
     };
     window.addEventListener('ewrozka:ads-count-changed', handleAdsCountChanged);
 
+    // Odśwież saldo po powiadomieniu o opłaceniu spotkania
+    const handleNotification = (e: Event) => {
+      const notification = (e as CustomEvent).detail;
+      if (notification?.type === 'meeting_paid' && storedUser?.token && isWizardRole && !isAdminRole) {
+        fetchWizardBar(storedUser.token);
+      }
+    };
+    window.addEventListener('ewrozka:notification', handleNotification);
+
     return () => {
       window.removeEventListener('ewrozka:user-updated', handleUserUpdated);
       window.removeEventListener('ewrozka:connect-configured', handleConnectConfigured);
       window.removeEventListener('ewrozka:ads-count-changed', handleAdsCountChanged);
+      window.removeEventListener('ewrozka:notification', handleNotification);
     };
   }, [router]);
 
