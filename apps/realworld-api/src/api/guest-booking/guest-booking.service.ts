@@ -56,7 +56,7 @@ export class GuestBookingService {
     this.currency = this.config.get('stripe.currency', { infer: true }) ?? 'pln';
   }
 
-  private get paymentMethods(): string[] {
+  private get paymentMethods(): Stripe.Checkout.SessionCreateParams.PaymentMethodType[] {
     return this.currency === 'pln' ? ['card', 'blik', 'p24'] : ['card'];
   }
 
