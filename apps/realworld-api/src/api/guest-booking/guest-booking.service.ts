@@ -20,7 +20,7 @@ import { EmailType } from '../email/email-type.enum';
 import { EmailService } from '../email/email.service';
 import { DailyCoService } from '../meeting-room/daily-co.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { buildNewRequestNotification } from '../notifications/handlers';
+import { buildMeetingPaidNotification, buildNewRequestNotification } from '../notifications/handlers';
 
 export interface CreateGuestBookingDto {
   advertisementId: number;
@@ -400,6 +400,20 @@ export class GuestBookingService {
         appUrl,
       },
     });
+
+    // Powiadom wróżkę o opłaceniu spotkania przez gościa
+    const advertisement = await this.adRepo.findOne({
+      where: { id: booking.advertisementId ?? 0 },
+    });
+    void this.notificationsService.createAndEmit(
+      buildMeetingPaidNotification({
+        wizardId: booking.wizardId,
+        clientName: booking.guestName,
+        advertisementTitle: advertisement?.title ?? 'Konsultacja',
+        appointmentId: 0,
+        startsAt: booking.scheduledAt?.toISOString?.() ?? '',
+      }),
+    );
 
     this.logger.log(`Guest booking ${booking.id} paid, token: ${guestToken}`);
   }
