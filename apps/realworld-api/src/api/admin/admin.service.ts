@@ -1312,20 +1312,26 @@ export class AdminService {
 
   }
 
-  /** Konfiguracja przypomnień o spotkaniach (48h, 24h, 1h przed). */
+  /** Konfiguracja przypomnień o spotkaniach. */
   async getReminderConfig(): Promise<{
     enabled48h: boolean;
     enabled24h: boolean;
     enabled1h: boolean;
+    hoursSlot1: number;
+    hoursSlot2: number;
+    hoursSlot3: number;
   }> {
     const config = await this.reminderConfigRepo.findOne({ where: { id: 1 } });
     if (!config) {
-      return { enabled48h: true, enabled24h: true, enabled1h: true };
+      return { enabled48h: true, enabled24h: true, enabled1h: true, hoursSlot1: 48, hoursSlot2: 24, hoursSlot3: 1 };
     }
     return {
       enabled48h: config.enabled48h,
       enabled24h: config.enabled24h,
       enabled1h: config.enabled1h,
+      hoursSlot1: config.hoursSlot1,
+      hoursSlot2: config.hoursSlot2,
+      hoursSlot3: config.hoursSlot3,
     };
   }
 
@@ -1334,6 +1340,9 @@ export class AdminService {
     enabled48h?: boolean;
     enabled24h?: boolean;
     enabled1h?: boolean;
+    hoursSlot1?: number;
+    hoursSlot2?: number;
+    hoursSlot3?: number;
   }): Promise<void> {
     const config = await this.reminderConfigRepo.findOne({ where: { id: 1 } });
     if (!config) {
@@ -1344,6 +1353,9 @@ export class AdminService {
     if (body.enabled48h !== undefined) config.enabled48h = body.enabled48h;
     if (body.enabled24h !== undefined) config.enabled24h = body.enabled24h;
     if (body.enabled1h !== undefined) config.enabled1h = body.enabled1h;
+    if (body.hoursSlot1 !== undefined && body.hoursSlot1 >= 1) config.hoursSlot1 = body.hoursSlot1;
+    if (body.hoursSlot2 !== undefined && body.hoursSlot2 >= 1) config.hoursSlot2 = body.hoursSlot2;
+    if (body.hoursSlot3 !== undefined && body.hoursSlot3 >= 1) config.hoursSlot3 = body.hoursSlot3;
     await this.reminderConfigRepo.save(config);
   }
 
