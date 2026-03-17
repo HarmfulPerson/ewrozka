@@ -2,7 +2,8 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { appConfig } from '@repo/api';
 import {
   AsyncContextProvider,
@@ -92,7 +93,12 @@ const i18nModule = I18nModule.forRootAsync({
     ApiModule,
   ],
   controllers: [AppController],
-  providers: [AppService, AsyncContextProvider, FastifyPinoLogger],
+  providers: [
+    AppService,
+    AsyncContextProvider,
+    FastifyPinoLogger,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
   exports: [AsyncContextProvider],
 })
 export class AppModule implements NestModule {
