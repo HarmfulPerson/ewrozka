@@ -13,9 +13,11 @@
   position: relative;
 }
 
-.wizard-card:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .wizard-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
 }
 
 /* ── Featured ── */
@@ -25,9 +27,11 @@
   box-shadow: 0 0 0 1px #f59e0b40, 0 4px 20px #f59e0b20;
 }
 
-.wizard-card--featured:hover {
-  border-color: #fbbf24;
-  box-shadow: 0 0 0 1px #fbbf2450, 0 6px 24px #f59e0b30;
+@media (hover: hover) {
+  .wizard-card--featured:hover {
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 1px #fbbf2450, 0 6px 24px #f59e0b30;
+  }
 }
 
 .wizard-card__featured-badge {
@@ -68,16 +72,20 @@
   transition: border-color 0.2s;
 }
 
-.wizard-card:hover .wizard-card__avatar {
-  border-color: var(--accent);
+@media (hover: hover) {
+  .wizard-card:hover .wizard-card__avatar {
+    border-color: var(--accent);
+  }
 }
 
 .wizard-card--featured .wizard-card__avatar {
   border-color: #f59e0b;
 }
 
-.wizard-card--featured:hover .wizard-card__avatar {
-  border-color: #fbbf24;
+@media (hover: hover) {
+  .wizard-card--featured:hover .wizard-card__avatar {
+    border-color: #fbbf24;
+  }
 }
 
 /* ── Body ── */
