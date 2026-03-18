@@ -492,7 +492,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
 
               const busyLabel = item.kind === 'appointment'
                 ? `Spotkanie z ${item.apt.clientUsername || 'klientem'}`
-                : `Spotkanie z ${item.kind === 'guest' ? (item.guest.guestName || 'gościem') : 'klientem'}`;
+                : 'Spotkanie z gościem';
               return (
                 <div key={`${avail.id}-busy-${idx}`}
                   className="calendar-week__appointment"
