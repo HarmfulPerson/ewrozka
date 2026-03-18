@@ -333,9 +333,9 @@ export function VantaBackground({ children }: VantaBackgroundProps) {
           if (star.y < -5) star.y = h + 5;
           if (star.y > h + 5) star.y = -5;
 
-          // Twinkle
+          // Twinkle — gwiazdki pojawiają się i znikają
           const twinkle = (Math.sin(t * star.twinkleSpeed * 60 + star.twinklePhase) + 1) * 0.5;
-          const alpha = star.brightness * (0.4 + twinkle * 0.6);
+          const alpha = star.brightness * twinkle;
           if (alpha < 0.02) continue;
 
           const [r, g, b] = star.color;
