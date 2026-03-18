@@ -17,17 +17,16 @@ export default function RejestracjaKlientPage() {
     const form = e.currentTarget;
     const email = (form.querySelector('#email') as HTMLInputElement)?.value?.trim();
     const password = (form.querySelector('#password') as HTMLInputElement)?.value;
-    const firstName = (form.querySelector('#firstName') as HTMLInputElement)?.value?.trim();
-    const lastName = (form.querySelector('#lastName') as HTMLInputElement)?.value?.trim();
+    const username = (form.querySelector('#username') as HTMLInputElement)?.value?.trim();
     const gender = (form.querySelector('input[name="gender"]:checked') as HTMLInputElement)?.value as '' | 'female' | 'male';
+    if (!username || username.length < 3) {
+      setError('Nazwa użytkownika musi mieć co najmniej 3 znaki.');
+      return;
+    }
     if (!email || !password) {
       setError('Wypełnij e-mail i hasło.');
       return;
     }
-    const username =
-      firstName && lastName
-        ? `${firstName}_${lastName}`.toLowerCase().replace(/\s+/g, '_')
-        : email.replace(/@.*$/, '');
     setLoading(true);
     try {
       await apiRegister({
@@ -56,15 +55,9 @@ export default function RejestracjaKlientPage() {
             {error}
           </p>
         )}
-        <div className="auth-form__row">
-          <div className="auth-form__field">
-            <label htmlFor="firstName">Imię</label>
-            <input id="firstName" type="text" placeholder="Jan" />
-          </div>
-          <div className="auth-form__field">
-            <label htmlFor="lastName">Nazwisko</label>
-            <input id="lastName" type="text" placeholder="Nowak" />
-          </div>
+        <div className="auth-form__field">
+          <label htmlFor="username">Nazwa użytkownika *</label>
+          <input id="username" type="text" placeholder="np. jan_nowak" minLength={3} maxLength={60} required />
         </div>
         <div className="auth-form__field">
           <span className="auth-form__label">Płeć</span>

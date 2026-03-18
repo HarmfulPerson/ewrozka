@@ -62,6 +62,11 @@ function DokonczGoogleRejestracjaForm() {
     const bio = (form.querySelector('#bio') as HTMLTextAreaElement)?.value?.trim();
     const gender = (form.querySelector('input[name="gender"]:checked') as HTMLInputElement)?.value as '' | 'female' | 'male';
 
+    if (!username || username.length < 3) {
+      setError('Nazwa użytkownika musi mieć co najmniej 3 znaki.');
+      return;
+    }
+
     if (role === 'wizard') {
       if (!bio || bio.length < 20) {
         setError('Opis musi mieć co najmniej 20 znaków.');
@@ -230,18 +235,17 @@ function DokonczGoogleRejestracjaForm() {
           </div>
         </div>
         <div className="auth-form__field">
-          <label htmlFor="username">Pseudonim</label>
+          <label htmlFor="username">Nazwa użytkownika *</label>
           <input
             id="username"
             type="text"
             placeholder={profile.displayName || profile.email.split('@')[0]}
             minLength={3}
             maxLength={60}
+            required
           />
           <small className="wrozka-reg__field-hint">
-            {role === 'client'
-              ? 'Opcjonalne – widoczne na profilu'
-              : 'Nazwa widoczna publicznie'}
+            Nazwa widoczna na profilu
           </small>
         </div>
 
