@@ -1,60 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { getStoredUser } from '../../lib/auth-mock';
-import { apiGetMyClientRequests, MeetingRequestDto } from '../../lib/api-meetings';
+import { useMojeWnioski } from './useMojeWnioski';
+import { WnioskiCard } from './WnioskiCard';
 import './moje-wnioski.css';
 import '../panel-shared.css';
 
 export default function MojeWnioskiPage() {
-  const [user] = useState(() => getStoredUser());
-  const [requests, setRequests] = useState<MeetingRequestDto[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [offset, setOffset] = useState(0);
-  const [limit, setLimit] = useState(10);
-
-  const fetchRequests = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const data = await apiGetMyClientRequests(user.token, {
-        status: statusFilter || undefined,
-        limit,
-        offset,
-      });
-      setRequests(data.requests);
-      setTotal(data.total);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nie udało się załadować wniosków');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRequests();
-  }, [user, statusFilter, offset, limit]);
-
-  const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: 'Oczekuje na akceptację',
-      accepted: 'Zaakceptowane',
-      rejected: 'Odrzucone',
-    };
-    return labels[status] || status;
-  };
-
-  const totalPages = Math.ceil(total / limit);
-  const currentPage = Math.floor(offset / limit) + 1;
-
-  const handleLimitChange = (newLimit: number) => {
-    setLimit(newLimit);
-    setOffset(0);
-  };
+  const {
+    requests,
+    loading,
+    error,
+    statusFilter,
+    offset,
+    limit,
+    totalPages,
+    currentPage,
+    setOffset,
+    handleLimitChange,
+    handleStatusFilterChange,
+  } = useMojeWnioski();
 
   if (loading && requests.length === 0) {
     return (
@@ -82,10 +47,7 @@ export default function MojeWnioskiPage() {
             <select
               className="panel-select__dropdown"
               value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setOffset(0);
-              }}
+              onChange={(e) => handleStatusFilterChange(e.target.value)}
             >
               <option value="">Wszystkie</option>
               <option value="pending">Oczekujące na akceptację</option>
@@ -107,68 +69,9 @@ export default function MojeWnioskiPage() {
         ) : (
           <>
             <div className="moje-wnioski-list">
-              {requests.map((request) => {
-                const date = request.requestedStartsAt ? new Date(request.requestedStartsAt) : null;
-                
-                return (
-                  <div key={request.id} className="moje-wnioski-card">
-                    <div className="moje-wnioski-card__header">
-                      <div>
-                        <h3 className="moje-wnioski-card__title">{request.advertisementTitle}</h3>
-                        <span className="moje-wnioski-card__wrozka">
-                          Wróżka: <strong>{request.wrozkaUsername}</strong>
-                        </span>
-                      </div>
-                      <span className={`moje-wnioski-card__status moje-wnioski-card__status--${request.status}`}>
-                        {getStatusLabel(request.status)}
-                      </span>
-                    </div>
-
-                    <div className="moje-wnioski-card__body">
-                      {date ? (
-                        <div className="moje-wnioski-card__datetime">
-                          <div className="moje-wnioski-card__date">
-                            📅 {date.toLocaleDateString('pl-PL', { 
-                              weekday: 'long', 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
-                            })}
-                          </div>
-                          <div className="moje-wnioski-card__time">
-                            🕐 {date.toLocaleTimeString('pl-PL', { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="moje-wnioski-card__no-date">
-                          Data do ustalenia
-                        </div>
-                      )}
-
-                      {request.message && (
-                        <div className="moje-wnioski-card__message">
-                          <strong>Twoja wiadomość:</strong> {request.message}
-                        </div>
-                      )}
-
-                      {request.createdAt && (
-                        <div className="moje-wnioski-card__created">
-                          Wysłano: {new Date(request.createdAt).toLocaleString('pl-PL')}
-                        </div>
-                      )}
-
-                      {request.status === 'accepted' && (
-                        <div className="moje-wnioski-card__info">
-                          ℹ️ Wniosek został zaakceptowany. Przejdź do "Moje wizyty", aby opłacić konsultację.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              {requests.map((request) => (
+                <WnioskiCard key={request.id} request={request} />
+              ))}
             </div>
 
             {totalPages > 1 && (
@@ -192,7 +95,7 @@ export default function MojeWnioskiPage() {
                     Następna →
                   </button>
                 </div>
-                
+
                 <div className="panel-pagination__per-page">
                   <span className="panel-pagination__per-page-label">Na stronie:</span>
                   <select
