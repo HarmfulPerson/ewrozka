@@ -10,19 +10,13 @@ export function useEditAdvertisement(
   onSaved: (updated: Partial<AdvertisementDetailDto>) => void,
 ) {
   const [isOpen, setIsOpen] = useState(false);
-  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [priceZl, setPriceZl] = useState('');
-  const [duration, setDuration] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const open = () => {
     if (!advertisement) return;
-    setTitle(advertisement.title);
     setDescription(advertisement.description);
-    setPriceZl(((advertisement.priceGrosze ?? 0) / 100).toFixed(2));
-    setDuration(String(advertisement.durationMinutes));
     setError('');
     setIsOpen(true);
   };
@@ -32,21 +26,13 @@ export function useEditAdvertisement(
   const save = async () => {
     if (!advertisement || !token) return;
 
-    const price = parseFloat(priceZl.replace(',', '.'));
-    const dur = parseInt(duration, 10);
-
-    if (!title.trim()) { setError('Podaj tytuł.'); return; }
-    if (isNaN(price) || price <= 0) { setError('Podaj poprawną cenę.'); return; }
-    if (isNaN(dur) || dur < 5) { setError('Czas trwania musi wynosić co najmniej 5 minut.'); return; }
+    if (!description.trim()) { setError('Podaj opis.'); return; }
 
     setSaving(true);
     setError('');
     try {
       const res = await apiUpdateAdvertisement(token, advertisement.id, {
-        title: title.trim(),
         description: description.trim(),
-        priceGrosze: Math.round(price * 100),
-        durationMinutes: dur,
       });
       onSaved(res.advertisement);
       setIsOpen(false);
@@ -58,8 +44,7 @@ export function useEditAdvertisement(
   };
 
   return {
-    isOpen, title, description, priceZl, duration, saving, error,
-    open, close, save,
-    setTitle, setDescription, setPriceZl, setDuration,
+    isOpen, description, saving, error,
+    open, close, save, setDescription,
   };
 }

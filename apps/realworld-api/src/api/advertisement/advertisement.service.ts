@@ -144,10 +144,7 @@ export class AdvertisementService {
     userId: number,
     id: number,
     data: {
-      title?: string;
       description?: string;
-      priceGrosze?: number;
-      durationMinutes?: number;
     },
   ) {
     const advertisement = await this.advertisementRepository.findOne({ where: { id } });
@@ -159,7 +156,9 @@ export class AdvertisementService {
       throw new NotFoundException('Nie masz uprawnień do edycji tego ogłoszenia');
     }
 
-    Object.assign(advertisement, data);
+    if (data.description !== undefined) {
+      advertisement.description = data.description;
+    }
     const saved = await this.advertisementRepository.save(advertisement);
 
     return { advertisement: this.mapAd(saved) };
