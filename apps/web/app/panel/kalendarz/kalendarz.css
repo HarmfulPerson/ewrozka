@@ -435,10 +435,11 @@
   color: #90ee90;
 }
 
+/* Klient — domyślnie przyszłe: żywe kolory */
 .calendar-week__appointment {
-  background: rgba(139, 92, 246, 0.2);
-  border: 1px solid rgba(139, 92, 246, 0.4);
-  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.3);
+  border: 1px solid rgba(139, 92, 246, 0.55);
+  color: #ddd6fe;
 }
 
 .calendar-week__appointment--clickable {
@@ -448,8 +449,8 @@
 }
 
 .calendar-week__appointment--clickable:hover {
-  background: rgba(139, 92, 246, 0.35);
-  border-color: rgba(139, 92, 246, 0.6);
+  background: rgba(139, 92, 246, 0.4);
+  border-color: rgba(139, 92, 246, 0.7);
   transform: scale(1.02);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
@@ -462,27 +463,34 @@
   opacity: 0.7;
 }
 
+/* Zakończone — blade, wyszarzone */
 .calendar-week__appointment--ended {
-  background: rgba(139, 92, 246, 0.1);
+  background: rgba(139, 92, 246, 0.12);
   border: 1px solid rgba(139, 92, 246, 0.2);
-  color: rgba(196, 181, 253, 0.5);
-  opacity: 0.7;
+  color: rgba(196, 181, 253, 0.45);
 }
 
-/* Rezerwacje gości – nieco odmienny odcień */
+/* Gość — przyszłe: żywe złote kolory */
 .calendar-week__appointment--guest {
-  background: rgba(180, 130, 70, 0.2);
-  border-color: rgba(180, 130, 70, 0.45);
-  color: #e8b86d;
+  background: rgba(180, 130, 70, 0.3);
+  border-color: rgba(180, 130, 70, 0.55);
+  color: #f0c878;
 }
 
 .calendar-week__appointment--guest.calendar-week__appointment--clickable:hover {
-  background: rgba(180, 130, 70, 0.35);
-  border-color: rgba(180, 130, 70, 0.6);
+  background: rgba(180, 130, 70, 0.4);
+  border-color: rgba(180, 130, 70, 0.7);
 }
 
 .calendar-week__appointment--guest.calendar-week__appointment--locked {
-  background: rgba(160, 115, 60, 0.2);
-  border-color: rgba(160, 115, 60, 0.4);
+  background: rgba(160, 115, 60, 0.15);
+  border-color: rgba(160, 115, 60, 0.3);
   color: #d4a574;
+}
+
+/* Gość zakończone — blade złote */
+.calendar-week__appointment--guest.calendar-week__appointment--ended {
+  background: rgba(180, 130, 70, 0.12);
+  border-color: rgba(180, 130, 70, 0.2);
+  color: rgba(232, 184, 109, 0.45);
 }
