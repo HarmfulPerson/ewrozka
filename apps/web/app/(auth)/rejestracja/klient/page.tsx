@@ -59,6 +59,16 @@ export default function RejestracjaKlientPage() {
           <label htmlFor="username">Nazwa użytkownika *</label>
           <input id="username" type="text" placeholder="np. jan_nowak" minLength={3} maxLength={60} required />
         </div>
+        <div className="auth-form__row">
+          <div className="auth-form__field">
+            <label htmlFor="firstName">Imię</label>
+            <input id="firstName" type="text" placeholder="Jan" />
+          </div>
+          <div className="auth-form__field">
+            <label htmlFor="lastName">Nazwisko</label>
+            <input id="lastName" type="text" placeholder="Nowak" />
+          </div>
+        </div>
         <div className="auth-form__field">
           <span className="auth-form__label">Płeć</span>
           <div className="auth-form__radio-group" role="radiogroup" aria-label="Płeć">
