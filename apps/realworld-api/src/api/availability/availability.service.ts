@@ -178,12 +178,18 @@ export class AvailabilityService {
       });
 
       for (const req of toRejectRequests) {
-        req.status = 'rejected';
-        await this.meetingRequestRepository.save(req);
-
+        // Sprawdź, czy powiązany appointment nie jest opłacony – jeśli tak, nie anuluj
         const apt = await this.appointmentRepository.findOne({
           where: { meetingRequestId: req.id },
         });
+        if (apt && ['paid', 'completed'].includes(apt.status)) {
+          this.logger.log(`Skipping meeting request ${req.id} – appointment ${apt.id} is ${apt.status}`);
+          continue;
+        }
+
+        req.status = 'rejected';
+        await this.meetingRequestRepository.save(req);
+
         if (apt && apt.status === 'accepted') {
           apt.status = 'cancelled';
           await this.appointmentRepository.save(apt);
