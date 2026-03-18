@@ -412,7 +412,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         data-tooltip-id="meeting-tooltip"
                         data-tooltip-content={`Spotkanie z ${clientLabel} – zakończone`}
                       >
-                        {showText && `Spotkanie z ${clientLabel} (zakończone)`}
+                        {showText && `Spotkanie z ${clientLabel}`}
                       </div>
                     );
                   }
@@ -435,7 +435,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                       data-tooltip-id="meeting-tooltip"
                       data-tooltip-content={`Spotkanie z ${guestLabel} – zakończone`}
                     >
-                      {showText && `Spotkanie z ${guestLabel} (zakończone)`}
+                      {showText && 'Spotkanie z gościem'}
                     </div>
                   );
                 }
@@ -450,7 +450,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         data-tooltip-id="meeting-tooltip"
                         data-tooltip-content={`Gość: ${guestLabel} – Kliknij aby dołączyć`}
                       >
-                        {showText && `Spotkanie z ${guestLabel}`}
+                        {showText && 'Spotkanie z gościem'}
                       </Link>
                     );
                   } else if (aptNow < fiveMinsBefore) {
@@ -462,7 +462,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         data-tooltip-id="meeting-tooltip"
                         data-tooltip-html={`<div style="text-align:center"><strong>Gość: ${guestLabel}</strong><br/>Dostępne 5 min przed<br/>${fmtD(meetingStart)}, ${fmtT(fiveMinsBefore)}<br/><span style="color:#fbbf24">⏰ Za ${formatTimeUntil(timeUntilMins)}</span></div>`}
                       >
-                        {showText && `🔒 Spotkanie z ${guestLabel}`}
+                        {showText && '🔒 Spotkanie z gościem'}
                       </div>
                     );
                   } else {
@@ -473,7 +473,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         data-tooltip-id="meeting-tooltip"
                         data-tooltip-content={`Spotkanie z ${guestLabel} – zakończone`}
                       >
-                        {showText && `Spotkanie z ${guestLabel} (zakończone)`}
+                        {showText && 'Spotkanie z gościem'}
                       </div>
                     );
                   }
@@ -485,7 +485,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                     data-tooltip-id="meeting-tooltip"
                     data-tooltip-content={`Gość: ${guestLabel}${guest.status === 'pending' ? ' (oczekuje)' : ' (zaakceptowane)'}`}
                   >
-                    {showText && `Spotkanie z ${guestLabel}`}
+                    {showText && 'Spotkanie z gościem'}
                   </div>
                 );
               }
