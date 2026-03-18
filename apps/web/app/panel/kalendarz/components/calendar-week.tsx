@@ -380,15 +380,16 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                   const fiveMinsBefore = new Date(meetingStart.getTime() - 5 * 60 * 1000);
                   const meetingEnd = new Date(meetingStart.getTime() + apt.durationMinutes * 60 * 1000);
                   const isAvailable = aptNow >= fiveMinsBefore && aptNow <= meetingEnd;
+                  const clientLabel = apt.clientUsername || 'klient';
                   if (isAvailable) {
                     return (
                       <Link key={`${avail.id}-busy-${idx}`} href={`/spotkanie/${meetingToken}`}
                         className="calendar-week__appointment calendar-week__appointment--clickable"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
-                        data-tooltip-content={`Spotkanie z ${apt.clientUsername || 'klientem'} – Kliknij aby dołączyć`}
+                        data-tooltip-content={`Spotkanie z ${clientLabel} – Kliknij aby dołączyć`}
                       >
-                        {showText && 'Zajęty'}
+                        {showText && `Spotkanie z ${clientLabel}`}
                       </Link>
                     );
                   } else if (aptNow < fiveMinsBefore) {
@@ -398,9 +399,9 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         className="calendar-week__appointment calendar-week__appointment--locked"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
-                        data-tooltip-html={`<div style="text-align:center"><strong>${apt.clientUsername || 'Klient'}</strong><br/>Dostępne 5 min przed<br/>${fmtD(meetingStart)}, ${fmtT(fiveMinsBefore)}<br/><span style="color:#fbbf24">⏰ Za ${formatTimeUntil(timeUntilMins)}</span></div>`}
+                        data-tooltip-html={`<div style="text-align:center"><strong>${clientLabel}</strong><br/>Dostępne 5 min przed<br/>${fmtD(meetingStart)}, ${fmtT(fiveMinsBefore)}<br/><span style="color:#fbbf24">⏰ Za ${formatTimeUntil(timeUntilMins)}</span></div>`}
                       >
-                        {showText && '🔒 Zajęty'}
+                        {showText && `🔒 Spotkanie z ${clientLabel}`}
                       </div>
                     );
                   } else {
@@ -409,9 +410,9 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         className="calendar-week__appointment calendar-week__appointment--ended"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
-                        data-tooltip-content="Spotkanie zakończone"
+                        data-tooltip-content={`Spotkanie z ${clientLabel} zakończone`}
                       >
-                        {showText && 'Zakończone'}
+                        {showText && `Spotkanie z ${clientLabel}`}
                       </div>
                     );
                   }
@@ -449,7 +450,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         data-tooltip-id="meeting-tooltip"
                         data-tooltip-content={`Gość: ${guestLabel} – Kliknij aby dołączyć`}
                       >
-                        {showText && 'Zajęty (gość)'}
+                        {showText && `Spotkanie z ${guestLabel}`}
                       </Link>
                     );
                   } else if (aptNow < fiveMinsBefore) {
@@ -461,7 +462,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         data-tooltip-id="meeting-tooltip"
                         data-tooltip-html={`<div style="text-align:center"><strong>Gość: ${guestLabel}</strong><br/>Dostępne 5 min przed<br/>${fmtD(meetingStart)}, ${fmtT(fiveMinsBefore)}<br/><span style="color:#fbbf24">⏰ Za ${formatTimeUntil(timeUntilMins)}</span></div>`}
                       >
-                        {showText && '🔒 Zajęty (gość)'}
+                        {showText && `🔒 Spotkanie z ${guestLabel}`}
                       </div>
                     );
                   } else {
@@ -484,18 +485,22 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                     data-tooltip-id="meeting-tooltip"
                     data-tooltip-content={`Gość: ${guestLabel}${guest.status === 'pending' ? ' (oczekuje)' : ' (zaakceptowane)'}`}
                   >
-                    {showText && 'Zajęty (gość)'}
+                    {showText && `Spotkanie z ${guestLabel}`}
                   </div>
                 );
               }
 
+              const busyLabel = item.kind === 'appointment'
+                ? `Spotkanie z ${item.apt.clientUsername || 'klientem'}`
+                : `Spotkanie z ${item.kind === 'guest' ? (item.guest.guestName || 'gościem') : 'klientem'}`;
               return (
                 <div key={`${avail.id}-busy-${idx}`}
                   className="calendar-week__appointment"
                   style={{ top: `${top}px`, height: `${height}px` }}
-                  title={showText ? undefined : 'Zajęty'}
+                  data-tooltip-id="meeting-tooltip"
+                  data-tooltip-content={busyLabel}
                 >
-                  {showText && 'Zajęty'}
+                  {showText && busyLabel}
                 </div>
               );
             }
