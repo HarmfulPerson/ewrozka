@@ -410,9 +410,9 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         className="calendar-week__appointment calendar-week__appointment--ended"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
-                        data-tooltip-content={`Spotkanie z ${clientLabel} zakończone`}
+                        data-tooltip-content={`Spotkanie z ${clientLabel} – zakończone`}
                       >
-                        {showText && `Spotkanie z ${clientLabel}`}
+                        {showText && `Spotkanie z ${clientLabel} (zakończone)`}
                       </div>
                     );
                   }
@@ -433,9 +433,9 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                       className="calendar-week__appointment calendar-week__appointment--ended calendar-week__appointment--guest"
                       style={{ top: `${top}px`, height: `${height}px` }}
                       data-tooltip-id="meeting-tooltip"
-                      data-tooltip-content={`Spotkanie z gościem ${guestLabel} zakończone`}
+                      data-tooltip-content={`Spotkanie z ${guestLabel} – zakończone`}
                     >
-                      {showText && 'Spotkanie z gościem'}
+                      {showText && `Spotkanie z ${guestLabel} (zakończone)`}
                     </div>
                   );
                 }
@@ -471,9 +471,9 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                         className="calendar-week__appointment calendar-week__appointment--ended calendar-week__appointment--guest"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
-                        data-tooltip-content="Spotkanie z gościem zakończone"
+                        data-tooltip-content={`Spotkanie z ${guestLabel} – zakończone`}
                       >
-                        {showText && 'Zakończone'}
+                        {showText && `Spotkanie z ${guestLabel} (zakończone)`}
                       </div>
                     );
                   }
