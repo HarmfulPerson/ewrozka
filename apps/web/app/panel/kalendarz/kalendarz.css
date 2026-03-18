@@ -435,17 +435,23 @@
   color: #90ee90;
 }
 
-/* Klient — domyślnie przyszłe: żywe kolory */
+/* Klient — domyślnie (bez meetingToken, pending itp.): blade */
 .calendar-week__appointment {
-  background: rgba(139, 92, 246, 0.3);
-  border: 1px solid rgba(139, 92, 246, 0.55);
-  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  color: rgba(196, 181, 253, 0.45);
 }
 
 .calendar-week__appointment--clickable {
   cursor: pointer;
   text-decoration: none;
   transition: all 0.2s ease;
+}
+
+.calendar-week__appointment--clickable {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: rgba(139, 92, 246, 0.55);
+  color: #ddd6fe;
 }
 
 .calendar-week__appointment--clickable:hover {
@@ -456,22 +462,28 @@
 }
 
 .calendar-week__appointment--locked {
-  background: rgba(139, 92, 246, 0.15);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  color: #a78bfa;
+  background: rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  color: #c4b5fd;
   cursor: not-allowed;
-  opacity: 0.7;
 }
 
-/* Zakończone — blade, wyszarzone */
+/* Zakończone — blade */
 .calendar-week__appointment--ended {
   background: rgba(139, 92, 246, 0.12);
   border: 1px solid rgba(139, 92, 246, 0.2);
   color: rgba(196, 181, 253, 0.45);
 }
 
-/* Gość — przyszłe: żywe złote kolory */
+/* Gość — domyślnie blade */
 .calendar-week__appointment--guest {
+  background: rgba(180, 130, 70, 0.12);
+  border-color: rgba(180, 130, 70, 0.2);
+  color: rgba(232, 184, 109, 0.45);
+}
+
+/* Gość przyszłe: żywe złote */
+.calendar-week__appointment--guest.calendar-week__appointment--clickable {
   background: rgba(180, 130, 70, 0.3);
   border-color: rgba(180, 130, 70, 0.55);
   color: #f0c878;
@@ -483,12 +495,12 @@
 }
 
 .calendar-week__appointment--guest.calendar-week__appointment--locked {
-  background: rgba(160, 115, 60, 0.15);
-  border-color: rgba(160, 115, 60, 0.3);
-  color: #d4a574;
+  background: rgba(180, 130, 70, 0.25);
+  border-color: rgba(180, 130, 70, 0.45);
+  color: #e8b86d;
 }
 
-/* Gość zakończone — blade złote */
+/* Gość zakończone — blade */
 .calendar-week__appointment--guest.calendar-week__appointment--ended {
   background: rgba(180, 130, 70, 0.12);
   border-color: rgba(180, 130, 70, 0.2);
