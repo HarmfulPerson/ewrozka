@@ -93,16 +93,25 @@ export function VantaBackground({ children }: VantaBackgroundProps) {
     let constellations: Constellation[] = [];
     // Static layer drawn once per resize
     let staticCanvas: HTMLCanvasElement | null = null;
+    let lastW = 0;
+    let initialized = false;
 
     const resize = () => {
-      w = container.offsetWidth;
-      h = container.offsetHeight;
+      const newW = container.offsetWidth;
+      const newH = container.offsetHeight;
+
+      // Na mobilce: przebuduj tylko gdy zmieni się szerokość (nie przy scroll/header)
+      if (mobile && initialized && newW === lastW) return;
+
+      w = newW;
+      h = newH;
+      lastW = newW;
       canvas.width = w;
       canvas.height = h;
       createAll();
       drawStatic();
-      // Na mobilce: rysuj raz i zakończ
       if (mobile) drawMobileFrame();
+      initialized = true;
     };
 
     const createAll = () => {
