@@ -131,7 +131,7 @@ export class AvailabilityService {
       if (end <= now) return false; // spotkanie już się zakończyło – nie anuluj
       const blockStart = block.startsAt.getTime();
       const blockEnd = block.endsAt.getTime();
-      return start < blockEnd && end > blockStart && ['pending', 'accepted', 'paid'].includes(gb.status);
+      return start < blockEnd && end > blockStart && ['pending', 'accepted'].includes(gb.status);
     });
 
     for (const gb of toCancelGuest) {
@@ -184,7 +184,7 @@ export class AvailabilityService {
         const apt = await this.appointmentRepository.findOne({
           where: { meetingRequestId: req.id },
         });
-        if (apt && ['accepted', 'paid'].includes(apt.status)) {
+        if (apt && apt.status === 'accepted') {
           apt.status = 'cancelled';
           await this.appointmentRepository.save(apt);
         }
@@ -218,7 +218,7 @@ export class AvailabilityService {
       where: { wrozkaId: userId },
     });
     for (const apt of appointmentsInBlock) {
-      if (!['accepted', 'paid'].includes(apt.status)) continue;
+      if (apt.status !== 'accepted') continue;
       const start = apt.startsAt.getTime();
       const end = start + apt.durationMinutes * 60 * 1000;
       if (end <= now) continue; // spotkanie już się zakończyło – nie anuluj
