@@ -347,6 +347,150 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
           );
         })}
 
+        {/* Osirocone spotkania – opłacone/zakończone, których blok dostępności został usunięty */}
+        {dayBusyItems.filter(item => {
+          const itemStart = new Date(item.startsAt);
+          const itemStartMins = itemStart.getHours() * 60 + itemStart.getMinutes();
+          const itemEndMins = itemStartMins + item.durationMinutes;
+          const isOrphaned = !dayAvailabilities.some(avail => {
+            const aS = new Date(avail.startsAt).getHours() * 60 + new Date(avail.startsAt).getMinutes();
+            const aE = new Date(avail.endsAt).getHours() * 60 + new Date(avail.endsAt).getMinutes();
+            return itemStartMins < aE && itemEndMins > aS;
+          });
+          return isOrphaned;
+        }).map((item, idx) => {
+          const itemStart = new Date(item.startsAt);
+          const startMins = itemStart.getHours() * 60 + itemStart.getMinutes();
+          const top = ((startMins - START_HOUR * 60) / 60) * 40;
+          const height = (item.durationMinutes / 60) * 40;
+          if (height <= 0) return null;
+          const showText = item.durationMinutes >= 15;
+          const fmtD = (d: Date) => `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;
+          const fmtT = (d: Date) => `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+
+          if (item.kind === 'appointment') {
+            const apt = item.apt;
+            const meetingToken = apt.meetingToken;
+            const clientLabel = apt.clientUsername || 'klient';
+            if (meetingToken) {
+              const aptNow = new Date();
+              const meetingStart = new Date(apt.startsAt);
+              const fiveMinsBefore = new Date(meetingStart.getTime() - 5 * 60 * 1000);
+              const meetingEnd = new Date(meetingStart.getTime() + apt.durationMinutes * 60 * 1000);
+              const isAvailable = aptNow >= fiveMinsBefore && aptNow <= meetingEnd;
+              if (isAvailable) {
+                return (
+                  <Link key={`orphan-apt-${idx}`} href={`/spotkanie/${meetingToken}`}
+                    className="calendar-week__appointment calendar-week__appointment--clickable"
+                    style={{ top: `${top}px`, height: `${height}px` }}
+                    data-tooltip-id="meeting-tooltip"
+                    data-tooltip-content={`Spotkanie z ${clientLabel} – Kliknij aby dołączyć`}
+                  >
+                    {showText && `Spotkanie z ${clientLabel}`}
+                  </Link>
+                );
+              } else if (aptNow < fiveMinsBefore) {
+                const timeUntilMins = Math.ceil((fiveMinsBefore.getTime() - aptNow.getTime()) / 60000);
+                return (
+                  <div key={`orphan-apt-${idx}`}
+                    className="calendar-week__appointment calendar-week__appointment--locked"
+                    style={{ top: `${top}px`, height: `${height}px` }}
+                    data-tooltip-id="meeting-tooltip"
+                    data-tooltip-html={`<div style="text-align:center"><strong>${clientLabel}</strong><br/>Dostępne 5 min przed<br/>${fmtD(meetingStart)}, ${fmtT(fiveMinsBefore)}<br/><span style="color:#fbbf24">⏰ Za ${formatTimeUntil(timeUntilMins)}</span></div>`}
+                  >
+                    {showText && `🔒 Spotkanie z ${clientLabel}`}
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={`orphan-apt-${idx}`}
+                    className="calendar-week__appointment calendar-week__appointment--ended"
+                    style={{ top: `${top}px`, height: `${height}px` }}
+                    data-tooltip-id="meeting-tooltip"
+                    data-tooltip-content={`Spotkanie z ${clientLabel} – zakończone`}
+                  >
+                    {showText && `Spotkanie z ${clientLabel}`}
+                  </div>
+                );
+              }
+            }
+          }
+
+          if (item.kind === 'guest') {
+            const guest = item.guest;
+            const guestLabel = guest.guestName || 'Gość';
+            const meetingStart = new Date(guest.scheduledAt);
+            const fiveMinsBefore = new Date(meetingStart.getTime() - 5 * 60 * 1000);
+            const meetingEnd = new Date(meetingStart.getTime() + guest.durationMinutes * 60 * 1000);
+            const aptNow = new Date();
+
+            if (guest.status === 'completed') {
+              return (
+                <div key={`orphan-guest-${idx}`}
+                  className="calendar-week__appointment calendar-week__appointment--ended calendar-week__appointment--guest"
+                  style={{ top: `${top}px`, height: `${height}px` }}
+                  data-tooltip-id="meeting-tooltip"
+                  data-tooltip-content={`Spotkanie z ${guestLabel} – zakończone`}
+                >
+                  {showText && 'Spotkanie z gościem'}
+                </div>
+              );
+            }
+
+            if (guest.status === 'paid') {
+              const isAvailable = aptNow >= fiveMinsBefore && aptNow <= meetingEnd;
+              if (isAvailable) {
+                return (
+                  <Link key={`orphan-guest-${idx}`} href={`/panel/spotkanie-gosc/${guest.id}`}
+                    className="calendar-week__appointment calendar-week__appointment--clickable calendar-week__appointment--guest"
+                    style={{ top: `${top}px`, height: `${height}px` }}
+                    data-tooltip-id="meeting-tooltip"
+                    data-tooltip-content={`Gość: ${guestLabel} – Kliknij aby dołączyć`}
+                  >
+                    {showText && 'Spotkanie z gościem'}
+                  </Link>
+                );
+              } else if (aptNow < fiveMinsBefore) {
+                const timeUntilMins = Math.ceil((fiveMinsBefore.getTime() - aptNow.getTime()) / 60000);
+                return (
+                  <div key={`orphan-guest-${idx}`}
+                    className="calendar-week__appointment calendar-week__appointment--locked calendar-week__appointment--guest"
+                    style={{ top: `${top}px`, height: `${height}px` }}
+                    data-tooltip-id="meeting-tooltip"
+                    data-tooltip-html={`<div style="text-align:center"><strong>Gość: ${guestLabel}</strong><br/>Dostępne 5 min przed<br/>${fmtD(meetingStart)}, ${fmtT(fiveMinsBefore)}<br/><span style="color:#fbbf24">⏰ Za ${formatTimeUntil(timeUntilMins)}</span></div>`}
+                  >
+                    {showText && '🔒 Spotkanie z gościem'}
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={`orphan-guest-${idx}`}
+                    className="calendar-week__appointment calendar-week__appointment--ended calendar-week__appointment--guest"
+                    style={{ top: `${top}px`, height: `${height}px` }}
+                    data-tooltip-id="meeting-tooltip"
+                    data-tooltip-content={`Spotkanie z ${guestLabel} – zakończone`}
+                  >
+                    {showText && 'Spotkanie z gościem'}
+                  </div>
+                );
+              }
+            }
+
+            return (
+              <div key={`orphan-guest-${idx}`}
+                className="calendar-week__appointment calendar-week__appointment--guest"
+                style={{ top: `${top}px`, height: `${height}px` }}
+                data-tooltip-id="meeting-tooltip"
+                data-tooltip-content={`Gość: ${guestLabel}${guest.status === 'pending' ? ' (oczekuje)' : ' (zaakceptowane)'}`}
+              >
+                {showText && 'Spotkanie z gościem'}
+              </div>
+            );
+          }
+
+          return null;
+        })}
+
         {dayAvailabilities.flatMap((avail) => {
           const blocks = splitAvailabilityByAppointments(avail);
           return blocks.map((block, idx) => {
