@@ -1,10 +1,12 @@
 'use client';
 
 import { useEditAdvertisement } from './use-edit-advertisement';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 type EditState = ReturnType<typeof useEditAdvertisement>;
 
 export function EditModal({ edit }: { edit: EditState }) {
+  useBodyScrollLock(edit.isOpen);
   if (!edit.isOpen) return null;
 
   return (

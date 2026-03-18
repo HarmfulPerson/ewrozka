@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AdvertisementDto } from '../../lib/api-advertisements';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface DeleteAdvertisementModalProps {
   advertisement: AdvertisementDto;
@@ -10,6 +11,7 @@ interface DeleteAdvertisementModalProps {
 }
 
 export function DeleteAdvertisementModal({ advertisement, onClose, onConfirm }: DeleteAdvertisementModalProps) {
+  useBodyScrollLock(true);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 

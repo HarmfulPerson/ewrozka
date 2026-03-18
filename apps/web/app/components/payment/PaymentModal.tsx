@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 import {
   Elements,
   PaymentElement,
@@ -194,6 +195,7 @@ export function PaymentModal({
   onSuccess,
   clientSecretLoader,
 }: PaymentModalProps) {
+  useBodyScrollLock(true);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
 

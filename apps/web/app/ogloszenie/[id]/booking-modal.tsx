@@ -2,6 +2,7 @@
 
 import { SlotDto } from '../../lib/api-booking';
 import { useBooking } from './use-booking';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 type BookingState = ReturnType<typeof useBooking>;
 
@@ -197,6 +198,7 @@ interface BookingModalProps {
 }
 
 export function BookingModal({ booking, onLogin, onConfirmBooking, onConfirmGuestBooking }: BookingModalProps) {
+  useBodyScrollLock(booking.isOpen);
   if (!booking.isOpen) return null;
 
   const showSlotsFooter = booking.step === 'slots';

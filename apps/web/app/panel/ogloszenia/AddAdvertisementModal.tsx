@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface AddAdvertisementModalProps {
   onClose: () => void;
@@ -15,6 +16,7 @@ interface AddAdvertisementModalProps {
 }
 
 export function AddAdvertisementModal({ onClose, onSubmit, error }: AddAdvertisementModalProps) {
+  useBodyScrollLock(true);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priceZl, setPriceZl] = useState('');

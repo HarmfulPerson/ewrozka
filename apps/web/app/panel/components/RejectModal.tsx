@@ -1,6 +1,7 @@
 'use client';
 
 import type { RejectModalState } from '../useWizardDashboard';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
 
 interface RejectModalProps {
   rejectModal: RejectModalState;
@@ -10,6 +11,7 @@ interface RejectModalProps {
 }
 
 export function RejectModal({ rejectModal, onClose, onChange, onConfirm }: RejectModalProps) {
+  useBodyScrollLock(rejectModal.open);
   if (!rejectModal.open) return null;
 
   return (
