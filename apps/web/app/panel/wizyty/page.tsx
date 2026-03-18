@@ -11,7 +11,6 @@ export default function WizytyPage() {
     appointments,
     loading,
     error,
-    success,
     payingId,
     filterType,
     offset,
@@ -42,7 +41,6 @@ export default function WizytyPage() {
       </div>
 
       {error && <div className="wizyty-alert wizyty-alert--error">{error}</div>}
-      {success && <div className="wizyty-alert wizyty-alert--success">{success}</div>}
 
       <div className="wizyty-filters">
         <div className="panel-select">

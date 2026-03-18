@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { getStoredUser } from '../../lib/auth-mock';
 import {
   apiGetMyAdvertisements,
@@ -15,7 +16,6 @@ export function useAdvertisements() {
   const [advertisements, setAdvertisements] = useState<AdvertisementDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [connectReady, setConnectReady] = useState<boolean | null>(null);
 
   const fetchAdvertisements = async () => {
@@ -50,7 +50,6 @@ export function useAdvertisements() {
     if (!user) return;
 
     setError(null);
-    setSuccess(null);
 
     if (!title || !description || !priceZl || !durationMinutes) {
       throw new Error('Wszystkie pola są wymagane');
@@ -80,7 +79,7 @@ export function useAdvertisements() {
       imageFile || undefined,
     );
 
-    setSuccess('Ogłoszenie zostało dodane!');
+    toast.success('Ogłoszenie zostało dodane!');
     await fetchAdvertisements();
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('ewrozka:ads-count-changed'));
@@ -91,7 +90,7 @@ export function useAdvertisements() {
     if (!user) return;
 
     await apiDeleteAdvertisement(user.token, ad.id);
-    setSuccess('Ogłoszenie zostało usunięte');
+    toast.success('Ogłoszenie zostało usunięte');
     await fetchAdvertisements();
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('ewrozka:ads-count-changed'));
@@ -103,8 +102,6 @@ export function useAdvertisements() {
     loading,
     error,
     setError,
-    success,
-    setSuccess,
     connectReady,
     createAdvertisement,
     deleteAdvertisement,

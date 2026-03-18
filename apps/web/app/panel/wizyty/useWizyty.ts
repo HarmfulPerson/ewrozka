@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { getStoredUser } from '../../lib/auth-mock';
 import { apiGetMyAppointments, AppointmentDto } from '../../lib/api-calendar';
 import { apiPayForAppointment } from '../../lib/api-meetings';
@@ -11,7 +12,6 @@ export function useWizyty() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [payingId, setPayingId] = useState<number | null>(null);
   const [filterType, setFilterType] = useState<string>('upcoming');
   const [offset, setOffset] = useState(0);
@@ -43,11 +43,10 @@ export function useWizyty() {
     if (!user) return;
     setPayingId(id);
     setError(null);
-    setSuccess(null);
 
     try {
       await apiPayForAppointment(user.token, id);
-      setSuccess('Płatność została przetworzona! Spotkanie zostało potwierdzone.');
+      toast.success('Płatność została przetworzona!');
       await fetchAppointments();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się przetworzyć płatności');
@@ -73,7 +72,6 @@ export function useWizyty() {
     appointments,
     loading,
     error,
-    success,
     payingId,
     filterType,
     offset,

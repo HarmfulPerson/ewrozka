@@ -83,7 +83,6 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useSessionManager } from '../hooks/useSessionManager';
 import { useAdminPendingVideoCount } from '../hooks/useAdminPendingVideoCount';
 import { NotificationCenter, NotificationCenterMobile, NotificationMobilePanel, NotificationToastListener } from '../components/notification-center/notification-center';
-import { Toaster } from 'react-hot-toast';
 import 'react-tooltip/dist/react-tooltip.css';
 import { SubtleStars } from '../components/subtle-stars/subtle-stars';
 import './panel.css';
@@ -228,24 +227,6 @@ export default function PanelLayout({
     <div className="panel-layout">
       <SubtleStars count={120} maxOpacity={0.35} />
       <NotificationToastListener />
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          style: {
-            background: 'var(--bg-secondary, #1a1625)',
-            color: 'var(--text-primary, #e2e0f0)',
-            border: '1px solid rgba(167,139,250,0.2)',
-            borderRadius: '12px',
-            fontSize: '0.9rem',
-          },
-          success: {
-            iconTheme: { primary: '#a78bfa', secondary: '#1a1625' },
-          },
-          error: {
-            iconTheme: { primary: '#f87171', secondary: '#1a1625' },
-          },
-        }}
-      />
       <aside className="panel-sidebar">
         <div className="panel-sidebar__head">
           {/* Logo + saldo w jednej linii (mobile) */}

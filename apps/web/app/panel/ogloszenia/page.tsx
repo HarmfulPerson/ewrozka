@@ -15,8 +15,6 @@ export default function MojeOgloszeniaPage() {
     loading,
     error,
     setError,
-    success,
-    setSuccess,
     connectReady,
     createAdvertisement,
     deleteAdvertisement,
@@ -90,7 +88,6 @@ export default function MojeOgloszeniaPage() {
       )}
 
       {error && <div className="ogloszenia-alert ogloszenia-alert--error">{error}</div>}
-      {success && <div className="ogloszenia-alert ogloszenia-alert--success">{success}</div>}
 
       <section className="ogloszenia-section">
         <h2 className="ogloszenia-section__title">Lista ogłoszeń</h2>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { Header } from '../../components/layout/header';
 import { Footer } from '../../components/layout/footer';
 import { VantaBackground } from '../../components/vanta-background/vanta-background';
@@ -118,20 +118,6 @@ export default function AdvertisementPage() {
   return (
     <div className="advertisement-page">
       <VantaBackground>
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: 'var(--bg-secondary, #1a1625)',
-              color: 'var(--text-primary, #e2e0f0)',
-              border: '1px solid rgba(167,139,250,0.2)',
-              borderRadius: '12px',
-              fontSize: '0.9rem',
-            },
-            success: { iconTheme: { primary: '#a78bfa', secondary: '#1a1625' } },
-            error: { iconTheme: { primary: '#f87171', secondary: '#1a1625' } },
-          }}
-        />
         <Header />
         <main className="advertisement-main">
           <div className="advertisement-topnav">
