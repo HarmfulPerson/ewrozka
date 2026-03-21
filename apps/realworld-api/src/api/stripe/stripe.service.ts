@@ -360,10 +360,6 @@ export class StripeService {
 
   // ── Stripe Connect ──────────────────────────────────────────────────
 
-  async getEarnedBalance(userId: number): Promise<number> {
-    return this.paymentService.getEarnedBalance(userId);
-  }
-
   async createAccountSession(userId: number, email: string): Promise<{ clientSecret: string; accountId: string }> {
     // Upewnij się że konto Connect istnieje
     let connectAccount = await this.connectAccountRepository.findOne({

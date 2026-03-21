@@ -12,7 +12,6 @@ export * from './tag.entity';
 export * from './topic.entity';
 export * from './user-follows.entity';
 export * from './user.entity';
-export * from './wallet.entity';
 export * from './transaction.entity';
 export * from './platform-revenue.entity';
 export * from './platform-fee-config.entity';

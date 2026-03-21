@@ -9,10 +9,10 @@ import {
   apiGetConnectStatus,
   apiCreateWithdrawal,
   apiGetWithdrawals,
-  TransactionDto,
-  ConnectStatusDto,
-  WithdrawalDto,
-  CommissionTierDto,
+  type TransactionDto,
+  type ConnectStatusDto,
+  type WithdrawalDto,
+  type CommissionTierDto,
 } from '../../lib/api-payment';
 
 export function usePortfelData() {
@@ -54,7 +54,16 @@ export function usePortfelData() {
           apiGetConnectStatus(user.token),
           apiGetWithdrawals(user.token, { limit: 5 }),
         ]);
-        setBalanceFormatted(walletData.balanceFormatted);
+
+        // Saldo wyłącznie ze Stripe (jedyne źródło prawdy)
+        const configured = connectData.connected && connectData.onboardingCompleted;
+        if (configured) {
+          const totalGrosze = (connectData.stripeAvailableGrosze ?? 0) + (connectData.stripePendingGrosze ?? 0);
+          setBalanceFormatted(`${(totalGrosze / 100).toFixed(2)} zł`);
+        } else {
+          setBalanceFormatted('—');
+        }
+
         setPlatformFeePercent(walletData.platformFeePercent ?? null);
         setCommissionTier(walletData.commissionTier ?? null);
         setConnectStatus(connectData);
@@ -99,7 +108,14 @@ export function usePortfelData() {
       apiGetWithdrawals(token, { limit: 5 }),
       apiGetTransactions(token, { limit, offset, sortBy, sortOrder }),
     ]);
-    setBalanceFormatted(walletData.balanceFormatted);
+
+    // Saldo wyłącznie ze Stripe
+    const configured = connectData.connected && connectData.onboardingCompleted;
+    if (configured) {
+      const totalGrosze = (connectData.stripeAvailableGrosze ?? 0) + (connectData.stripePendingGrosze ?? 0);
+      setBalanceFormatted(`${(totalGrosze / 100).toFixed(2)} zł`);
+    }
+
     setPlatformFeePercent(walletData.platformFeePercent ?? null);
     setCommissionTier(walletData.commissionTier ?? null);
     setConnectStatus(connectData);

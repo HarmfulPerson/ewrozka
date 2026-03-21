@@ -14,22 +14,16 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Get('wallet')
-  @ApiAuth({ summary: 'Moje saldo portfela' })
-  async getWalletBalance(@CurrentUser('id') userId: number) {
-    const [balance, platformFeePercent, commissionTierStatus] = await Promise.all([
-      this.paymentService.getEarnedBalance(userId),
-
+  @ApiAuth({ summary: 'Prowizja i próg komisji (saldo z Stripe Connect)' })
+  async getWalletInfo(@CurrentUser('id') userId: number) {
+    const [platformFeePercent, commissionTierStatus] = await Promise.all([
       this.paymentService.getPlatformFeePercentForUser(userId),
 
       this.paymentService.getCommissionTierStatus(userId),
     ]);
 
     return {
-      balance,
-
       currency: 'PLN',
-
-      balanceFormatted: `${(balance / 100).toFixed(2)} zł`,
 
       platformFeePercent,
 

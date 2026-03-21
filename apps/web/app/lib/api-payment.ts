@@ -11,9 +11,7 @@ export interface CommissionTierDto {
 }
 
 export interface WalletDto {
-  balance: number;
   currency: string;
-  balanceFormatted: string;
   platformFeePercent?: number;
   commissionTier?: CommissionTierDto;
 }

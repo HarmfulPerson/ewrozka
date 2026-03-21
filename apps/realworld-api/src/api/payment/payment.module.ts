@@ -6,7 +6,6 @@ import {
   UserEntity,
   PlatformFeeConfigEntity,
   PlatformFeeTierEntity,
-  WithdrawalEntity,
 } from '@repo/postgresql-typeorm';
 import { PaymentController } from './payment.controller';
 import { PaymentService } from './payment.service';
@@ -20,7 +19,6 @@ import { CommissionTierService } from './commission-tier.service';
       UserEntity,
       PlatformFeeConfigEntity,
       PlatformFeeTierEntity,
-      WithdrawalEntity,
     ]),
   ],
   controllers: [PaymentController],

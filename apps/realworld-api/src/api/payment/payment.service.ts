@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { PlatformRevenueEntity, TransactionEntity, UserEntity, WithdrawalEntity } from '@repo/postgresql-typeorm';
+import { PlatformRevenueEntity, TransactionEntity, UserEntity } from '@repo/postgresql-typeorm';
 
 import { DataSource, Repository } from 'typeorm';
 
@@ -25,9 +25,6 @@ export class PaymentService {
 
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-
-    @InjectRepository(WithdrawalEntity)
-    private readonly withdrawalRepository: Repository<WithdrawalEntity>,
 
     private readonly dataSource: DataSource,
 
@@ -238,28 +235,6 @@ export class PaymentService {
 
       isSetByAdmin,
     };
-  }
-
-  /** Oblicza saldo z transakcji minus wypłaty — bez tabeli wallet */
-  async getEarnedBalance(userId: number): Promise<number> {
-    const { earned } = await this.transactionRepository
-      .createQueryBuilder('t')
-      .select('COALESCE(SUM(t.wizardAmount), 0)', 'earned')
-      .where('t.userId = :userId', { userId })
-      .andWhere('t.status = :status', { status: 'completed' })
-      .andWhere('t.type IN (:...types)', { types: ['payment', 'destination_charge'] })
-      .getRawOne();
-
-    const { withdrawn } = await this.withdrawalRepository
-      .createQueryBuilder('w')
-      .select('COALESCE(SUM(w.amountGrosze), 0)', 'withdrawn')
-      .where('w.userId = :userId', { userId })
-      .andWhere('w.status IN (:...statuses)', { statuses: ['processing', 'completed'] })
-      .getRawOne();
-
-    const balance = Number(earned) - Number(withdrawn);
-    this.logger.log(`getEarnedBalance(user=${userId}): earned=${earned}, withdrawn=${withdrawn}, balance=${balance}`);
-    return balance;
   }
 
   async getTransactionHistory(

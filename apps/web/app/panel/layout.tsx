@@ -190,12 +190,12 @@ export default function PanelLayout({
       const configured = connectData.connected && connectData.onboardingCompleted;
       setConnectConfigured(configured);
 
-      // Saldo ze Stripe (źródło prawdy)
+      // Saldo wyłącznie ze Stripe (jedyne źródło prawdy)
       if (configured) {
         const totalGrosze = (connectData.stripeAvailableGrosze ?? 0) + (connectData.stripePendingGrosze ?? 0);
         setWalletBalance(`${(totalGrosze / 100).toFixed(2)} zł`);
-      } else if (walletData) {
-        setWalletBalance(walletData.balanceFormatted);
+      } else {
+        setWalletBalance('—');
       }
 
       if (walletData) {
