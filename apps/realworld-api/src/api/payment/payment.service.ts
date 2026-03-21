@@ -205,10 +205,10 @@ export class PaymentService {
     const user = await this.userRepository.findOne({
       where: { id: userId },
 
-      select: ['platformFeePercent'],
+      select: ['id', 'platformFeePercent'],
     });
 
-    if (user?.platformFeePercent != null) {
+    if (user?.platformFeePercent !== null && user?.platformFeePercent !== undefined) {
       return user.platformFeePercent;
     }
 
@@ -220,18 +220,20 @@ export class PaymentService {
       this.userRepository.findOne({
         where: { id: userId },
 
-        select: ['platformFeePercent'],
+        select: ['id', 'platformFeePercent'],
       }),
 
       this.commissionTierService.getTierStatus(userId),
     ]);
 
-    const isSetByAdmin = user?.platformFeePercent != null;
+    // platformFeePercent musi być jawnie ustawione (nie null, nie undefined, nie 0 z domyślnej migracji)
+    const adminOverride = user?.platformFeePercent;
+    const isSetByAdmin = adminOverride !== null && adminOverride !== undefined;
 
     return {
       ...tierStatus,
 
-      platformFeePercent: isSetByAdmin ? user!.platformFeePercent! : tierStatus.platformFeePercent,
+      platformFeePercent: isSetByAdmin ? adminOverride : tierStatus.platformFeePercent,
 
       isSetByAdmin,
     };
