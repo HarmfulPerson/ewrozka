@@ -376,6 +376,11 @@ export class StripeService {
         country: 'PL',
         email,
         capabilities: { transfers: { requested: true } },
+        settings: {
+          payouts: {
+            schedule: { interval: 'manual' },
+          },
+        },
       });
       connectAccount = this.connectAccountRepository.create({
         userId,
@@ -418,17 +423,14 @@ export class StripeService {
       connectAccount.payoutsEnabled = account.payouts_enabled;
       await this.connectAccountRepository.save(connectAccount);
 
-      // Non-prod: ustaw natychmiastową dostępność środków
-      const nodeEnv = this.configService.get('app.nodeEnv', { infer: true });
-      if (nodeEnv !== Environment.PRODUCTION) {
-        await this.stripe.accounts.update(connectAccount.stripeAccountId, {
-          settings: {
-            payouts: {
-              schedule: { delay_days: 'minimum' as unknown as number },
-            },
+      // Wymuś ręczne wypłaty — wróżka sama zleca wypłatę
+      await this.stripe.accounts.update(connectAccount.stripeAccountId, {
+        settings: {
+          payouts: {
+            schedule: { interval: 'manual' },
           },
-        }).catch(() => {});
-      }
+        },
+      }).catch(() => {});
     } catch (err) {
       this.logger.warn(`refreshConnectStatus nie powiodło się: ${err}`);
     }
@@ -449,6 +451,11 @@ export class StripeService {
         email,
         capabilities: {
           transfers: { requested: true },
+        },
+        settings: {
+          payouts: {
+            schedule: { interval: 'manual' },
+          },
         },
       });
 
@@ -679,11 +686,11 @@ export class StripeService {
       });
       if (!connectAccount?.onboardingCompleted) return;
 
-      // W test mode: ustaw natychmiastową dostępność środków na connected account
+      // Wymuś ręczne wypłaty na connected account
       await this.stripe.accounts.update(connectAccount.stripeAccountId, {
         settings: {
           payouts: {
-            schedule: { delay_days: 'minimum' as unknown as number },
+            schedule: { interval: 'manual' },
           },
         },
       }).catch(() => {});
