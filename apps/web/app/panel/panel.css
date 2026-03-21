@@ -104,6 +104,15 @@
   line-height: 1.2;
 }
 
+.panel-balance-bar__pending {
+  font-size: 0.6875rem;
+  color: rgba(255, 200, 100, 0.8);
+}
+
+.panel-balance-bar--sidebar .panel-balance-bar__pending {
+  color: var(--text-secondary);
+}
+
 .panel-balance-bar__fee {
   font-size: 0.6875rem;
   color: rgba(255, 255, 255, 0.65);

@@ -5,7 +5,8 @@ import { ConnectStatusDto, CommissionTierDto } from '../../lib/api-payment';
 interface BalanceCardProps {
   isConnected: boolean;
   connectStatus: ConnectStatusDto | null;
-  balanceFormatted: string;
+  availableFormatted: string;
+  pendingFormatted: string;
   platformFeePercent: number | null;
   commissionTier: CommissionTierDto | null;
 }
@@ -13,26 +14,18 @@ interface BalanceCardProps {
 export function BalanceCard({
   isConnected,
   connectStatus,
-  balanceFormatted,
+  availableFormatted,
+  pendingFormatted,
   platformFeePercent,
   commissionTier,
 }: BalanceCardProps) {
   return (
     <div className="portfel-balance-card">
-      <div className="portfel-balance-label">Saldo Stripe</div>
-      <div className="portfel-balance-amount">
-        {isConnected
-          ? `${((connectStatus?.stripeTotalGrosze ?? 0) / 100).toFixed(2)} zł`
-          : balanceFormatted}
-      </div>
-      {isConnected && (connectStatus?.stripeAvailableGrosze ?? 0) > 0 && (connectStatus?.stripePendingGrosze ?? 0) > 0 && (
+      <div className="portfel-balance-label">Dostępne do wypłaty</div>
+      <div className="portfel-balance-amount">{availableFormatted}</div>
+      {pendingFormatted && (
         <div className="portfel-balance-pending">
-          {((connectStatus?.stripeAvailableGrosze ?? 0) / 100).toFixed(2)} zł dostępne · {((connectStatus?.stripePendingGrosze ?? 0) / 100).toFixed(2)} zł oczekujące
-        </div>
-      )}
-      {isConnected && (connectStatus?.stripeAvailableGrosze ?? 0) === 0 && (connectStatus?.stripePendingGrosze ?? 0) > 0 && (
-        <div className="portfel-balance-pending">
-          Wszystkie środki oczekujące (1–2 dni robocze)
+          Oczekujące: {pendingFormatted} (1–2 dni robocze)
         </div>
       )}
       {platformFeePercent != null && (

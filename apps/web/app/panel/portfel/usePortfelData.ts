@@ -20,7 +20,8 @@ export function usePortfelData() {
   const tokenRef = useRef<string | null>(null);
 
   const [pageLoading, setPageLoading] = useState(true);
-  const [balanceFormatted, setBalanceFormatted] = useState('0,00 zł');
+  const [availableFormatted, setAvailableFormatted] = useState('0,00 zł');
+  const [pendingFormatted, setPendingFormatted] = useState('');
   const [platformFeePercent, setPlatformFeePercent] = useState<number | null>(null);
   const [commissionTier, setCommissionTier] = useState<CommissionTierDto | null>(null);
   const [connectStatus, setConnectStatus] = useState<ConnectStatusDto | null>(null);
@@ -58,10 +59,13 @@ export function usePortfelData() {
         // Saldo wyłącznie ze Stripe (jedyne źródło prawdy)
         const configured = connectData.connected && connectData.onboardingCompleted;
         if (configured) {
-          const totalGrosze = (connectData.stripeAvailableGrosze ?? 0) + (connectData.stripePendingGrosze ?? 0);
-          setBalanceFormatted(`${(totalGrosze / 100).toFixed(2)} zł`);
+          const avail = connectData.stripeAvailableGrosze ?? 0;
+          const pending = connectData.stripePendingGrosze ?? 0;
+          setAvailableFormatted(`${(avail / 100).toFixed(2)} zł`);
+          setPendingFormatted(pending > 0 ? `${(pending / 100).toFixed(2)} zł` : '');
         } else {
-          setBalanceFormatted('—');
+          setAvailableFormatted('—');
+          setPendingFormatted('');
         }
 
         setPlatformFeePercent(walletData.platformFeePercent ?? null);
@@ -112,8 +116,10 @@ export function usePortfelData() {
     // Saldo wyłącznie ze Stripe
     const configured = connectData.connected && connectData.onboardingCompleted;
     if (configured) {
-      const totalGrosze = (connectData.stripeAvailableGrosze ?? 0) + (connectData.stripePendingGrosze ?? 0);
-      setBalanceFormatted(`${(totalGrosze / 100).toFixed(2)} zł`);
+      const avail = connectData.stripeAvailableGrosze ?? 0;
+      const pending = connectData.stripePendingGrosze ?? 0;
+      setAvailableFormatted(`${(avail / 100).toFixed(2)} zł`);
+      setPendingFormatted(pending > 0 ? `${(pending / 100).toFixed(2)} zł` : '');
     }
 
     setPlatformFeePercent(walletData.platformFeePercent ?? null);
@@ -158,7 +164,8 @@ export function usePortfelData() {
 
   return {
     pageLoading,
-    balanceFormatted,
+    availableFormatted,
+    pendingFormatted,
     platformFeePercent,
     commissionTier,
     connectStatus,

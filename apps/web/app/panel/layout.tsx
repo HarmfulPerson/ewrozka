@@ -96,7 +96,8 @@ export default function PanelLayout({
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<ReturnType<typeof getStoredUser>>(null);
-  const [walletBalance, setWalletBalance] = useState<string>('');
+  const [availableBalance, setAvailableBalance] = useState<string>('');
+  const [pendingBalance, setPendingBalance] = useState<string>('');
   const [platformFeePercent, setPlatformFeePercent] = useState<number | null>(null);
   const [commissionTier, setCommissionTier] = useState<CommissionTierDto | null>(null);
   const [connectConfigured, setConnectConfigured] = useState<boolean | null>(null);
@@ -192,10 +193,13 @@ export default function PanelLayout({
 
       // Saldo wyłącznie ze Stripe (jedyne źródło prawdy)
       if (configured) {
-        const totalGrosze = (connectData.stripeAvailableGrosze ?? 0) + (connectData.stripePendingGrosze ?? 0);
-        setWalletBalance(`${(totalGrosze / 100).toFixed(2)} zł`);
+        const avail = connectData.stripeAvailableGrosze ?? 0;
+        const pending = connectData.stripePendingGrosze ?? 0;
+        setAvailableBalance(`${(avail / 100).toFixed(2)} zł`);
+        setPendingBalance(pending > 0 ? `${(pending / 100).toFixed(2)} zł` : '');
       } else {
-        setWalletBalance('—');
+        setAvailableBalance('—');
+        setPendingBalance('');
       }
 
       if (walletData) {
@@ -239,8 +243,11 @@ export default function PanelLayout({
                 <div className="panel-balance-bar__content">
                   {connectConfigured ? (
                     <>
-                      <span className="panel-balance-bar__label">Saldo:</span>
-                      <span className="panel-balance-bar__amount">{walletBalance || '...'}</span>
+                      <span className="panel-balance-bar__label">Dostępne:</span>
+                      <span className="panel-balance-bar__amount">{availableBalance || '...'}</span>
+                      {pendingBalance && (
+                        <span className="panel-balance-bar__pending">Oczekujące: {pendingBalance}</span>
+                      )}
                       {platformFeePercent != null && (
                         <span className="panel-balance-bar__fee">prowizja {platformFeePercent}%</span>
                       )}
@@ -498,8 +505,11 @@ export default function PanelLayout({
             <div className="panel-balance-bar__content">
               {connectConfigured ? (
                 <>
-                  <span className="panel-balance-bar__label">Saldo portfela:</span>
-                  <span className="panel-balance-bar__amount">{walletBalance || '...'}</span>
+                  <span className="panel-balance-bar__label">Dostępne:</span>
+                  <span className="panel-balance-bar__amount">{availableBalance || '...'}</span>
+                  {pendingBalance && (
+                    <span className="panel-balance-bar__pending">Oczekujące: {pendingBalance}</span>
+                  )}
                   {platformFeePercent != null && (
                     <span className="panel-balance-bar__fee">prowizja {platformFeePercent}%</span>
                   )}

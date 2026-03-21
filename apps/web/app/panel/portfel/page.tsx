@@ -10,7 +10,8 @@ import '../panel-shared.css';
 export default function PortfelPage() {
   const {
     pageLoading,
-    balanceFormatted,
+    availableFormatted,
+    pendingFormatted,
     platformFeePercent,
     commissionTier,
     connectStatus,
@@ -52,7 +53,8 @@ export default function PortfelPage() {
         <BalanceCard
           isConnected={isConnected}
           connectStatus={connectStatus}
-          balanceFormatted={balanceFormatted}
+          availableFormatted={availableFormatted}
+          pendingFormatted={pendingFormatted}
           platformFeePercent={platformFeePercent}
           commissionTier={commissionTier}
         />
