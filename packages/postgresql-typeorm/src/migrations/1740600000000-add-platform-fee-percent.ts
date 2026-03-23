@@ -6,7 +6,7 @@ export class AddPlatformFeePercent1740600000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       ALTER TABLE "user"
-      ADD COLUMN IF NOT EXISTS "platform_fee_percent" SMALLINT NULL DEFAULT 20
+      ADD COLUMN IF NOT EXISTS "platform_fee_percent" SMALLINT NULL DEFAULT NULL
     `);
   }
 
