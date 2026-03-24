@@ -22,6 +22,7 @@ import {
 import path from 'path';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { ApiModule } from './api/api.module';
+import { HealthModule } from './health/health.module';
 import authConfig from './api/auth/config/auth.config';
 import paymentConfig from './config/payment.config';
 import stripeConfig from './config/stripe.config';
@@ -92,6 +93,7 @@ const i18nModule = I18nModule.forRootAsync({
       { name: 'long', ttl: 60_000, limit: 100 },
     ]),
     ApiModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [
