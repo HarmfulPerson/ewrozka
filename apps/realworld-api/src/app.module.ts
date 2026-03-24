@@ -1,3 +1,4 @@
+import { SentryModule } from '@sentry/nestjs/setup';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -83,6 +84,7 @@ const i18nModule = I18nModule.forRootAsync({
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     configModule,
     dbModule,
     i18nModule,

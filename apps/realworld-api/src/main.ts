@@ -1,3 +1,4 @@
+import './instrument';
 import compression from '@fastify/compress';
 import helmet from '@fastify/helmet';
 import staticPlugin from '@fastify/static';
@@ -30,6 +31,7 @@ import * as path from 'path';
 import { AuthService } from './api/auth/auth.service';
 import { AppModule } from './app.module';
 import { AllConfigType } from './config/config.type';
+import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
@@ -225,6 +227,8 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(
+
+    new SentryGlobalFilter(),
 
     new GlobalExceptionFilter(
 
