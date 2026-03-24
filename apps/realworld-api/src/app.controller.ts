@@ -11,4 +11,11 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  // TODO: Remove after verifying Sentry works
+  @Get('debug-sentry')
+  @ApiPublic()
+  debugSentry(): string {
+    throw new Error('Test Sentry error — safe to ignore');
+  }
 }

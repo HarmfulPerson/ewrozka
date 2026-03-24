@@ -54,7 +54,7 @@ jobs:
             # Save current SHA for rollback reference
             echo "${SHORT_SHA}" > .last-deploy-prod
 
-            $COMPOSE run --rm api sh -c "cd /app && ./node_modules/.bin/typeorm migration:run -d packages/postgresql-typeorm/dist/data-source.js" || true
+            $COMPOSE run --rm api sh -c "cd /app && ./node_modules/.bin/typeorm migration:run -d packages/postgresql-typeorm/dist/data-source.js"
             $COMPOSE up -d --remove-orphans
 
             # Prune only dangling images, keep tagged ones (last 3 deploys)
