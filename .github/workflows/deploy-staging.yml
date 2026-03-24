@@ -41,9 +41,26 @@ jobs:
             git checkout develop
             git pull origin develop
 
-            docker compose -f docker-compose.staging.yml --env-file .env.staging build
-            docker compose -f docker-compose.staging.yml --env-file .env.staging run --rm api-staging sh -c "cd /app && ./node_modules/.bin/typeorm migration:run -d packages/postgresql-typeorm/dist/data-source.js" || true
-            docker compose -f docker-compose.staging.yml --env-file .env.staging up -d --remove-orphans
-            docker image prune -f
+            # Tag images with git SHA for rollback capability
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            COMPOSE="docker compose -f docker-compose.staging.yml --env-file .env.staging"
 
-            echo "Staging deployed successfully"
+            $COMPOSE build
+
+            # Tag built images: sha + latest
+            docker tag ewrozka-api-staging:latest ewrozka-api-staging:${SHORT_SHA} 2>/dev/null || true
+            docker tag ewrozka-web-staging:latest ewrozka-web-staging:${SHORT_SHA} 2>/dev/null || true
+
+            # Save current SHA for rollback reference
+            echo "${SHORT_SHA}" > .last-deploy-staging
+
+            $COMPOSE run --rm api-staging sh -c "cd /app && ./node_modules/.bin/typeorm migration:run -d packages/postgresql-typeorm/dist/data-source.js" || true
+            $COMPOSE up -d --remove-orphans
+
+            # Prune only dangling images, keep tagged ones
+            docker image prune -f
+            for svc in ewrozka-api-staging ewrozka-web-staging; do
+              docker images "$svc" --format '{{.Tag}} {{.ID}}' | grep -v latest | sort -r | tail -n +4 | awk '{print $2}' | xargs -r docker rmi 2>/dev/null || true
+            done
+
+            echo "Staging deployed: ${SHORT_SHA}"

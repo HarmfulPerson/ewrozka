@@ -41,9 +41,27 @@ jobs:
             git checkout main
             git pull origin main
 
-            docker compose -f docker-compose.prod.yml --env-file .env.production build
-            docker compose -f docker-compose.prod.yml --env-file .env.production run --rm api sh -c "cd /app && ./node_modules/.bin/typeorm migration:run -d packages/postgresql-typeorm/dist/data-source.js" || true
-            docker compose -f docker-compose.prod.yml --env-file .env.production up -d --remove-orphans
-            docker image prune -f
+            # Tag images with git SHA for rollback capability
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env.production"
 
-            echo "Production deployed successfully"
+            $COMPOSE build
+
+            # Tag built images: sha + latest
+            docker tag ewrozka-api:latest ewrozka-api:${SHORT_SHA} 2>/dev/null || true
+            docker tag ewrozka-web:latest ewrozka-web:${SHORT_SHA} 2>/dev/null || true
+
+            # Save current SHA for rollback reference
+            echo "${SHORT_SHA}" > .last-deploy-prod
+
+            $COMPOSE run --rm api sh -c "cd /app && ./node_modules/.bin/typeorm migration:run -d packages/postgresql-typeorm/dist/data-source.js" || true
+            $COMPOSE up -d --remove-orphans
+
+            # Prune only dangling images, keep tagged ones (last 3 deploys)
+            docker image prune -f
+            # Clean up old tagged images, keep last 3
+            for svc in ewrozka-api ewrozka-web; do
+              docker images "$svc" --format '{{.Tag}} {{.ID}}' | grep -v latest | sort -r | tail -n +4 | awk '{print $2}' | xargs -r docker rmi 2>/dev/null || true
+            done
+
+            echo "Production deployed: ${SHORT_SHA}"
