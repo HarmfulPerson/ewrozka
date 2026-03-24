@@ -104,6 +104,67 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
+  # ── Monitoring stack (SSH tunnel only) ────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - .docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - .docker/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_staging_data:/prometheus
+    networks:
+      - monitoring
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=14d"
+      - "--storage.tsdb.retention.size=512MB"
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - grafana_staging_data:/var/lib/grafana
+      - .docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - .docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - monitoring
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "http://localhost:3001"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - monitoring
+    privileged: true
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - monitoring
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+
   # ── Caddy (reverse proxy + auto HTTPS) ─────────────────────────────────────
   caddy:
     image: lucaslorentz/caddy-docker-proxy:ci-alpine
@@ -125,6 +186,8 @@ networks:
     driver: bridge
   web:
     external: true
+  monitoring:
+    driver: bridge
 
 volumes:
   postgres_staging_data:
@@ -132,3 +195,5 @@ volumes:
   uploads_staging:
   caddy_staging_data:
   caddy_staging_config:
+  prometheus_staging_data:
+  grafana_staging_data:

@@ -1,0 +1,58 @@
+groups:
+  - name: host
+    rules:
+      # Disk usage > 85%
+      - alert: DiskSpaceLow
+        expr: 100 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk usage above 85%"
+          description: "Disk usage is {{ $value | printf \"%.1f\" }}%"
+
+      # Disk usage > 95%
+      - alert: DiskSpaceCritical
+        expr: 100 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} * 100) > 95
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk usage above 95% — immediate action needed"
+
+      # Host CPU > 80% for 5 min
+      - alert: HighCpuUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU usage above 80% for 5 minutes"
+
+      # Host memory > 90%
+      - alert: HighMemoryUsage
+        expr: 100 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100) > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory usage above 90%"
+
+  - name: containers
+    rules:
+      # Container restarted
+      - alert: ContainerRestarted
+        expr: increase(container_start_time_seconds{name=~"ewrozka.*"}[5m]) > 1
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} restarted"
+
+      # Container using > 90% of its memory limit
+      - alert: ContainerHighMemory
+        expr: container_memory_usage_bytes{name=~"ewrozka.*"} / container_spec_memory_limit_bytes{name=~"ewrozka.*"} * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} memory above 90% of limit"
