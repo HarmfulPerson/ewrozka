@@ -8,11 +8,16 @@ if (process.env.SENTRY_DSN) {
 
     integrations: [nodeProfilingIntegration()],
 
-    // Capture 100% of errors, sample 10% of transactions for performance
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-    profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    // Send structured logs to Sentry
+    enableLogs: true,
 
-    // Don't send PII by default
+    // Tracing — 100% in dev, 20% in production
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
+
+    // Profiling — trace lifecycle automatically profiles active traces
+    profileSessionSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
+    profileLifecycle: 'trace',
+
     sendDefaultPii: false,
   });
 }

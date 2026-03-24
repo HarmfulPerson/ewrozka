@@ -11,6 +11,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { SentryExceptionCaptured } from '@sentry/nestjs';
 import {
   ErrorDto,
   handleError,
@@ -32,6 +33,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     private readonly debug: boolean,
   ) {}
 
+  @SentryExceptionCaptured()
   catch(exception: any, host: ArgumentsHost): void {
     const { httpAdapter } = this.httpAdapterHost;
     const ctx = host.switchToHttp();
