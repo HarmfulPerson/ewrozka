@@ -60,11 +60,11 @@ services:
       redis-staging:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8001/health || exit 1"]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:8001/health').then(r=>{if(!r.ok)throw r.status}).catch(()=>process.exit(1))\""]
       interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     labels:
       caddy: "api-staging.ewrozka.online"
       caddy.reverse_proxy: "{{upstreams 8001}}"
@@ -86,11 +86,11 @@ services:
       api-staging:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ || exit 1"]
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/').then(r=>{if(!r.ok)throw r.status}).catch(()=>process.exit(1))\""]
       interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     labels:
       caddy: "staging.ewrozka.online"
       caddy.reverse_proxy: "{{upstreams 3000}}"
