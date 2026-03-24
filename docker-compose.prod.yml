@@ -93,6 +93,22 @@ services:
       caddy: "ewrozka.online, www.ewrozka.online"
       caddy.reverse_proxy: "{{upstreams 3000}}"
 
+  # ── Dozzle (log viewer) ──────────────────────────────────────────────────────
+  dozzle:
+    image: amir20/dozzle:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - web
+    environment:
+      DOZZLE_AUTH_PROVIDER: simple
+      DOZZLE_USERNAME: ${DOZZLE_USERNAME:-admin}
+      DOZZLE_PASSWORD: ${DOZZLE_PASSWORD:-}
+    labels:
+      caddy: "logs.ewrozka.online"
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+
   # ── Caddy (reverse proxy + auto HTTPS) ───────────────────────────────────────
   caddy:
     image: lucaslorentz/caddy-docker-proxy:ci-alpine
