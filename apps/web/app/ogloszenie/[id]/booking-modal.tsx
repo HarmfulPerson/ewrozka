@@ -162,7 +162,7 @@ function GuestForm({ booking }: { booking: BookingState }) {
       </div>
       <div className="guest-form__field">
         <label>Numer telefonu</label>
-        <input type="tel" value={guestForm.phone} onChange={e => booking.updateGuestField('phone', e.target.value)} placeholder="+48 600 000 000" />
+        <input type="tel" value={guestForm.phone} onChange={e => booking.updateGuestField('phone', e.target.value)} placeholder="+48 600 000 000" maxLength={20} />
       </div>
       <div className="guest-form__field">
         <label>Wiadomość (opcjonalnie)</label>

@@ -24,13 +24,32 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { buildMeetingPaidNotification, buildNewRequestNotification } from '../notifications/handlers';
 import { PaymentService } from '../payment/payment.service';
 
-export interface CreateGuestBookingDto {
-  advertisementId: number;
-  guestName: string;
-  guestEmail: string;
+import { IsEmail, IsInt, IsOptional, IsString, MaxLength } from 'class-validator';
+
+export class CreateGuestBookingDto {
+  @IsInt()
+  advertisementId!: number;
+
+  @IsString()
+  @MaxLength(100)
+  guestName!: string;
+
+  @IsEmail()
+  @MaxLength(200)
+  guestEmail!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
   guestPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
   message?: string;
-  scheduledAt: string; // ISO string
+
+  @IsString()
+  scheduledAt!: string; // ISO string
 }
 
 @Injectable()

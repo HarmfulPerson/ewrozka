@@ -12,7 +12,7 @@ import { ApiPublic, ApiAuth } from '@repo/api/decorators/http.decorators';
 import { CurrentUser } from '@repo/api';
 import { ApiTags } from '@nestjs/swagger';
 import { GuestBookingService } from './guest-booking.service';
-import type { CreateGuestBookingDto } from './guest-booking.service';
+import { CreateGuestBookingDto } from './guest-booking.service';
 
 @ApiTags('GuestBooking')
 @Controller()
