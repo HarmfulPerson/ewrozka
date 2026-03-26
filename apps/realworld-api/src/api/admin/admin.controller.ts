@@ -194,4 +194,40 @@ export class AdminController {
   ) {
     return this.adminService.updateReminderConfig(body);
   }
+
+  // ── Analytics ──
+
+  @Get('analytics/revenue')
+  @ApiAuth({ summary: 'Analityka: przychody platformy' })
+  getRevenueAnalytics(
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('groupBy') groupBy?: 'day' | 'week' | 'month',
+  ) {
+    return this.adminService.getRevenueAnalytics(from, to, groupBy);
+  }
+
+  @Get('analytics/registrations')
+  @ApiAuth({ summary: 'Analityka: rejestracje użytkowników' })
+  getRegistrationAnalytics(
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('groupBy') groupBy?: 'day' | 'week' | 'month',
+  ) {
+    return this.adminService.getRegistrationAnalytics(from, to, groupBy);
+  }
+
+  @Get('analytics/wizard-revenue')
+  @ApiAuth({ summary: 'Analityka: zarobki wróżek (top N)' })
+  getWizardRevenueAnalytics(
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.getWizardRevenueAnalytics(
+      from,
+      to,
+      limit ? parseInt(limit, 10) : 10,
+    );
+  }
 }

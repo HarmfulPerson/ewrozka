@@ -308,3 +308,90 @@ export async function apiUpdateReminderConfig(
     body: JSON.stringify(body),
   });
 }
+
+// ── Analytics ──
+
+export interface RevenueDataPoint {
+  date: string;
+  platformFees: number;
+  wizardPayouts: number;
+  totalVolume: number;
+  transactionCount: number;
+}
+
+export interface RevenueAnalytics {
+  data: RevenueDataPoint[];
+  summary: {
+    totalPlatformFees: number;
+    totalWizardPayouts: number;
+    totalVolume: number;
+    totalTransactions: number;
+  };
+}
+
+export interface RegistrationDataPoint {
+  date: string;
+  total: number;
+  clients: number;
+  wizards: number;
+  fromReferral: number;
+}
+
+export interface RegistrationAnalytics {
+  data: RegistrationDataPoint[];
+  summary: {
+    total: number;
+    clients: number;
+    wizards: number;
+    fromReferral: number;
+  };
+}
+
+export interface WizardRevenueRow {
+  wizardId: number;
+  username: string;
+  image: string;
+  wizardEarned: number;
+  platformEarned: number;
+  transactionCount: number;
+}
+
+export interface WizardRevenueAnalytics {
+  data: WizardRevenueRow[];
+}
+
+export async function apiGetRevenueAnalytics(
+  token: string,
+  from: string,
+  to: string,
+  groupBy: 'day' | 'week' | 'month' = 'day',
+): Promise<RevenueAnalytics> {
+  return fetchAdmin<RevenueAnalytics>(
+    `admin/analytics/revenue?from=${from}&to=${to}&groupBy=${groupBy}`,
+    token,
+  );
+}
+
+export async function apiGetRegistrationAnalytics(
+  token: string,
+  from: string,
+  to: string,
+  groupBy: 'day' | 'week' | 'month' = 'day',
+): Promise<RegistrationAnalytics> {
+  return fetchAdmin<RegistrationAnalytics>(
+    `admin/analytics/registrations?from=${from}&to=${to}&groupBy=${groupBy}`,
+    token,
+  );
+}
+
+export async function apiGetWizardRevenueAnalytics(
+  token: string,
+  from: string,
+  to: string,
+  limit = 10,
+): Promise<WizardRevenueAnalytics> {
+  return fetchAdmin<WizardRevenueAnalytics>(
+    `admin/analytics/wizard-revenue?from=${from}&to=${to}&limit=${limit}`,
+    token,
+  );
+}

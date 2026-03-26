@@ -1,0 +1,222 @@
+.analytics-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 1200px;
+}
+
+/* ── Period selector ── */
+.analytics-period {
+  display: flex;
+  gap: 0.375rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+}
+
+.analytics-period__btn {
+  padding: 0.4rem 0.875rem;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.analytics-period__btn:hover {
+  color: var(--text-primary);
+}
+
+.analytics-period__btn--active {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+/* ── KPI cards ── */
+.analytics-kpi {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.analytics-kpi__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.125rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.analytics-kpi__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.analytics-kpi__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* ── Chart sections ── */
+.analytics-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+
+.analytics-section__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.analytics-chart {
+  width: 100%;
+}
+
+.analytics-empty {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+/* ── Wizard revenue list ── */
+.analytics-wizard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.analytics-wizard-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.analytics-wizard-row:last-child {
+  border-bottom: none;
+}
+
+.analytics-wizard-row__rank {
+  width: 1.5rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.analytics-wizard-row__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+}
+
+.analytics-wizard-row__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.analytics-wizard-row__avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.analytics-wizard-row__name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  min-width: 100px;
+}
+
+.analytics-wizard-row__bars {
+  flex: 1;
+  min-width: 0;
+}
+
+.analytics-wizard-row__bar-wrap {
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.analytics-wizard-row__bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.analytics-wizard-row__bar--wizard {
+  background: var(--accent);
+}
+
+.analytics-wizard-row__amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 120px;
+}
+
+.analytics-wizard-row__earned {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.analytics-wizard-row__platform {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .analytics-kpi {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .analytics-wizard-row__bars {
+    display: none;
+  }
+
+  .analytics-wizard-row__name {
+    min-width: 60px;
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-kpi {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-period {
+    flex-wrap: wrap;
+  }
+}

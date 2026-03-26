@@ -30,6 +30,8 @@ import {
 
   PlatformFeeTierEntity,
 
+  PlatformRevenueEntity,
+
   ReminderConfigEntity,
 
   RoleEntity,
@@ -270,6 +272,9 @@ export class AdminService {
     @InjectRepository(ReminderConfigEntity)
 
     private readonly reminderConfigRepo: Repository<ReminderConfigEntity>,
+
+    @InjectRepository(PlatformRevenueEntity)
+    private readonly platformRevenueRepo: Repository<PlatformRevenueEntity>,
 
     private readonly commissionTierService: CommissionTierService,
 
@@ -1371,6 +1376,151 @@ export class AdminService {
     if (body.hoursSlot2 !== undefined && body.hoursSlot2 >= 1) config.hoursSlot2 = body.hoursSlot2;
     if (body.hoursSlot3 !== undefined && body.hoursSlot3 >= 1) config.hoursSlot3 = body.hoursSlot3;
     await this.reminderConfigRepo.save(config);
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // Analytics
+  // ══════════════════════════════════════════════════════════════
+
+  async getRevenueAnalytics(
+    from: string,
+    to: string,
+    groupBy: 'day' | 'week' | 'month' = 'day',
+  ) {
+    const trunc = groupBy === 'day' ? 'day' : groupBy === 'week' ? 'week' : 'month';
+
+    const rows = await this.platformRevenueRepo
+      .createQueryBuilder('r')
+      .select(`DATE_TRUNC('${trunc}', r.date)::date`, 'date')
+      .addSelect('SUM(r.total_fees)::bigint', 'platformFeesGrosze')
+      .addSelect('SUM(r.total_wizard_payouts)::bigint', 'wizardPayoutsGrosze')
+      .addSelect('SUM(r.total_volume)::bigint', 'totalVolumeGrosze')
+      .addSelect('SUM(r.transaction_count)::int', 'transactionCount')
+      .where('r.date >= :from', { from })
+      .andWhere('r.date <= :to', { to })
+      .groupBy(`DATE_TRUNC('${trunc}', r.date)`)
+      .orderBy(`DATE_TRUNC('${trunc}', r.date)`, 'ASC')
+      .getRawMany();
+
+    let totalPlatformFees = 0;
+    let totalWizardPayouts = 0;
+    let totalVolume = 0;
+    let totalTransactions = 0;
+
+    const data = rows.map((r) => {
+      const pf = Number(r.platformFeesGrosze) / 100;
+      const wp = Number(r.wizardPayoutsGrosze) / 100;
+      const tv = Number(r.totalVolumeGrosze) / 100;
+      const tc = Number(r.transactionCount);
+      totalPlatformFees += pf;
+      totalWizardPayouts += wp;
+      totalVolume += tv;
+      totalTransactions += tc;
+      return {
+        date: r.date,
+        platformFees: pf,
+        wizardPayouts: wp,
+        totalVolume: tv,
+        transactionCount: tc,
+      };
+    });
+
+    return {
+      data,
+      summary: {
+        totalPlatformFees: Math.round(totalPlatformFees * 100) / 100,
+        totalWizardPayouts: Math.round(totalWizardPayouts * 100) / 100,
+        totalVolume: Math.round(totalVolume * 100) / 100,
+        totalTransactions,
+      },
+    };
+  }
+
+  async getRegistrationAnalytics(
+    from: string,
+    to: string,
+    groupBy: 'day' | 'week' | 'month' = 'day',
+  ) {
+    const trunc = groupBy === 'day' ? 'day' : groupBy === 'week' ? 'week' : 'month';
+
+    const rows = await this.userRepo
+      .createQueryBuilder('u')
+      .select(`DATE_TRUNC('${trunc}', u.created_at)::date`, 'date')
+      .addSelect('COUNT(*)::int', 'total')
+      .addSelect(
+        `COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.id
+          WHERE ur.user_id = u.id AND r.name = 'client'
+        ))::int`,
+        'clients',
+      )
+      .addSelect(
+        `COUNT(*) FILTER (WHERE EXISTS (
+          SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.id
+          WHERE ur.user_id = u.id AND r.name = 'wizard'
+        ))::int`,
+        'wizards',
+      )
+      .addSelect('COUNT(*) FILTER (WHERE u.referred_by IS NOT NULL)::int', 'fromReferral')
+      .where('u.created_at >= :from', { from })
+      .andWhere('u.created_at < :toNext', { toNext: to + 'T23:59:59.999Z' })
+      .groupBy(`DATE_TRUNC('${trunc}', u.created_at)`)
+      .orderBy(`DATE_TRUNC('${trunc}', u.created_at)`, 'ASC')
+      .getRawMany();
+
+    let totalAll = 0;
+    let totalClients = 0;
+    let totalWizards = 0;
+    let totalReferral = 0;
+
+    const data = rows.map((r) => {
+      const t = Number(r.total);
+      const c = Number(r.clients);
+      const w = Number(r.wizards);
+      const ref = Number(r.fromReferral);
+      totalAll += t;
+      totalClients += c;
+      totalWizards += w;
+      totalReferral += ref;
+      return { date: r.date, total: t, clients: c, wizards: w, fromReferral: ref };
+    });
+
+    return {
+      data,
+      summary: { total: totalAll, clients: totalClients, wizards: totalWizards, fromReferral: totalReferral },
+    };
+  }
+
+  async getWizardRevenueAnalytics(from: string, to: string, limit = 10) {
+    const rows = await this.transactionRepo
+      .createQueryBuilder('t')
+      .innerJoin('t.user', 'u')
+      .select('u.id', 'wizardId')
+      .addSelect('u.username', 'username')
+      .addSelect('u.image', 'image')
+      .addSelect('SUM(t.wizard_amount)::bigint', 'wizardEarnedGrosze')
+      .addSelect('SUM(t.platform_fee)::bigint', 'platformEarnedGrosze')
+      .addSelect('COUNT(*)::int', 'transactionCount')
+      .where('t.status = :status', { status: 'completed' })
+      .andWhere('t.created_at >= :from', { from })
+      .andWhere('t.created_at <= :to', { to: to + 'T23:59:59.999Z' })
+      .groupBy('u.id')
+      .addGroupBy('u.username')
+      .addGroupBy('u.image')
+      .orderBy('SUM(t.wizard_amount)', 'DESC')
+      .limit(limit)
+      .getRawMany();
+
+    return {
+      data: rows.map((r) => ({
+        wizardId: Number(r.wizardId),
+        username: r.username,
+        image: r.image,
+        wizardEarned: Number(r.wizardEarnedGrosze) / 100,
+        platformEarned: Number(r.platformEarnedGrosze) / 100,
+        transactionCount: Number(r.transactionCount),
+      })),
+    };
   }
 
 }

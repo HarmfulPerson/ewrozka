@@ -466,6 +466,17 @@ export default function PanelLayout({
                 </span>
                 Przypomnienia
               </Link>
+              <Link
+                href="/panel/admin/analityka"
+                className={`panel-sidebar__link ${pathname?.startsWith('/panel/admin/analityka') ? 'panel-sidebar__link--active' : ''}`}
+              >
+                <span className="panel-sidebar__link-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="20" height="20">
+                    <path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 4-6"/>
+                  </svg>
+                </span>
+                Analityka
+              </Link>
             </>
           )}
 
