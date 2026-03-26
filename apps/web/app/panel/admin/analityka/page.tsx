@@ -1,6 +1,7 @@
 'use client';
 
 import { ChartSection, type ChartSeries } from '../../../components/chart/chart';
+import '../../../components/chart/analytics-shared.css';
 import { useAnalytics, type Period } from './useAnalytics';
 import { getUploadUrl } from '../../../lib/api';
 import './analityka.css';

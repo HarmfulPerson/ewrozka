@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { ChartSection, type ChartSeries } from '../../../../components/chart/chart';
+import '../../../../components/chart/analytics-shared.css';
 import { getStoredUser } from '../../../../lib/auth-mock';
 import {
   apiGetWizardAnalytics,
@@ -41,8 +42,8 @@ function formatDate(dateStr: string): string {
 }
 
 const REVENUE_SERIES: ChartSeries[] = [
-  { dataKey: 'wizardEarned', label: 'Zarobek wrozki', color: '#8b5cf6', stackId: '1', fillOpacity: 0.4 },
-  { dataKey: 'platformFee', label: 'Prowizja platformy', color: '#f59e0b', stackId: '1', fillOpacity: 0.25 },
+  { dataKey: 'wizardEarned', label: 'Zarobek wrozki', color: '#8b5cf6', fillOpacity: 0.3 },
+  { dataKey: 'platformFee', label: 'Prowizja platformy', color: '#f59e0b', fillOpacity: 0.15 },
 ];
 
 const MEETING_SERIES: ChartSeries[] = [
