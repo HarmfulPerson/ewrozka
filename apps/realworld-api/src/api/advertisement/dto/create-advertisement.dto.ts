@@ -20,7 +20,7 @@ export class CreateAdvertisementReqDto {
   @StringFieldOptional({ minLength: 0, maxLength: 500 })
   imageUrl?: string;
 
-  /** Cena w groszach (np. 99 zł = 9900). Min 0, max 99999999 (999999.99 zł). */
+  /** Cena w groszach (np. 99 zł = 9900). Min 2000 (20 zł), max 99999999 (999999.99 zł). */
   @ApiProperty({ example: 9900, description: 'Price in grosze (99 zł = 9900)' })
   @NumberField({
     int: true,

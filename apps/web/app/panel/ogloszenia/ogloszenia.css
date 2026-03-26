@@ -96,6 +96,13 @@
   margin-bottom: 0.5rem;
 }
 
+.ogloszenia-form__hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
+
 .ogloszenia-form__input,
 .ogloszenia-form__textarea {
   width: 100%;

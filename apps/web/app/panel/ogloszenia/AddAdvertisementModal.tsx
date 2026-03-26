@@ -101,9 +101,10 @@ export function AddAdvertisementModal({ onClose, onSubmit, error }: AddAdvertise
                   value={priceZl}
                   onChange={(e) => setPriceZl(e.target.value)}
                   placeholder="50.00"
-                  min="0.01"
+                  min="20"
                   required
                 />
+                <small className="ogloszenia-form__hint">Minimalna cena usługi to 20 zł</small>
               </div>
 
               <div className="ogloszenia-form__field">

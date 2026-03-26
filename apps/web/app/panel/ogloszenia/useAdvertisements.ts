@@ -58,8 +58,8 @@ export function useAdvertisements() {
     const priceFloat = parseFloat(priceZl.replace(',', '.'));
     const duration = parseInt(durationMinutes);
 
-    if (isNaN(priceFloat) || priceFloat <= 0) {
-      throw new Error('Cena musi być większa od 0');
+    if (isNaN(priceFloat) || priceFloat < 20) {
+      throw new Error('Minimalna cena usługi to 20 zł');
     }
 
     if (duration <= 0) {
