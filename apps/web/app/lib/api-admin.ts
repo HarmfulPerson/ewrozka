@@ -395,3 +395,52 @@ export async function apiGetWizardRevenueAnalytics(
     token,
   );
 }
+
+// ── Wizard-specific analytics ──
+
+export interface WizardRevenuePoint {
+  date: string;
+  wizardEarned: number;
+  platformFee: number;
+  totalVolume: number;
+  transactionCount: number;
+}
+
+export interface WizardMeetingPoint {
+  date: string;
+  total: number;
+  completed: number;
+}
+
+export interface WizardRatingPoint {
+  date: string;
+  avgRating: number;
+  ratingCount: number;
+}
+
+export interface WizardAnalytics {
+  revenue: WizardRevenuePoint[];
+  meetings: WizardMeetingPoint[];
+  ratings: WizardRatingPoint[];
+  summary: {
+    totalWizardEarned: number;
+    totalPlatformFee: number;
+    totalMeetings: number;
+    totalCompleted: number;
+    avgRating: number | null;
+    totalRatings: number;
+  };
+}
+
+export async function apiGetWizardAnalytics(
+  token: string,
+  wizardId: number,
+  from: string,
+  to: string,
+  groupBy: 'day' | 'week' | 'month' = 'day',
+): Promise<WizardAnalytics> {
+  return fetchAdmin<WizardAnalytics>(
+    `admin/analytics/wizard/${wizardId}?from=${from}&to=${to}&groupBy=${groupBy}`,
+    token,
+  );
+}

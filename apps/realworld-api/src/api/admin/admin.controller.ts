@@ -230,4 +230,15 @@ export class AdminController {
       limit ? parseInt(limit, 10) : 10,
     );
   }
+
+  @Get('analytics/wizard/:id')
+  @ApiAuth({ summary: 'Analityka: szczegóły wróżki' })
+  getWizardAnalytics(
+    @Param('id', ParseIntPipe) wizardId: number,
+    @Query('from') from: string,
+    @Query('to') to: string,
+    @Query('groupBy') groupBy?: 'day' | 'week' | 'month',
+  ) {
+    return this.adminService.getWizardAnalytics(wizardId, from, to, groupBy);
+  }
 }

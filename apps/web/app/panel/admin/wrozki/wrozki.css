@@ -607,3 +607,42 @@
   border: 1px solid rgba(16, 185, 129, 0.3);
   color: #34d399;
 }
+
+/* ── Tabs ── */
+.aw-profile__tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+  margin-bottom: 1.25rem;
+  width: fit-content;
+}
+
+.aw-profile__tab {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.aw-profile__tab:hover {
+  color: var(--text-primary);
+}
+
+.aw-profile__tab--active {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+/* ── Wizard analytics ── */
+.wizard-analytics {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}

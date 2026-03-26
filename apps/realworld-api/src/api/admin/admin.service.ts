@@ -1523,5 +1523,113 @@ export class AdminService {
     };
   }
 
+  async getWizardAnalytics(
+    wizardId: number,
+    from: string,
+    to: string,
+    groupBy: 'day' | 'week' | 'month' = 'day',
+  ) {
+    const trunc = groupBy === 'day' ? 'day' : groupBy === 'week' ? 'week' : 'month';
+    const toEnd = to + 'T23:59:59.999Z';
+
+    // Revenue over time
+    const revenueRows = await this.transactionRepo
+      .createQueryBuilder('t')
+      .select(`DATE_TRUNC('${trunc}', t.created_at)::date`, 'date')
+      .addSelect('SUM(t.wizard_amount)::bigint', 'wizardEarnedGrosze')
+      .addSelect('SUM(t.platform_fee)::bigint', 'platformFeeGrosze')
+      .addSelect('SUM(t.total_amount)::bigint', 'totalVolumeGrosze')
+      .addSelect('COUNT(*)::int', 'transactionCount')
+      .where('t.user_id = :wizardId', { wizardId })
+      .andWhere('t.status = :status', { status: 'completed' })
+      .andWhere('t.created_at >= :from', { from })
+      .andWhere('t.created_at <= :toEnd', { toEnd })
+      .groupBy(`DATE_TRUNC('${trunc}', t.created_at)`)
+      .orderBy(`DATE_TRUNC('${trunc}', t.created_at)`, 'ASC')
+      .getRawMany();
+
+    let totalWizardEarned = 0;
+    let totalPlatformFee = 0;
+
+    const revenue = revenueRows.map((r) => {
+      const we = Number(r.wizardEarnedGrosze) / 100;
+      const pf = Number(r.platformFeeGrosze) / 100;
+      totalWizardEarned += we;
+      totalPlatformFee += pf;
+      return {
+        date: r.date,
+        wizardEarned: we,
+        platformFee: pf,
+        totalVolume: Number(r.totalVolumeGrosze) / 100,
+        transactionCount: Number(r.transactionCount),
+      };
+    });
+
+    // Meetings over time
+    const meetingRows = await this.appointmentRepo
+      .createQueryBuilder('a')
+      .select(`DATE_TRUNC('${trunc}', a.created_at)::date`, 'date')
+      .addSelect('COUNT(*)::int', 'total')
+      .addSelect(`COUNT(*) FILTER (WHERE a.status = 'completed')::int`, 'completed')
+      .where('a.wrozka_id = :wizardId', { wizardId })
+      .andWhere('a.created_at >= :from', { from })
+      .andWhere('a.created_at <= :toEnd', { toEnd })
+      .groupBy(`DATE_TRUNC('${trunc}', a.created_at)`)
+      .orderBy(`DATE_TRUNC('${trunc}', a.created_at)`, 'ASC')
+      .getRawMany();
+
+    let totalMeetings = 0;
+    let totalCompleted = 0;
+
+    const meetings = meetingRows.map((r) => {
+      const t = Number(r.total);
+      const c = Number(r.completed);
+      totalMeetings += t;
+      totalCompleted += c;
+      return { date: r.date, total: t, completed: c };
+    });
+
+    // Average rating over time
+    const ratingRows = await this.appointmentRepo
+      .createQueryBuilder('a')
+      .select(`DATE_TRUNC('${trunc}', a.created_at)::date`, 'date')
+      .addSelect('ROUND(AVG(a.rating)::numeric, 2)::float', 'avgRating')
+      .addSelect('COUNT(a.rating)::int', 'ratingCount')
+      .where('a.wrozka_id = :wizardId', { wizardId })
+      .andWhere('a.rating IS NOT NULL')
+      .andWhere('a.created_at >= :from', { from })
+      .andWhere('a.created_at <= :toEnd', { toEnd })
+      .groupBy(`DATE_TRUNC('${trunc}', a.created_at)`)
+      .orderBy(`DATE_TRUNC('${trunc}', a.created_at)`, 'ASC')
+      .getRawMany();
+
+    let totalRatingSum = 0;
+    let totalRatingCount = 0;
+
+    const ratings = ratingRows.map((r) => {
+      const avg = Number(r.avgRating);
+      const cnt = Number(r.ratingCount);
+      totalRatingSum += avg * cnt;
+      totalRatingCount += cnt;
+      return { date: r.date, avgRating: avg, ratingCount: cnt };
+    });
+
+    return {
+      revenue,
+      meetings,
+      ratings,
+      summary: {
+        totalWizardEarned: Math.round(totalWizardEarned * 100) / 100,
+        totalPlatformFee: Math.round(totalPlatformFee * 100) / 100,
+        totalMeetings,
+        totalCompleted,
+        avgRating: totalRatingCount > 0
+          ? Math.round((totalRatingSum / totalRatingCount) * 100) / 100
+          : null,
+        totalRatings: totalRatingCount,
+      },
+    };
+  }
+
 }
 
