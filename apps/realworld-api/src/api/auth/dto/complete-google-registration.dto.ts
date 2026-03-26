@@ -30,4 +30,8 @@ export class CompleteGoogleRegistrationDto {
   @IsOptional()
   @IsString()
   gender?: 'female' | 'male';
+
+  @IsOptional()
+  @IsString()
+  referralCode?: string;
 }

@@ -128,6 +128,26 @@ export class UserEntity extends AbstractEntity {
   @Index('UQ_user_google_id', { unique: true, where: '"google_id" IS NOT NULL' })
   googleId!: string | null;
 
+  /** Unikalny kod polecający – generowany automatycznie przy tworzeniu konta. */
+  @Column({
+    name: 'referral_code',
+    type: 'varchar',
+    length: 12,
+    nullable: true,
+    default: null,
+  })
+  @Index('UQ_user_referral_code', { unique: true, where: '"referral_code" IS NOT NULL' })
+  referralCode!: string | null;
+
+  /** ID użytkownika, który polecił tego użytkownika. */
+  @Column({
+    name: 'referred_by',
+    type: 'int',
+    nullable: true,
+    default: null,
+  })
+  referredBy!: number | null;
+
   /**
    * Prowizja platformy w % (tylko wróżki, 0–100). Null = domyślnie 20%.
    * Ustawiane przez admina.

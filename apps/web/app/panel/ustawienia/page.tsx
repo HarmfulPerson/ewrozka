@@ -7,6 +7,7 @@ import { ProfileSection } from './ProfileSection';
 import { PasswordSection } from './PasswordSection';
 import { VideoSection } from './VideoSection';
 import { VideoModal } from './VideoModal';
+import { ReferralSection } from './ReferralSection';
 import './ustawienia.css';
 import '../panel-shared.css';
 
@@ -89,6 +90,9 @@ export default function UstawieniaPage() {
               onOpenModal={() => settings.setVideoModalOpen(true)}
             />
           )}
+
+          {/* Referral link */}
+          <ReferralSection />
 
         </div>{/* end prawa kolumna */}
 

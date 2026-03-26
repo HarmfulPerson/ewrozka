@@ -206,6 +206,12 @@ export class UserController {
     await this.userService.updateUserVideo(userId, null as any);
   }
 
+  @Get('user/referral-stats')
+  @ApiAuth({ summary: 'Statystyki reflinka' })
+  async getReferralStats(@CurrentUser('id') userId: number) {
+    return this.userService.getReferralStats(userId);
+  }
+
   @Get('wizards')
   @ApiPublic({ summary: 'Lista specjalistów' })
   async getWizards(

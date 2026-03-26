@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { AllConfigType } from '@/config/config.type';
 import {
   BadRequestException,
@@ -249,6 +250,7 @@ export class AuthService {
     phone?: string;
     topicIds?: number[];
     gender?: 'female' | 'male';
+    referralCode?: string;
   }): Promise<UserResDto | { id: string }> {
     const profile = await this.verifyGoogleTempToken(dto.tempToken);
 
@@ -257,6 +259,16 @@ export class AuthService {
     });
     if (existing) {
       throw new ConflictException('Konto z tym adresem e-mail już istnieje.');
+    }
+
+    // Resolve referral code
+    let referredBy: number | null = null;
+    if (dto.referralCode) {
+      const referrer = await this.userRepository.findOne({
+        where: { referralCode: dto.referralCode },
+        select: ['id'],
+      });
+      if (referrer) referredBy = referrer.id;
     }
 
     if (dto.role === 'client') {
@@ -279,6 +291,8 @@ export class AuthService {
         emailVerified: true,
         roles: [clientRole],
         gender: dto.gender ?? null,
+        referralCode: randomBytes(4).toString('hex'),
+        referredBy,
       });
       const saved = await this.userRepository.save(newUser);
 
@@ -334,6 +348,7 @@ export class AuthService {
         gender: dto.gender ?? null,
         status: 'pending',
         googleId: profile.id,
+        referralCodeUsed: dto.referralCode ?? null,
       });
       await this.appRepo.save(app);
       return { id: app.id };

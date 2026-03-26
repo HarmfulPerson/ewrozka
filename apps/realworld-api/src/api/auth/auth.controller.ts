@@ -135,6 +135,7 @@ export class AuthController {
       bio: dto.bio,
       phone: dto.phone?.replace(/\D/g, '').slice(0, 9),
       topicIds: dto.topicIds,
+      referralCode: dto.referralCode,
     });
   }
 

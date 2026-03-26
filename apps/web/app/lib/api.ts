@@ -78,6 +78,7 @@ export interface RegisterData {
   gender?: 'female' | 'male';
   topicIds?: number[];
   roleNames?: string[];
+  referralCode?: string;
 }
 
 export interface TopicDto {
@@ -164,10 +165,20 @@ export async function apiCompleteGoogleRegistration(data: {
   phone?: string;
   gender?: 'female' | 'male';
   topicIds?: number[];
+  referralCode?: string;
 }): Promise<{ user: ApiUser } | { id: string }> {
   return fetchApi('auth/register-google', {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+}
+
+export async function apiGetReferralStats(token: string): Promise<{
+  referralCode: string;
+  referralCount: number;
+}> {
+  return fetchApi('user/referral-stats', {
+    headers: { Authorization: `Token ${token}` },
   });
 }
 
@@ -276,6 +287,7 @@ export async function apiSubmitWizardApplication(data: {
   phone?: string;
   gender?: 'female' | 'male';
   topicIds?: number[];
+  referralCode?: string;
 }): Promise<{ id: string }> {
   const url = `${getBaseUrl()}/wizard-applications`;
   const res = await fetch(url, {

@@ -21,6 +21,7 @@ function DokonczGoogleRejestracjaForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const temp = searchParams.get('temp');
+  const referralCode = searchParams.get('ref') ?? undefined;
 
   const [step, setStep] = useState<Step>('role');
   const [role, setRole] = useState<Role | null>(null);
@@ -89,6 +90,7 @@ function DokonczGoogleRejestracjaForm() {
         phone: role === 'wizard' ? phone.replace(/\D/g, '').slice(0, 9) : undefined,
         topicIds: role === 'wizard' && selectedTopics.length > 0 ? selectedTopics : undefined,
         ...(gender && { gender }),
+        ...(referralCode && { referralCode }),
       });
 
       if ('user' in res) {

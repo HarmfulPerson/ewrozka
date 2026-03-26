@@ -26,6 +26,7 @@ export class WizardApplicationService {
     phone?: string;
     topicIds?: number[];
     gender?: 'female' | 'male';
+    referralCode?: string;
   }): Promise<{ id: string }> {
     const emailLower = dto.email.toLowerCase().trim();
 
@@ -61,6 +62,7 @@ export class WizardApplicationService {
       topicIds: dto.topicIds ?? [],
       gender: dto.gender ?? null,
       status: 'pending',
+      referralCodeUsed: dto.referralCode ?? null,
     });
 
     await this.appRepo.save(app);

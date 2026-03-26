@@ -1,4 +1,9 @@
+import { randomBytes } from 'crypto';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+
+function generateReferralCode(): string {
+  return randomBytes(4).toString('hex'); // 8 chars
+}
 
 
 
@@ -220,7 +225,7 @@ export class UserService {
 
   async create(dto: CreateUserReqDto): Promise<UserResDto> {
 
-    const { username, email, password, roleNames, topicIds, bio, phone, gender } = dto;
+    const { username, email, password, roleNames, topicIds, bio, phone, gender, referralCode } = dto;
 
 
 
@@ -302,6 +307,16 @@ export class UserService {
 
     const wizardReg = (roleNames ?? []).includes('wizard');
 
+    // Resolve referral code → referrer user ID
+    let referredBy: number | null = null;
+    if (referralCode) {
+      const referrer = await this.userRepository.findOne({
+        where: { referralCode },
+        select: ['id'],
+      });
+      if (referrer) referredBy = referrer.id;
+    }
+
     const newUser = this.userRepository.create({
 
       username,
@@ -342,6 +357,9 @@ export class UserService {
       wizardApplicationStatus: wizardReg ? 'pending' : null,
 
       gender: gender ?? null,
+
+      referralCode: generateReferralCode(),
+      referredBy,
 
     });
 
@@ -1183,6 +1201,32 @@ export class UserService {
 
     };
 
+  }
+
+  async getReferralStats(userId: number): Promise<{
+    referralCode: string;
+    referralCount: number;
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id', 'referralCode'],
+    });
+    if (!user) throw new NotFoundException('Użytkownik nie istnieje');
+
+    // Generate code if missing (legacy users)
+    if (!user.referralCode) {
+      user.referralCode = generateReferralCode();
+      await this.userRepository.save(user);
+    }
+
+    const referralCount = await this.userRepository.count({
+      where: { referredBy: userId },
+    });
+
+    return {
+      referralCode: user.referralCode,
+      referralCount,
+    };
   }
 
 }

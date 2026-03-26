@@ -40,6 +40,10 @@ export class WizardApplicationEntity {
   @Column({ name: 'rejection_reason', type: 'text', nullable: true, default: null })
   rejectionReason!: string | null;
 
+  /** Kod polecający użyty przy rejestracji – przenoszony na UserEntity przy zatwierdzeniu. */
+  @Column({ name: 'referral_code_used', type: 'varchar', length: 12, nullable: true, default: null })
+  referralCodeUsed!: string | null;
+
   @Column({ name: 'google_id', length: 64, nullable: true, default: null })
   googleId!: string | null;
 

@@ -47,6 +47,10 @@ class SubmitWizardApplicationDto {
   @IsOptional()
   @IsString()
   gender?: 'female' | 'male';
+
+  @IsOptional()
+  @IsString()
+  referralCode?: string;
 }
 
 @ApiTags('WizardApplication')

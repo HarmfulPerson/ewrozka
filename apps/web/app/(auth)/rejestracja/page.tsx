@@ -1,7 +1,14 @@
+'use client';
+
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { AuthFormShell } from '../../components/auth/auth-form-shell';
 
 export default function RejestracjaPage() {
+  const searchParams = useSearchParams();
+  const ref = searchParams.get('ref') ?? '';
+  const qs = ref ? `?ref=${encodeURIComponent(ref)}` : '';
+
   return (
     <AuthFormShell
       title="Dołącz do eWróżka"
@@ -9,7 +16,7 @@ export default function RejestracjaPage() {
       backHref="/"
     >
       <div className="auth-choice">
-        <Link href="/rejestracja/wrozka" className="auth-choice__card">
+        <Link href={`/rejestracja/wrozka${qs}`} className="auth-choice__card">
           <span className="auth-choice__icon" aria-hidden>
             ✦
           </span>
@@ -20,7 +27,7 @@ export default function RejestracjaPage() {
           </p>
           <span className="auth-choice__cta">Załóż konto specjalisty <span className="auth-choice__arrow">→</span></span>
         </Link>
-        <Link href="/rejestracja/klient" className="auth-choice__card">
+        <Link href={`/rejestracja/klient${qs}`} className="auth-choice__card">
           <span className="auth-choice__icon" aria-hidden>
             ☆
           </span>

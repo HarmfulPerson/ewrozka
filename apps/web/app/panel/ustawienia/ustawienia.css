@@ -327,6 +327,77 @@
   border-color: var(--accent) !important;
 }
 
+/* ── Referral section ── */
+
+.referral-loading {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.referral-stats {
+  margin-bottom: 1rem;
+}
+
+.referral-stats__count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.referral-stats__number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.referral-stats__label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.referral-link {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.referral-link__input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-family: monospace;
+  cursor: text;
+  min-width: 0;
+}
+
+.referral-link__input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.referral-link__copy {
+  flex-shrink: 0;
+  padding: 0.6rem 1rem;
+  background: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.2s;
+  white-space: nowrap;
+}
+
+.referral-link__copy:hover {
+  filter: brightness(1.08);
+}
+
 /* ── Video modal (Poznaj mnie) ── */
 .video-modal-overlay {
   position: fixed;

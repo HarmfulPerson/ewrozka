@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { AuthFormShell } from '../../../components/auth/auth-form-shell';
 import {
@@ -18,6 +18,8 @@ type Step = 'form' | 'success';
 
 export default function RejestracjaWrozkaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const referralCode = searchParams.get('ref') ?? undefined;
   const [step, setStep] = useState<Step>('form');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -110,6 +112,7 @@ export default function RejestracjaWrozkaPage() {
         phone,
         topicIds: selectedTopics,
         ...(gender && { gender }),
+        ...(referralCode && { referralCode }),
       });
 
       // 2. Prześlij zdjęcie do wniosku

@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { AuthFormShell } from '../../../components/auth/auth-form-shell';
 import { apiRegister } from '../../../lib/api';
 
 export default function RejestracjaKlientPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const referralCode = searchParams.get('ref') ?? undefined;
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -35,6 +37,7 @@ export default function RejestracjaKlientPage() {
         password,
         roleNames: ['client'],
         ...(gender && { gender }),
+        ...(referralCode && { referralCode }),
       });
       router.push(`/sprawdz-email?email=${encodeURIComponent(email)}`);
     } catch (err) {

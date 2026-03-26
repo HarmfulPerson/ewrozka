@@ -45,4 +45,10 @@ export class CreateUserReqDto {
   @IsString()
   @Matches(/^\d{9}$/, { message: 'Numer telefonu musi składać się z dokładnie 9 cyfr.' })
   readonly phone?: string;
+
+  /** Kod polecający (reflink) – opcjonalny. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(12)
+  readonly referralCode?: string;
 }

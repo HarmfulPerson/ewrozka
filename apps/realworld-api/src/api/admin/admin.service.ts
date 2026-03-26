@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import type { AllConfigType } from '@/config/config.type';
 
 import {
@@ -425,6 +426,16 @@ export class AdminService {
 
 
 
+    // Resolve referral code from wizard application
+    let referredBy: number | null = null;
+    if (app.referralCodeUsed) {
+      const referrer = await this.userRepo.findOne({
+        where: { referralCode: app.referralCodeUsed },
+        select: ['id'],
+      });
+      if (referrer) referredBy = referrer.id;
+    }
+
     // Utwórz użytkownika – hasło jest już zahashowane, @BeforeInsert nie rehashuje argon2
 
     const user = this.userRepo.create({
@@ -450,6 +461,9 @@ export class AdminService {
       googleId: app.googleId ?? undefined,
 
       gender: app.gender ?? null,
+
+      referralCode: randomBytes(4).toString('hex'),
+      referredBy,
 
     });
 
