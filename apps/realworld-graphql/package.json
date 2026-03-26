@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",
-    "@as-integrations/fastify": "^3.0.0",
+    "@as-integrations/fastify": "^3.1.0",
     "@fastify/compress": "^8.1.0",
     "@fastify/helmet": "^13.0.2",
     "@nestjs/apollo": "^13.2.1",
