@@ -2,11 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { AuthFormShell } from '../../../components/auth/auth-form-shell';
 import { apiRegister } from '../../../lib/api';
 
 export default function RejestracjaKlientPage() {
+  return <Suspense><RejestracjaKlientContent /></Suspense>;
+}
+
+function RejestracjaKlientContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const referralCode = searchParams.get('ref') ?? undefined;

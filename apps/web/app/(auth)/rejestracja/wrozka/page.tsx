@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { AuthFormShell } from '../../../components/auth/auth-form-shell';
 import {
   apiGetTopics,
@@ -17,6 +17,10 @@ import './wrozka-registration.css';
 type Step = 'form' | 'success';
 
 export default function RejestracjaWrozkaPage() {
+  return <Suspense><RejestracjaWrozkaContent /></Suspense>;
+}
+
+function RejestracjaWrozkaContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const referralCode = searchParams.get('ref') ?? undefined;

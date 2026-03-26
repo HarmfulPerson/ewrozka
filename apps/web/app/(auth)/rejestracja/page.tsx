@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AuthFormShell } from '../../components/auth/auth-form-shell';
 
-export default function RejestracjaPage() {
+function RejestracjaContent() {
   const searchParams = useSearchParams();
   const ref = searchParams.get('ref') ?? '';
   const qs = ref ? `?ref=${encodeURIComponent(ref)}` : '';
@@ -46,5 +47,13 @@ export default function RejestracjaPage() {
         </Link>
       </p>
     </AuthFormShell>
+  );
+}
+
+export default function RejestracjaPage() {
+  return (
+    <Suspense>
+      <RejestracjaContent />
+    </Suspense>
   );
 }
