@@ -155,11 +155,17 @@ export default function PanelLayout({
     };
     window.addEventListener('ewrozka:notification', handleNotification);
 
+    const handleBalanceChanged = () => {
+      if (storedUser?.token && isWizardRole && !isAdminRole) fetchWizardBar(storedUser.token);
+    };
+    window.addEventListener('ewrozka:balance-changed', handleBalanceChanged);
+
     return () => {
       window.removeEventListener('ewrozka:user-updated', handleUserUpdated);
       window.removeEventListener('ewrozka:connect-configured', handleConnectConfigured);
       window.removeEventListener('ewrozka:ads-count-changed', handleAdsCountChanged);
       window.removeEventListener('ewrozka:notification', handleNotification);
+      window.removeEventListener('ewrozka:balance-changed', handleBalanceChanged);
     };
   }, [router]);
 

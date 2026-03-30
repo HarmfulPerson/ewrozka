@@ -149,6 +149,7 @@ export function usePortfelData() {
       setWithdrawSuccess(`Wypłata ${result.amountFormatted} zlecona. Środki pojawią się w ciągu 1–7 dni roboczych.`);
       setWithdrawAmount('');
       await refreshAfterWithdraw();
+      window.dispatchEvent(new CustomEvent('ewrozka:balance-changed'));
     } catch (err) {
       setWithdrawError(err instanceof Error ? err.message : 'Błąd podczas wypłaty');
     } finally {
