@@ -47,7 +47,7 @@ export class WizardRequestsService {
     const sortCol = sortByMap[options?.sortBy ?? ''] ?? '"createdAt"';
     const sortDir = options?.order === 'ASC' ? 'ASC' : 'DESC';
 
-    const statusFilter = ['pending', 'accepted', 'paid', 'rejected'].includes(
+    const statusFilter = ['pending', 'accepted', 'paid', 'completed', 'rejected', 'cancelled'].includes(
       options?.status ?? '',
     )
       ? options!.status
@@ -58,7 +58,9 @@ export class WizardRequestsService {
         mr.id::text                     AS "id",
         'regular'                       AS "kind",
         CASE
+          WHEN mr.status = 'accepted' AND apt.status = 'completed' THEN 'completed'
           WHEN mr.status = 'accepted' AND apt.status = 'paid' THEN 'paid'
+          WHEN mr.status = 'accepted' AND apt.status = 'cancelled' THEN 'cancelled'
           ELSE mr.status
         END                             AS "unifiedStatus",
         mr.created_at                   AS "createdAt",
