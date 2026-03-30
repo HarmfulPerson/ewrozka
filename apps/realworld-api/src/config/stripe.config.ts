@@ -13,6 +13,6 @@ export default registerAs<StripeConfig>('stripe', () => {
     connectReturnUrl: process.env.STRIPE_CONNECT_RETURN_URL || 'http://localhost:3000/panel/portfel',
     connectRefreshUrl: process.env.STRIPE_CONNECT_REFRESH_URL || 'http://localhost:3000/panel/portfel',
     currency: 'pln',
-    instantPayouts: !isProduction,
+    instantPayouts: false,
   };
 });
