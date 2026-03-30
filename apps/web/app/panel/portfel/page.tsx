@@ -16,6 +16,9 @@ export default function PortfelPage() {
     commissionTier,
     connectStatus,
     withdrawals,
+    withdrawalsCurrentPage,
+    withdrawalsTotalPages,
+    handleWithdrawalsPageChange,
     transactions,
     total,
     listLoading,
@@ -69,6 +72,9 @@ export default function PortfelPage() {
           withdrawError={withdrawError}
           withdrawSuccess={withdrawSuccess}
           withdrawals={withdrawals}
+          withdrawalsCurrentPage={withdrawalsCurrentPage}
+          withdrawalsTotalPages={withdrawalsTotalPages}
+          onWithdrawalsPageChange={handleWithdrawalsPageChange}
           handleStartOnboarding={handleStartOnboarding}
           handleWithdraw={handleWithdraw}
         />

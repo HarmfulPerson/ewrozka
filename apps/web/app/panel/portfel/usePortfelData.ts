@@ -26,6 +26,9 @@ export function usePortfelData() {
   const [commissionTier, setCommissionTier] = useState<CommissionTierDto | null>(null);
   const [connectStatus, setConnectStatus] = useState<ConnectStatusDto | null>(null);
   const [withdrawals, setWithdrawals] = useState<WithdrawalDto[]>([]);
+  const [withdrawalsTotal, setWithdrawalsTotal] = useState(0);
+  const [withdrawalsOffset, setWithdrawalsOffset] = useState(0);
+  const withdrawalsLimit = 5;
 
   const [transactions, setTransactions] = useState<TransactionDto[]>([]);
   const [total, setTotal] = useState(0);
@@ -53,7 +56,7 @@ export function usePortfelData() {
         const [walletData, connectData, withdrawalsData] = await Promise.all([
           apiGetWallet(user.token),
           apiGetConnectStatus(user.token),
-          apiGetWithdrawals(user.token, { limit: 5 }),
+          apiGetWithdrawals(user.token, { limit: withdrawalsLimit, offset: 0 }),
         ]);
 
         // Saldo wyłącznie ze Stripe (jedyne źródło prawdy)
@@ -72,6 +75,7 @@ export function usePortfelData() {
         setCommissionTier(walletData.commissionTier ?? null);
         setConnectStatus(connectData);
         setWithdrawals(withdrawalsData.withdrawals);
+        setWithdrawalsTotal(withdrawalsData.total);
       } catch (err) {
         console.error(err);
       } finally {
@@ -109,7 +113,7 @@ export function usePortfelData() {
     const [walletData, connectData, withdrawalsData, txData] = await Promise.all([
       apiGetWallet(token),
       apiGetConnectStatus(token),
-      apiGetWithdrawals(token, { limit: 5 }),
+      apiGetWithdrawals(token, { limit: withdrawalsLimit, offset: 0 }),
       apiGetTransactions(token, { limit, offset, sortBy, sortOrder }),
     ]);
 
@@ -126,6 +130,8 @@ export function usePortfelData() {
     setCommissionTier(walletData.commissionTier ?? null);
     setConnectStatus(connectData);
     setWithdrawals(withdrawalsData.withdrawals);
+    setWithdrawalsTotal(withdrawalsData.total);
+    setWithdrawalsOffset(0);
     setTransactions(txData.transactions);
     setTotal(txData.total);
   };
@@ -163,6 +169,18 @@ export function usePortfelData() {
   const isPending   = !!(connectStatus?.connected && (!connectStatus?.onboardingCompleted || !connectStatus?.payoutsEnabled));
   const withdrawable = (connectStatus?.withdrawableGrosze ?? 0) / 100;
 
+  const withdrawalsCurrentPage = Math.floor(withdrawalsOffset / withdrawalsLimit) + 1;
+  const withdrawalsTotalPages = Math.ceil(withdrawalsTotal / withdrawalsLimit);
+
+  const handleWithdrawalsPageChange = async (newPage: number) => {
+    if (!tokenRef.current) return;
+    const newOffset = (newPage - 1) * withdrawalsLimit;
+    const data = await apiGetWithdrawals(tokenRef.current, { limit: withdrawalsLimit, offset: newOffset });
+    setWithdrawals(data.withdrawals);
+    setWithdrawalsTotal(data.total);
+    setWithdrawalsOffset(newOffset);
+  };
+
   return {
     pageLoading,
     availableFormatted,
@@ -171,6 +189,9 @@ export function usePortfelData() {
     commissionTier,
     connectStatus,
     withdrawals,
+    withdrawalsCurrentPage,
+    withdrawalsTotalPages,
+    handleWithdrawalsPageChange,
     transactions,
     total,
     listLoading,

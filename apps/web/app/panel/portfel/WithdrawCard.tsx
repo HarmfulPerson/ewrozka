@@ -28,6 +28,9 @@ interface WithdrawCardProps {
   withdrawError: string | null;
   withdrawSuccess: string | null;
   withdrawals: WithdrawalDto[];
+  withdrawalsCurrentPage: number;
+  withdrawalsTotalPages: number;
+  onWithdrawalsPageChange: (page: number) => void;
   handleStartOnboarding: () => void;
   handleWithdraw: () => void;
 }
@@ -42,6 +45,9 @@ export function WithdrawCard({
   withdrawError,
   withdrawSuccess,
   withdrawals,
+  withdrawalsCurrentPage,
+  withdrawalsTotalPages,
+  onWithdrawalsPageChange,
   handleStartOnboarding,
   handleWithdraw,
 }: WithdrawCardProps) {
@@ -121,6 +127,27 @@ export function WithdrawCard({
                   </div>
                 );
               })}
+              {withdrawalsTotalPages > 1 && (
+                <div className="portfel-withdrawals-mini__pagination">
+                  <button
+                    className="portfel-withdrawals-mini__page-btn"
+                    disabled={withdrawalsCurrentPage <= 1}
+                    onClick={() => onWithdrawalsPageChange(withdrawalsCurrentPage - 1)}
+                  >
+                    ←
+                  </button>
+                  <span className="portfel-withdrawals-mini__page-info">
+                    {withdrawalsCurrentPage} / {withdrawalsTotalPages}
+                  </span>
+                  <button
+                    className="portfel-withdrawals-mini__page-btn"
+                    disabled={withdrawalsCurrentPage >= withdrawalsTotalPages}
+                    onClick={() => onWithdrawalsPageChange(withdrawalsCurrentPage + 1)}
+                  >
+                    →
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </>
