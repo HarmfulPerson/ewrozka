@@ -371,7 +371,7 @@ export class StripeService {
         type: 'express',
         country: 'PL',
         email,
-        capabilities: { transfers: { requested: true } },
+        capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
         settings: {
           payouts: {
             schedule: { interval: 'manual' },
@@ -446,6 +446,7 @@ export class StripeService {
         country: 'PL',
         email,
         capabilities: {
+          card_payments: { requested: true },
           transfers: { requested: true },
         },
         settings: {
