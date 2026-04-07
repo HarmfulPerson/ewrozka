@@ -33,7 +33,7 @@ jobs:
           envs: ENV_B64
           script: |
             set -e
-            cd /opt/ewrozka/ewrozka
+            cd /opt/ewrozka/ewrozka-prod
 
             printf '%s' "$ENV_B64" | base64 -d > .env.production
 
