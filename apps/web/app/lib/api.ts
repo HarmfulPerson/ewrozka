@@ -133,6 +133,20 @@ export async function apiVerifyEmail(token: string): Promise<{ message: string }
   return fetchApi(`auth/verify-email?token=${encodeURIComponent(token)}`);
 }
 
+export async function apiForgotPassword(email: string): Promise<{ message: string }> {
+  return fetchApi('auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function apiResetPassword(token: string, password: string): Promise<{ message: string }> {
+  return fetchApi('auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  });
+}
+
 export interface ContactFormData {
   name: string;
   email: string;

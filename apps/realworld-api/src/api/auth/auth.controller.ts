@@ -18,7 +18,9 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { UserResDto } from '../user/dto/user.dto';
 import { AuthService } from './auth.service';
 import { CompleteGoogleRegistrationDto } from './dto/complete-google-registration.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginReqDto } from './dto/login.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { GoogleEnabledGuard } from './guards/google-enabled.guard';
 import type { GoogleProfile } from './strategies/google.strategy';
 
@@ -66,6 +68,24 @@ export class AuthController {
   async verifyEmail(@Query('token') token: string): Promise<{ message: string }> {
     await this.authService.verifyEmail(token);
     return { message: 'Adres e-mail został pomyślnie zweryfikowany. Możesz się teraz zalogować.' };
+  }
+
+  @Post('auth/forgot-password')
+  @Throttle({ short: { ttl: 60_000, limit: 3 } })
+  @ApiPublic({ summary: 'Żądanie resetu hasła – wysyła e-mail z linkiem' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<{ message: string }> {
+    await this.authService.forgotPassword(dto.email);
+    return {
+      message: 'Jeśli konto z podanym adresem e-mail istnieje, wysłaliśmy link do resetu hasła.',
+    };
+  }
+
+  @Post('auth/reset-password')
+  @Throttle({ short: { ttl: 60_000, limit: 5 } })
+  @ApiPublic({ summary: 'Ustawienie nowego hasła za pomocą tokena z e-maila' })
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<{ message: string }> {
+    await this.authService.resetPassword(dto.token, dto.password);
+    return { message: 'Hasło zostało zmienione. Możesz się teraz zalogować.' };
   }
 
   @Get('auth/google')

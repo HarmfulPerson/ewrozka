@@ -93,6 +93,11 @@ function LoginForm() {
           autoComplete="current-password"
         />
       </div>
+      <div className="auth-form__forgot">
+        <Link href="/zapomnialem-hasla" className="auth-form__link">
+          Nie pamiętasz hasła?
+        </Link>
+      </div>
       <button
         type="submit"
         className="auth-form__submit"

@@ -212,6 +212,18 @@ export class EmailService implements OnModuleInit {
     });
   }
 
+  async sendPasswordResetEmail(to: string, username: string, token: string): Promise<void> {
+    const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
+    const resetUrl = `${frontendUrl}/reset-hasla?token=${token}`;
+
+    await this.send({
+      type: EmailType.PASSWORD_RESET,
+      to,
+      subject: 'Resetowanie hasła – eWróżka',
+      context: { username, resetUrl },
+    });
+  }
+
   async sendWizardApplicationRejected(to: string, username: string, reason?: string): Promise<void> {
     const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
     const applyAgainUrl = `${frontendUrl}/rejestracja/wrozka`;

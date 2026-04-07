@@ -140,6 +140,66 @@ export class AuthService {
       .catch((err) => this.logger.error('Failed to send welcome email', err));
   }
 
+  /**
+   * Tworzy JWT do resetu hasła (payload: { id, purpose: 'password-reset' }, ważny 15 min).
+   */
+  async createPasswordResetToken(userId: number): Promise<string> {
+    return this.jwtService.signAsync(
+      { id: userId, purpose: 'password-reset' },
+      {
+        secret: this.configService.getOrThrow('auth.secret', { infer: true }),
+        expiresIn: '15m',
+      },
+    );
+  }
+
+  /**
+   * Wysyła e-mail z linkiem do resetu hasła.
+   * Celowo nie ujawnia, czy e-mail istnieje w bazie (ochrona przed enumeracją).
+   */
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      // Nie ujawniaj, że konto nie istnieje – cicho wyjdź
+      return;
+    }
+
+    const token = await this.createPasswordResetToken(user.id);
+
+    this.emailService
+      .sendPasswordResetEmail(user.email, user.username, token)
+      .catch((err) => this.logger.error('Failed to send password reset email', err));
+  }
+
+  /**
+   * Weryfikuje token resetu hasła i ustawia nowe hasło.
+   */
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    let payload: { id: number; purpose: string };
+
+    try {
+      payload = this.jwtService.verify(token, {
+        secret: this.configService.getOrThrow('auth.secret', { infer: true }),
+      });
+    } catch {
+      throw new UnauthorizedException('Link do resetu hasła jest nieprawidłowy lub wygasł.');
+    }
+
+    if (payload.purpose !== 'password-reset') {
+      throw new UnauthorizedException('Nieprawidłowy token resetu hasła.');
+    }
+
+    const user = await this.userRepository.findOne({ where: { id: payload.id } });
+
+    if (!user) {
+      throw new UnauthorizedException('Użytkownik nie istnieje.');
+    }
+
+    user.password = newPassword; // Auto-hash przez @BeforeUpdate w UserEntity
+    await this.userRepository.save(user);
+  }
+
   async verifyAccessToken(token: string): Promise<JwtPayloadType> {
     let payload: JwtPayloadType;
     try {
