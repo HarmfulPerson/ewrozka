@@ -100,7 +100,7 @@ services:
     image: amir20/dozzle:latest
     restart: unless-stopped
     ports:
-      - "127.0.0.1:9999:8080"
+      - "127.0.0.1:9998:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
@@ -109,7 +109,7 @@ services:
     image: prom/prometheus:latest
     restart: unless-stopped
     ports:
-      - "127.0.0.1:9090:9090"
+      - "127.0.0.1:9091:9090"
     volumes:
       - .docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - .docker/alerts.yml:/etc/prometheus/alerts.yml:ro
@@ -125,7 +125,7 @@ services:
     image: grafana/grafana:latest
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3001:3000"
+      - "127.0.0.1:3002:3000"
     volumes:
       - grafana_prod_data:/var/lib/grafana
       - .docker/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -165,21 +165,10 @@ services:
       - "--path.rootfs=/rootfs"
       - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
 
-  # ── Caddy (reverse proxy + auto HTTPS) ───────────────────────────────────────
-  caddy:
-    image: lucaslorentz/caddy-docker-proxy:ci-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - caddy_prod_data:/data
-      - caddy_prod_config:/config
-    networks:
-      - web
-    environment:
-      - CADDY_INGRESS_NETWORKS=web
+  # ── Caddy ────────────────────────────────────────────────────────────────────
+  # Wspólny Caddy działa z docker-compose.staging.yml (sieć "web" external).
+  # Kontenery prod (api, web) mają labels caddy.* — staging Caddy je wykrywa
+  # automatycznie. NIE uruchamiaj drugiego Caddy na tych samych portach 80/443.
 
 networks:
   internal:
@@ -193,7 +182,5 @@ volumes:
   postgres_prod_data:
   redis_prod_data:
   uploads_prod:
-  caddy_prod_data:
-  caddy_prod_config:
   prometheus_prod_data:
   grafana_prod_data:
