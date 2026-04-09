@@ -1,0 +1,22 @@
+{
+  "name": "eWrozka — Portal konsultacji ezoterycznych",
+  "short_name": "eWrozka",
+  "description": "Polacz sie ze specjalistami lub oferuj konsultacje. Tarot, horoskopy, runy.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0014",
+  "theme_color": "#8b5cf6",
+  "lang": "pl",
+  "icons": [
+    {
+      "src": "/icon-purple.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
