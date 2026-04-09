@@ -1,6 +1,7 @@
 import { registerAs } from '@nestjs/config';
 import { IsMs, validateConfig } from '@repo/nest-common';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import type { StringValue } from 'ms';
 import { AuthConfig } from './auth-config.type';
 
 class EnvironmentVariablesValidator {
@@ -42,7 +43,7 @@ export default registerAs<AuthConfig>('auth', () => {
 
   return {
     secret: process.env.AUTH_JWT_SECRET,
-    expires: process.env.AUTH_JWT_TOKEN_EXPIRES_IN,
+    expires: process.env.AUTH_JWT_TOKEN_EXPIRES_IN as StringValue,
     google: hasGoogle
       ? {
           clientId: process.env.GOOGLE_CLIENT_ID!,
