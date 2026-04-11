@@ -74,10 +74,14 @@ async function bootstrap() {
     // "Cannot read properties of undefined (reading 'ignoreDuplicateSlashes')"
     // because Fastify 5.x leaves initialConfig.routerOptions undefined unless
     // we pass it here. Defining it (even as {}) is enough to prevent the crash.
-    routerOptions: {
-      ignoreDuplicateSlashes: true,
-      ignoreTrailingSlash: true,
-    },
+    // Cast required: @nestjs/platform-fastify types don't expose routerOptions
+    // yet, even though Fastify 5 accepts it at runtime.
+    ...({
+      routerOptions: {
+        ignoreDuplicateSlashes: true,
+        ignoreTrailingSlash: true,
+      },
+    } as Record<string, unknown>),
 
   });
 
