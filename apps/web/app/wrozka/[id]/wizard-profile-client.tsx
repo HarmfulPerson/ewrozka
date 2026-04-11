@@ -176,7 +176,7 @@ export default function WizardProfileClient() {
           ) : (
             <div className="wizard-services__grid">
               {advertisements.map((ad) => (
-                <Link key={ad.id} href={`/ogloszenie/${ad.id}`} className="wizard-ad-card">
+                <Link key={ad.id} href={`/ogloszenie/${ad.uid}`} className="wizard-ad-card">
                   {ad.imageUrl && (
                     <div className="wizard-ad-card__image">
                       <Image

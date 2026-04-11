@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Req,
@@ -36,8 +37,14 @@ export class AdvertisementController {
     return this.advertisementService.getAdvertisementsByWizardId(wizardId);
   }
 
+  @Get('uid/:uid')
+  @ApiPublic({ summary: 'Get advertisement by UID (preferred)' })
+  async getByUid(@Param('uid', ParseUUIDPipe) uid: string) {
+    return this.advertisementService.getAdvertisementByUid(uid);
+  }
+
   @Get(':id')
-  @ApiPublic({ summary: 'Get advertisement by ID' })
+  @ApiPublic({ summary: 'Get advertisement by ID (deprecated — use /uid/:uid)' })
   async getById(@Param('id', ParseIntPipe) id: number) {
     return this.advertisementService.getAdvertisementById(id);
   }

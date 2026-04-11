@@ -43,7 +43,7 @@ export function AdvertisementCard({ ad, onDelete }: AdvertisementCardProps) {
       <div className="ogloszenia-card__actions">
         <button
           className="ogloszenia-card__button ogloszenia-card__button--view"
-          onClick={() => router.push(`/ogloszenie/${ad.id}`)}
+          onClick={() => router.push(`/ogloszenie/${ad.uid}`)}
         >
           Zobacz
         </button>

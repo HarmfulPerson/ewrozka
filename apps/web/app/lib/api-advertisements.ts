@@ -37,6 +37,8 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
 
 export interface AdvertisementDto {
   id: number;
+  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
+  uid: string;
   title: string;
   description: string;
   imageUrl?: string;

@@ -73,6 +73,7 @@ export class AdvertisementService {
   private mapAd(ad: AdvertisementEntity) {
     return {
       id: ad.id,
+      uid: ad.uid,
       title: ad.title,
       description: ad.description,
       imageUrl: ad.imageUrl,
@@ -95,6 +96,7 @@ export class AdvertisementService {
     return {
       advertisement: {
         id: advertisement.id,
+        uid: advertisement.uid,
         title: advertisement.title,
         description: advertisement.description,
         imageUrl: advertisement.imageUrl,
@@ -109,6 +111,24 @@ export class AdvertisementService {
         },
       },
     };
+  }
+
+  /**
+   * Public lookup by UUID. Phase 2 of the int-id → uid migration.
+   * Resolves uid → id and delegates to getAdvertisementById so the response
+   * shape stays identical between the two paths.
+   */
+  async getAdvertisementByUid(uid: string) {
+    const ad = await this.advertisementRepository.findOne({
+      where: { uid },
+      select: ['id'],
+    });
+
+    if (!ad) {
+      throw new NotFoundException('Ogłoszenie nie znalezione');
+    }
+
+    return this.getAdvertisementById(ad.id);
   }
 
   async createAdvertisement(
@@ -131,6 +151,7 @@ export class AdvertisementService {
     return {
       advertisement: {
         id: saved.id,
+        uid: saved.uid,
         title: saved.title,
         description: saved.description,
         imageUrl: saved.imageUrl,

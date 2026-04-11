@@ -267,6 +267,8 @@ export async function apiGetWizard(
 
 export interface AdvertisementDto {
   id: number;
+  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
+  uid: string;
   title: string;
   description: string;
   imageUrl: string;
@@ -277,6 +279,8 @@ export interface AdvertisementDto {
 
 export interface AdvertisementDetailDto {
   id: number;
+  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
+  uid: string;
   title: string;
   description: string;
   imageUrl: string;
@@ -296,8 +300,17 @@ export async function apiGetWizardAdvertisements(wizardId: number): Promise<{ ad
   return fetchApi(`advertisements/wizard/${wizardId}`);
 }
 
-export async function apiGetAdvertisement(id: number): Promise<{ advertisement: AdvertisementDetailDto }> {
-  return fetchApi(`advertisements/${id}`);
+/**
+ * Fetch an advertisement. Accepts either the new uid (preferred) or the
+ * legacy numeric id — the route is picked automatically. Once every caller
+ * migrates to uid we can delete the legacy branch.
+ */
+export async function apiGetAdvertisement(
+  uidOrId: string | number,
+): Promise<{ advertisement: AdvertisementDetailDto }> {
+  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
+  const path = isUid ? `advertisements/uid/${uidOrId}` : `advertisements/${uidOrId}`;
+  return fetchApi(path);
 }
 
 export async function apiGetTopics(): Promise<TopicDto[]> {

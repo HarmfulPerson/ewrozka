@@ -37,8 +37,9 @@ export default function AdvertisementClient() {
     if (!params.id) return;
     (async () => {
       try {
-        const id = parseInt(params.id as string, 10);
-        const response = await apiGetAdvertisement(id);
+        // params.id is now an opaque string — may be uid (UUID) or legacy
+        // numeric id during the migration. apiGetAdvertisement handles both.
+        const response = await apiGetAdvertisement(params.id as string);
         setAdvertisement(response.advertisement);
       } catch (error) {
         console.error('Error fetching advertisement:', error);
