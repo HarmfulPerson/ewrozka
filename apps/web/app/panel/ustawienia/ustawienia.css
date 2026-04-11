@@ -227,6 +227,12 @@
   color: var(--text-muted);
 }
 
+/* Bio textarea: no manual resize handle, natywny scrollbar pojawia się
+   dopiero gdy tekst przekroczy wysokość rows={4}. */
+.ustawienia-field textarea#bio {
+  resize: none;
+}
+
 /* ── Save button ── */
 
 .ustawienia-page__save {
@@ -334,35 +340,41 @@
   font-size: 0.875rem;
 }
 
-.referral-stats {
-  margin-bottom: 1rem;
-}
-
-.referral-stats__count {
+.referral-section__header {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: baseline;
-  gap: 0.5rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  width: 100%;
 }
 
-.referral-stats__number {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--accent);
-  line-height: 1;
+.referral-section__title {
+  margin-bottom: 0;
+  min-width: 0;
+  flex: 0 1 auto;
 }
 
-.referral-stats__label {
+.referral-section__count {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .referral-link {
   display: flex;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .referral-link__input {
-  flex: 1;
+  flex: 1 1 0;
+  width: 100%;
+  min-width: 0;
   padding: 0.6rem 0.75rem;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
@@ -371,7 +383,6 @@
   font-size: 0.8125rem;
   font-family: monospace;
   cursor: text;
-  min-width: 0;
 }
 
 .referral-link__input:focus {
