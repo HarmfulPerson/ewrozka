@@ -15,7 +15,8 @@ export type GuestBookingStatus =
   | 'accepted'
   | 'rejected'
   | 'paid'
-  | 'completed';
+  | 'completed'
+  | 'cancelled';
 
 @Entity('guest_booking')
 export class GuestBookingEntity {

@@ -95,7 +95,54 @@ export class AppointmentCronService {
       this.logger.log(`Zakonczono ${toCompleteGuest.length} rezerwacji gosci`);
     }
 
-    if (toComplete.length === 0 && toCompleteGuest.length === 0) {
+    // ─── Unpaid (status='accepted') appointments past their end time ───────
+    // Client never paid and the slot is over → silently cancel so they don't
+    // sit forever in "Do opłacenia" and confuse the status filter.
+    const acceptedAppointments = await this.appointmentRepository.find({
+      where: { status: 'accepted' },
+    });
+
+    const toCancel = acceptedAppointments.filter((apt) => {
+      const endTime = new Date(apt.startsAt);
+      endTime.setMinutes(endTime.getMinutes() + apt.durationMinutes);
+      return endTime < now;
+    });
+
+    for (const appointment of toCancel) {
+      appointment.status = 'cancelled';
+      await this.appointmentRepository.save(appointment);
+    }
+
+    if (toCancel.length > 0) {
+      this.logger.log(`Anulowano ${toCancel.length} nieoplaconych spotkan (appointments)`);
+    }
+
+    // Same cleanup for guest bookings stuck in 'accepted' past their end time
+    const acceptedGuestBookings = await this.guestBookingRepository.find({
+      where: { status: 'accepted' },
+    });
+
+    const toCancelGuest = acceptedGuestBookings.filter((gb) => {
+      const endTime = new Date(gb.scheduledAt);
+      endTime.setMinutes(endTime.getMinutes() + gb.durationMinutes);
+      return endTime < now;
+    });
+
+    for (const booking of toCancelGuest) {
+      booking.status = 'cancelled';
+      await this.guestBookingRepository.save(booking);
+    }
+
+    if (toCancelGuest.length > 0) {
+      this.logger.log(`Anulowano ${toCancelGuest.length} nieoplaconych rezerwacji gosci`);
+    }
+
+    if (
+      toComplete.length === 0 &&
+      toCompleteGuest.length === 0 &&
+      toCancel.length === 0 &&
+      toCancelGuest.length === 0
+    ) {
       this.logger.debug('Brak spotkan do zakonczenia');
     }
 

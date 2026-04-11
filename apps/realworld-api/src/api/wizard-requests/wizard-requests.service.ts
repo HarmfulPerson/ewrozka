@@ -39,12 +39,29 @@ export class WizardRequestsService {
     const limit = Math.min(Math.max(options?.limit ?? 20, 1), 100);
     const offset = Math.max(options?.offset ?? 0, 0);
 
+    // Sortowanie statusu idzie po kolejności POLSKICH etykiet (co widzi user),
+    // nie po angielskim enum. Kolejność alfabetyczna:
+    //   cancelled → Anulowane     (A)  → 1
+    //   accepted  → Do opłacenia  (D)  → 2
+    //   pending   → Oczekujące    (Oc) → 3
+    //   rejected  → Odrzucone     (Od) → 4
+    //   paid      → Opłacone      (Op) → 5
+    //   completed → Zakończone    (Z)  → 6
+    const statusSortExpr = `CASE c."unifiedStatus"
+        WHEN 'cancelled' THEN 1
+        WHEN 'accepted'  THEN 2
+        WHEN 'pending'   THEN 3
+        WHEN 'rejected'  THEN 4
+        WHEN 'paid'      THEN 5
+        WHEN 'completed' THEN 6
+        ELSE 99
+      END`;
     const sortByMap: Record<string, string> = {
-      createdAt: '"createdAt"',
-      scheduledAt: '"scheduledAt"',
-      status: '"unifiedStatus"',
+      createdAt: 'c."createdAt"',
+      scheduledAt: 'c."scheduledAt"',
+      status: statusSortExpr,
     };
-    const sortCol = sortByMap[options?.sortBy ?? ''] ?? '"createdAt"';
+    const sortExpr = sortByMap[options?.sortBy ?? ''] ?? 'c."createdAt"';
     const sortDir = options?.order === 'ASC' ? 'ASC' : 'DESC';
 
     const statusFilter = ['pending', 'accepted', 'paid', 'completed', 'rejected', 'cancelled'].includes(
@@ -124,7 +141,7 @@ export class WizardRequestsService {
     const dataQuery = `
       SELECT c.* FROM (${unionSql}) c
       ${whereClause}
-      ORDER BY c.${sortCol} ${sortDir}
+      ORDER BY ${sortExpr} ${sortDir}
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
     const dataParams = [...params, limit, offset];
@@ -158,12 +175,23 @@ export class WizardRequestsService {
     const limit = Math.min(Math.max(options?.limit ?? 20, 1), 100);
     const offset = Math.max(options?.offset ?? 0, 0);
 
+    // Sortowanie statusu: po polskich etykietach, nie po angielskim enum.
+    // Patrz komentarz w getUnifiedRequests powyżej.
+    const statusSortExpr = `CASE c."unifiedStatus"
+        WHEN 'cancelled' THEN 1
+        WHEN 'accepted'  THEN 2
+        WHEN 'pending'   THEN 3
+        WHEN 'rejected'  THEN 4
+        WHEN 'paid'      THEN 5
+        WHEN 'completed' THEN 6
+        ELSE 99
+      END`;
     const sortByMap: Record<string, string> = {
-      createdAt: '"createdAt"',
-      scheduledAt: '"scheduledAt"',
-      status: '"unifiedStatus"',
+      createdAt: 'c."createdAt"',
+      scheduledAt: 'c."scheduledAt"',
+      status: statusSortExpr,
     };
-    const sortCol = sortByMap[options?.sortBy ?? ''] ?? '"createdAt"';
+    const sortExpr = sortByMap[options?.sortBy ?? ''] ?? 'c."createdAt"';
     const sortDir = options?.order === 'ASC' ? 'ASC' : 'DESC';
 
     const validStatuses = ['pending', 'accepted', 'paid', 'completed', 'rejected', 'cancelled'];
@@ -202,7 +230,12 @@ export class WizardRequestsService {
       SELECT
         apt.id::text                    AS "id",
         'appointment'                   AS "kind",
-        apt.status                      AS "unifiedStatus",
+        CASE
+          WHEN apt.status = 'accepted'
+               AND apt.starts_at + (apt.duration_minutes * INTERVAL '1 minute') <= NOW()
+            THEN 'cancelled'
+          ELSE apt.status
+        END                             AS "unifiedStatus",
         apt.created_at                  AS "createdAt",
         apt.starts_at                   AS "scheduledAt",
         NULL                            AS "message",
@@ -233,7 +266,7 @@ export class WizardRequestsService {
     const dataQuery = `
       SELECT c.* FROM (${unionSql}) c
       ${whereClause}
-      ORDER BY c.${sortCol} ${sortDir}
+      ORDER BY ${sortExpr} ${sortDir}
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
     const dataParams = [...params, limit, offset];
