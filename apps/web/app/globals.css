@@ -54,3 +54,38 @@ label {
   font-family: inherit;
 }
 
+/* ── Subtle dark scrollbar for every textarea, matching site palette ── */
+textarea {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(142, 150, 184, 0.35) transparent;
+}
+
+textarea::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: rgba(142, 150, 184, 0.25);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.2s;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(142, 150, 184, 0.5);
+  background-clip: padding-box;
+}
+
+textarea::-webkit-scrollbar-thumb:active {
+  background: var(--accent);
+  background-clip: padding-box;
+}
+
