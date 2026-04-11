@@ -86,18 +86,18 @@ export async function apiCreateAdvertisement(
 
 export async function apiUpdateAdvertisement(
   token: string,
-  id: number,
+  uid: string,
   data: { title?: string; description?: string; priceGrosze?: number; durationMinutes?: number },
 ): Promise<{ advertisement: AdvertisementDto }> {
-  return fetchApi(`advertisements/${id}`, {
+  return fetchApi(`advertisements/uid/${uid}`, {
     method: 'PATCH',
     headers: { Authorization: `Token ${token}` },
     body: JSON.stringify(data),
   });
 }
 
-export async function apiDeleteAdvertisement(token: string, id: number): Promise<void> {
-  await fetchApi(`advertisements/${id}`, {
+export async function apiDeleteAdvertisement(token: string, uid: string): Promise<void> {
+  await fetchApi(`advertisements/uid/${uid}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Token ${token}`,

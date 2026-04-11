@@ -37,6 +37,8 @@ export interface ApiUser {
   topicIds?: number[];
   topicNames?: string[];
   id: number;
+  /** Stable non-sequential external identifier. Prefer this over `id` for cross-resource comparisons. */
+  uid: string;
   emailVerified?: boolean;
   gender?: 'female' | 'male' | null;
 }

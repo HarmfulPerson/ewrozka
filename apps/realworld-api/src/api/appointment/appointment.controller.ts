@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@repo/api';
 import { ApiAuth } from '@repo/api/decorators/http.decorators';
@@ -55,7 +55,7 @@ export class AppointmentController {
 
   @Post('uid/:uid/rate')
   @HttpCode(HttpStatus.OK)
-  @ApiAuth({ summary: 'Oceń zakończone spotkanie po UID (preferowane)' })
+  @ApiAuth({ summary: 'Oceń zakończone spotkanie' })
   async rateByUid(
     @CurrentUser('id') userId: number,
     @Param('uid', ParseUUIDPipe) uid: string,
@@ -63,19 +63,6 @@ export class AppointmentController {
     @Body('comment') comment?: string,
   ) {
     await this.appointmentService.rateAppointmentByUid(userId, uid, Number(rating), comment);
-    return { message: 'Ocena zapisana' };
-  }
-
-  @Post(':id/rate')
-  @HttpCode(HttpStatus.OK)
-  @ApiAuth({ summary: 'Oceń zakończone spotkanie (deprecated — użyj /uid/:uid/rate)' })
-  async rate(
-    @CurrentUser('id') userId: number,
-    @Param('id', ParseIntPipe) id: number,
-    @Body('rating') rating: number,
-    @Body('comment') comment?: string,
-  ) {
-    await this.appointmentService.rateAppointment(userId, id, Number(rating), comment);
     return { message: 'Ocena zapisana' };
   }
 
@@ -98,43 +85,14 @@ export class AppointmentController {
     );
   }
 
-  @Get('reviews/:wizardId')
-  @Public()
-  async getWizardReviews(
-    @Param('wizardId', ParseIntPipe) wizardId: number,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    const parsedPage = parsePositiveInt(page, 1, 'page');
-    const parsedLimit = parsePositiveInt(limit, 5, 'limit');
-    if (parsedLimit > 50) {
-      throw new BadRequestException('limit must be ≤ 50');
-    }
-    return this.appointmentService.getWizardReviews(
-      wizardId,
-      parsedPage,
-      parsedLimit,
-    );
-  }
-
   @Post('uid/:uid/pay')
-  @ApiAuth({ summary: 'Opłać wizytę po UID (preferowane) — tworzy Stripe Checkout session' })
+  @ApiAuth({ summary: 'Opłać wizytę — tworzy Stripe Checkout session' })
   async payByUid(
     @CurrentUser('id') userId: number,
     @CurrentUser('email') email: string,
     @Param('uid', ParseUUIDPipe) uid: string,
   ) {
     return this.appointmentService.payByUid(userId, uid, email);
-  }
-
-  @Post(':id/pay')
-  @ApiAuth({ summary: 'Opłać wizytę (deprecated — użyj /uid/:uid/pay)' })
-  async pay(
-    @CurrentUser('id') userId: number,
-    @CurrentUser('email') email: string,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.appointmentService.pay(userId, id, email);
   }
 }
 

@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -32,27 +31,15 @@ export class AdvertisementController {
   }
 
   @Get('wizard/uid/:wizardUid')
-  @ApiPublic({ summary: 'Get advertisements by wizard UID (preferred)' })
+  @ApiPublic({ summary: "Get advertisements by wizard UID" })
   async getByWizardUid(@Param('wizardUid', ParseUUIDPipe) wizardUid: string) {
     return this.advertisementService.getAdvertisementsByWizardUid(wizardUid);
   }
 
-  @Get('wizard/:wizardId')
-  @ApiPublic({ summary: 'Get advertisements by wizard ID (deprecated — use /wizard/uid/:wizardUid)' })
-  async getByWizardId(@Param('wizardId', ParseIntPipe) wizardId: number) {
-    return this.advertisementService.getAdvertisementsByWizardId(wizardId);
-  }
-
   @Get('uid/:uid')
-  @ApiPublic({ summary: 'Get advertisement by UID (preferred)' })
+  @ApiPublic({ summary: 'Get advertisement by UID' })
   async getByUid(@Param('uid', ParseUUIDPipe) uid: string) {
     return this.advertisementService.getAdvertisementByUid(uid);
-  }
-
-  @Get(':id')
-  @ApiPublic({ summary: 'Get advertisement by ID (deprecated — use /uid/:uid)' })
-  async getById(@Param('id', ParseIntPipe) id: number) {
-    return this.advertisementService.getAdvertisementById(id);
   }
 
   @Post()
@@ -134,11 +121,11 @@ export class AdvertisementController {
     return result;
   }
 
-  @Patch(':id')
+  @Patch('uid/:uid')
   @ApiAuth({ summary: 'Update advertisement (wizard only)' })
   async update(
     @CurrentUser('id') userId: number,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uid', ParseUUIDPipe) uid: string,
     @Body()
     body: {
       title?: string;
@@ -147,16 +134,16 @@ export class AdvertisementController {
       durationMinutes?: number;
     },
   ) {
-    return this.advertisementService.updateAdvertisement(userId, id, body);
+    return this.advertisementService.updateAdvertisementByUid(userId, uid, body);
   }
 
-  @Delete(':id')
+  @Delete('uid/:uid')
   @ApiAuth({ summary: 'Delete advertisement (wizard only)' })
   async delete(
     @CurrentUser('id') userId: number,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('uid', ParseUUIDPipe) uid: string,
   ) {
-    await this.advertisementService.deleteAdvertisement(userId, id);
+    await this.advertisementService.deleteAdvertisementByUid(userId, uid);
     return { ok: true };
   }
 }

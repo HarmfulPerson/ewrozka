@@ -150,54 +150,7 @@ export class AdminController {
     return this.adminService.rejectWizardVideoByUid(uid);
   }
 
-  // ── Legacy :id routes (deprecated — use /wizards/uid/:uid/*) ──
-
-  @Get('wizards/:id')
-  @ApiAuth({ summary: 'Szczegóły specjalisty (deprecated — użyj /wizards/uid/:uid)' })
-  getWizard(@Param('id', ParseIntPipe) id: number) {
-    return this.adminService.getWizardById(id);
-  }
-
-  @Patch('wizards/:id/platform-fee')
-  @ApiAuth({ summary: 'Zmień prowizję (deprecated — użyj /wizards/uid/:uid/platform-fee)' })
-  @HttpCode(HttpStatus.OK)
-  updateWizardPlatformFee(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: { platformFeePercent: number },
-  ) {
-    return this.adminService.updateWizardPlatformFee(
-      id,
-      Number(body.platformFeePercent),
-    );
-  }
-
-  @Post('wizards/:id/platform-fee/reset-to-tier')
-  @ApiAuth({ summary: 'Reset prowizji (deprecated — użyj /wizards/uid/:uid/...)' })
-  @HttpCode(HttpStatus.OK)
-  resetWizardPlatformFeeToTier(@Param('id', ParseIntPipe) id: number) {
-    return this.adminService.resetWizardPlatformFeeToTier(id);
-  }
-
-  @Post('wizards/:id/featured')
-  @ApiAuth({ summary: 'Wyróżnienie (deprecated — użyj /wizards/uid/:uid/featured)' })
-  @HttpCode(HttpStatus.OK)
-  setWizardFeatured(@Param('id', ParseIntPipe) id: number) {
-    return this.adminService.setWizardFeatured(id);
-  }
-
-  @Post('wizards/:id/video/approve')
-  @ApiAuth({ summary: 'Zatwierdź filmik (deprecated — użyj /wizards/uid/:uid/video/approve)' })
-  @HttpCode(HttpStatus.OK)
-  approveWizardVideo(@Param('id', ParseIntPipe) id: number) {
-    return this.adminService.approveWizardVideo(id);
-  }
-
-  @Post('wizards/:id/video/reject')
-  @ApiAuth({ summary: 'Odrzuć filmik (deprecated — użyj /wizards/uid/:uid/video/reject)' })
-  @HttpCode(HttpStatus.OK)
-  rejectWizardVideo(@Param('id', ParseIntPipe) id: number) {
-    return this.adminService.rejectWizardVideo(id);
-  }
+  // Legacy :id routes removed in Phase 6. All wizard ops go through /wizards/uid/:uid/*.
 
   @Get('commission-tier-config')
   @ApiAuth({ summary: 'Pobierz konfigurację progów prowizji (tylko admin)' })
@@ -294,14 +247,4 @@ export class AdminController {
     return this.adminService.getWizardAnalyticsByUid(uid, from, to, groupBy);
   }
 
-  @Get('analytics/wizard/:id')
-  @ApiAuth({ summary: 'Analityka: szczegóły wróżki (deprecated — użyj /analytics/wizard/uid/:uid)' })
-  getWizardAnalytics(
-    @Param('id', ParseIntPipe) wizardId: number,
-    @Query('from') from: string,
-    @Query('to') to: string,
-    @Query('groupBy') groupBy?: 'day' | 'week' | 'month',
-  ) {
-    return this.adminService.getWizardAnalytics(wizardId, from, to, groupBy);
-  }
 }

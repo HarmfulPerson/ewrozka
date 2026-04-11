@@ -7,7 +7,13 @@ export interface StoredUser {
   bio: string;
   image: string;
   roles: string[];
+  /**
+   * Kept for backward compat with entries already persisted in localStorage.
+   * New code should prefer `uid`. Will be removed when all consumers migrate.
+   */
   id: number;
+  /** Stable non-sequential external identifier. Prefer this for comparisons. */
+  uid: string;
   topicIds: number[];
   topicNames: string[];
 }
@@ -44,6 +50,7 @@ export function userFromApi(apiUser: ApiUser): StoredUser {
     image: apiUser.image,
     roles: apiUser.roles,
     id: apiUser.id,
+    uid: apiUser.uid,
     topicIds: apiUser.topicIds ?? [],
     topicNames: apiUser.topicNames ?? [],
   };

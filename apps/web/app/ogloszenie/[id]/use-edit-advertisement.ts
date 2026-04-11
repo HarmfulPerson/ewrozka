@@ -31,7 +31,7 @@ export function useEditAdvertisement(
     setSaving(true);
     setError('');
     try {
-      const res = await apiUpdateAdvertisement(token, advertisement.id, {
+      const res = await apiUpdateAdvertisement(token, advertisement.uid, {
         description: description.trim(),
       });
       onSaved(res.advertisement);

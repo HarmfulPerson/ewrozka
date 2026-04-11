@@ -25,7 +25,7 @@ export default function AdvertisementClient() {
   const [loading, setLoading] = useState(true);
   const user = getStoredUser();
 
-  const isOwner = !!user && !!advertisement && user.roles?.includes('wizard') && user.id === advertisement.wizard.id;
+  const isOwner = !!user && !!advertisement && user.roles?.includes('wizard') && user.uid === advertisement.wizard.uid;
   const isOtherWizard = !!user && user.roles?.includes('wizard') && !isOwner;
 
   const booking = useBooking(advertisement?.uid);

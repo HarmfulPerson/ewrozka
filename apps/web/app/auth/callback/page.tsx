@@ -21,6 +21,7 @@ function AuthCallbackInner() {
         image: '',
         roles: [],
         id: 0,
+        uid: '',
         topicIds: [],
         topicNames: [],
       });

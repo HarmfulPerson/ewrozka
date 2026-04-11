@@ -238,15 +238,9 @@ export class UserController {
   }
 
   @Get('wizards/uid/:uid')
-  @ApiPublic({ summary: 'Profil specjalisty po UID (preferowane)' })
+  @ApiPublic({ summary: 'Profil specjalisty po UID' })
   async getWizardByUid(@Param('uid', ParseUUIDPipe) uid: string) {
     return this.userService.getWizardByUid(uid);
-  }
-
-  @Get('wizards/:id')
-  @ApiPublic({ summary: 'Profil specjalisty po ID (deprecated — użyj /wizards/uid/:uid)' })
-  async getWizard(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.getWizardById(id);
   }
 
   @Get('topics')

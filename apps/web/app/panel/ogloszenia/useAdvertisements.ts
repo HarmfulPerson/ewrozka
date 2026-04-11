@@ -89,7 +89,7 @@ export function useAdvertisements() {
   const deleteAdvertisement = async (ad: AdvertisementDto) => {
     if (!user) return;
 
-    await apiDeleteAdvertisement(user.token, ad.id);
+    await apiDeleteAdvertisement(user.token, ad.uid);
     toast.success('Ogłoszenie zostało usunięte');
     await fetchAdvertisements();
     if (typeof window !== 'undefined') {

@@ -143,6 +143,30 @@ export class AdvertisementService {
     return this.getAdvertisementById(ad.id);
   }
 
+  /** Phase 6: update an advertisement by uid. Resolves → id → delegates. */
+  async updateAdvertisementByUid(
+    userId: number,
+    uid: string,
+    data: { description?: string },
+  ) {
+    const ad = await this.advertisementRepository.findOne({
+      where: { uid },
+      select: ['id'],
+    });
+    if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
+    return this.updateAdvertisement(userId, ad.id, data);
+  }
+
+  /** Phase 6: delete an advertisement by uid. Resolves → id → delegates. */
+  async deleteAdvertisementByUid(userId: number, uid: string) {
+    const ad = await this.advertisementRepository.findOne({
+      where: { uid },
+      select: ['id'],
+    });
+    if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
+    return this.deleteAdvertisement(userId, ad.id);
+  }
+
   async createAdvertisement(
     userId: number,
     data: {
