@@ -5,6 +5,14 @@ export class UserDto {
   @NumberField({ expose: true })
   id: number;
 
+  /**
+   * Stable, non-sequential external identifier. Prefer this over `id` in
+   * public URLs and cross-service references. `id` will be dropped in a
+   * future phase of the uid migration.
+   */
+  @StringField({ expose: true })
+  uid: string;
+
   @EmailField({ expose: true })
   email: string;
 

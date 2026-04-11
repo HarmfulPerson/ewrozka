@@ -173,6 +173,8 @@ export class UserService {
 
         id: user.id,
 
+        uid: user.uid,
+
 
 
         email: user.email,
@@ -420,6 +422,8 @@ export class UserService {
 
         id: savedWithRoles.id,
 
+        uid: savedWithRoles.uid,
+
 
 
         email: savedWithRoles.email,
@@ -573,6 +577,8 @@ export class UserService {
       user: {
 
         id: savedUser.id,
+
+        uid: savedUser.uid,
 
 
 
@@ -759,6 +765,8 @@ export class UserService {
       user: {
 
         id: user.id,
+
+        uid: user.uid,
 
 
 
@@ -984,6 +992,8 @@ export class UserService {
 
         id: wizard.id,
 
+        uid: wizard.uid,
+
 
 
         username: wizard.username,
@@ -1125,6 +1135,8 @@ export class UserService {
 
         id: wizard.id,
 
+        uid: wizard.uid,
+
 
 
         username: wizard.username,
@@ -1169,6 +1181,26 @@ export class UserService {
 
     };
 
+  }
+
+  /**
+   * Public lookup by UUID. Phase 1 of the int-id → uid migration. Prefer this
+   * over `getWizardById` for any consumer where the id crosses a trust
+   * boundary (public URLs, share links, external callers). Internally just
+   * resolves `uid → id` and delegates to `getWizardById` so both paths return
+   * an identical response shape.
+   */
+  async getWizardByUid(uid: string) {
+    const wizard = await this.userRepository.findOne({
+      where: { uid },
+      select: ['id'],
+    });
+
+    if (!wizard) {
+      throw new NotFoundException('Specjalista nie istnieje');
+    }
+
+    return this.getWizardById(wizard.id);
   }
 
 

@@ -75,6 +75,7 @@ export class AuthService {
     return {
       user: {
         id: user.id,
+        uid: user.uid,
         email: user.email,
         username: user.username,
         bio: user.bio,
@@ -369,6 +370,7 @@ export class AuthService {
       return {
         user: {
           id: saved.id,
+          uid: saved.uid,
           email: saved.email,
           username: saved.username,
           bio: saved.bio,

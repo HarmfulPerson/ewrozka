@@ -35,12 +35,16 @@ export default function WizardProfileClient() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const id = parseInt(params.id as string, 10);
-        const [wizardResponse, adsResponse] = await Promise.all([
-          apiGetWizard(id),
-          apiGetWizardAdvertisements(id),
-        ]);
+        // params.id in the route segment may be either the new uid (UUID)
+        // or the legacy numeric id during the int-id → uid migration.
+        // apiGetWizard handles both internally.
+        const wizardResponse = await apiGetWizard(params.id as string);
         setWizard(wizardResponse.wizard);
+        // Advertisements endpoint still uses numeric wizard.id (Phase 2+ will
+        // migrate it). Use the numeric id that came back on the wizard DTO.
+        const adsResponse = await apiGetWizardAdvertisements(
+          wizardResponse.wizard.id,
+        );
         setAdvertisements(adsResponse.advertisements);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -53,10 +57,11 @@ export default function WizardProfileClient() {
   }, [params.id]);
 
   useEffect(() => {
-    if (!params.id) return;
-    const wizardId = parseInt(params.id as string, 10);
+    // Reviews endpoint still takes numeric wizardId — fetch only after the
+    // wizard profile has loaded so we have its numeric id available.
+    if (!wizard) return;
     setReviewsLoading(true);
-    apiGetWizardReviews(wizardId, reviewsPage, REVIEWS_LIMIT)
+    apiGetWizardReviews(wizard.id, reviewsPage, REVIEWS_LIMIT)
       .then((res) => {
         setReviews(res.reviews);
         setReviewsTotal(res.total);
@@ -64,7 +69,7 @@ export default function WizardProfileClient() {
       })
       .catch(() => {})
       .finally(() => setReviewsLoading(false));
-  }, [params.id, reviewsPage]);
+  }, [wizard, reviewsPage]);
 
   if (loading) {
     return (

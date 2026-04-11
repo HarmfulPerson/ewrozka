@@ -60,7 +60,7 @@ export function AnnouncementsSection() {
           <ul className="announcements__list" ref={listRef}>
             {wizards.map((wizard) => (
               <li key={wizard.id}>
-                <a href={`/wrozka/${wizard.id}`} className="announcements__card-link">
+                <a href={`/wrozka/${wizard.uid}`} className="announcements__card-link">
                   <WizardCard wizard={wizard} />
                 </a>
               </li>

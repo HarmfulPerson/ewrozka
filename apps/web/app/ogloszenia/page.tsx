@@ -138,7 +138,7 @@ function WizardList({ filters }: { filters: ReturnType<typeof useWizardFilters> 
       </p>
       <div className="ogloszenia-list">
         {filters.wizards.map(wizard => (
-          <Link key={wizard.id} href={`/wrozka/${wizard.id}`} className="ogloszenia-link">
+          <Link key={wizard.id} href={`/wrozka/${wizard.uid}`} className="ogloszenia-link">
             <WizardCard wizard={wizard} />
           </Link>
         ))}

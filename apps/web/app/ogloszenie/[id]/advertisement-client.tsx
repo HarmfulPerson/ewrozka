@@ -121,11 +121,11 @@ export default function AdvertisementClient() {
         <Header />
         <main className="advertisement-main">
           <div className="advertisement-topnav">
-            <Link href={`/wrozka/${advertisement.wizard.id}`} className="advertisement-topnav__back">← Wróć</Link>
+            <Link href={`/wrozka/${advertisement.wizard.uid}`} className="advertisement-topnav__back">← Wróć</Link>
             <div className="advertisement-topnav__breadcrumbs">
               <Link href="/ogloszenia" className="breadcrumb-link">Specjaliści</Link>
               <span className="breadcrumb-separator">/</span>
-              <Link href={`/wrozka/${advertisement.wizard.id}`} className="breadcrumb-link">
+              <Link href={`/wrozka/${advertisement.wizard.uid}`} className="breadcrumb-link">
                 {advertisement.wizard.username}
               </Link>
               <span className="breadcrumb-separator">/</span>
@@ -152,7 +152,7 @@ export default function AdvertisementClient() {
                 <h1 className="advertisement-details__title">{advertisement.title}</h1>
 
                 <div className="advertisement-details__wizard">
-                  <Link href={`/wrozka/${advertisement.wizard.id}`} className="wizard-link">
+                  <Link href={`/wrozka/${advertisement.wizard.uid}`} className="wizard-link">
                     {advertisement.wizard.image && (
                       <Image
                         src={getUploadUrl(advertisement.wizard.image)}

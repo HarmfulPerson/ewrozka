@@ -57,8 +57,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (res.ok) {
       const data = await res.json();
       const wizards = data.wizards ?? [];
-      wizardPages = wizards.map((w: { id: number }) => ({
-        url: `${BASE_URL}/wrozka/${w.id}`,
+      wizardPages = wizards.map((w: { uid: string }) => ({
+        url: `${BASE_URL}/wrozka/${w.uid}`,
         lastModified: new Date(),
         changeFrequency: 'weekly' as const,
         priority: 0.8,

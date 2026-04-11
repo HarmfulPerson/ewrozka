@@ -6,9 +6,13 @@ const API_BASE = (() => {
   return base.endsWith('/api') ? base : `${base}/api`;
 })();
 
-async function getWizard(id: string) {
+async function getWizard(uidOrId: string) {
+  // Route segment may hold either the new uid (UUID) or the legacy numeric id
+  // during the int-id → uid migration. Detect and hit the right endpoint.
+  const isUid = /^[0-9a-f]{8}-/i.test(uidOrId);
+  const path = isUid ? `wizards/uid/${uidOrId}` : `wizards/${uidOrId}`;
   try {
-    const res = await fetch(`${API_BASE}/wizards/${id}`, { next: { revalidate: 600 } });
+    const res = await fetch(`${API_BASE}/${path}`, { next: { revalidate: 600 } });
     if (!res.ok) return null;
     const data = await res.json();
     return data.wizard ?? null;

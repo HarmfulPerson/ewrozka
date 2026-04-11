@@ -43,6 +43,8 @@ export interface ApiUser {
 
 export interface WizardDto {
   id: number;
+  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
+  uid: string;
   username: string;
   bio: string;
   image: string;
@@ -250,8 +252,17 @@ export async function apiGetWizards(params?: {
 }
 
 
-export async function apiGetWizard(userId: number): Promise<{ wizard: WizardDto }> {
-  return fetchApi(`wizards/${userId}`);
+/**
+ * Fetch a wizard profile. Accepts either the new uid (preferred) or the legacy
+ * numeric id — the route is picked automatically. Once every caller migrates
+ * to uid we can delete the legacy branch.
+ */
+export async function apiGetWizard(
+  uidOrId: string | number,
+): Promise<{ wizard: WizardDto }> {
+  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
+  const path = isUid ? `wizards/uid/${uidOrId}` : `wizards/${uidOrId}`;
+  return fetchApi(path);
 }
 
 export interface AdvertisementDto {
@@ -273,6 +284,8 @@ export interface AdvertisementDetailDto {
   durationMinutes: number;
   wizard: {
     id: number;
+    /** Stable non-sequential external identifier. Prefer over `id` in URLs. */
+    uid: string;
     username: string;
     image: string;
     topicNames: string[];

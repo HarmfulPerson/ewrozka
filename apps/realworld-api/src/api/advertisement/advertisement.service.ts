@@ -102,6 +102,7 @@ export class AdvertisementService {
         durationMinutes: advertisement.durationMinutes,
         wizard: {
           id: advertisement.user.id,
+          uid: advertisement.user.uid,
           username: advertisement.user.username,
           image: advertisement.user.image,
           topicNames: advertisement.user.topics?.map((t) => t.name) ?? [],
