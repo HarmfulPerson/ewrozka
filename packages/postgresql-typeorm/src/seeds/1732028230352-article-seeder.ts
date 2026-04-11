@@ -36,7 +36,7 @@ export class ArticleSeeder1732028230352 implements Seeder {
     for (const user of users) {
       const randomTagNumber = getRandomInt(0, tags.length - 1);
       await articleFactory.saveMany(5, {
-        authorId: user.id,
+        authorId: user.uid,
         tags: tags.slice(0, randomTagNumber).slice(0, 5),
       });
     }

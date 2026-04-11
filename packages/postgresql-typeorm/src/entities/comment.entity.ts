@@ -4,7 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
@@ -18,33 +18,34 @@ export class CommentEntity extends AbstractEntity {
     Object.assign(this, data);
   }
 
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_comment_id' })
-  id!: number;
-
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_comment_uid',
+  })
   uid!: string;
 
   @Column()
   body!: string;
 
   @Column({ name: 'article_id' })
-  articleId!: number;
+  articleId!: string;
 
   @ManyToOne(() => ArticleEntity, (article) => article.comments)
   @JoinColumn({
     name: 'article_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_comment_article',
   })
   article: ArticleEntity;
 
   @Column({ name: 'author_id' })
-  authorId!: number;
+  authorId!: string;
 
   @ManyToOne(() => UserEntity, (user) => user.comments)
   @JoinColumn({
     name: 'author_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_comment_user',
   })
   author: UserEntity;

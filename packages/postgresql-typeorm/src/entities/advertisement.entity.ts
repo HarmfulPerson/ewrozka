@@ -4,7 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
   UpdateDateColumn,
 } from 'typeorm';
@@ -18,12 +18,11 @@ export class AdvertisementEntity extends AbstractEntity {
     Object.assign(this, data);
   }
 
-  @PrimaryGeneratedColumn({
-    primaryKeyConstraintName: 'PK_advertisement_id',
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_advertisement_uid',
   })
-  id!: number;
-
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
   uid!: string;
 
   @Column()
@@ -44,12 +43,12 @@ export class AdvertisementEntity extends AbstractEntity {
   durationMinutes!: number;
 
   @Column({ name: 'user_id' })
-  userId!: number;
+  userId!: string;
 
   @ManyToOne(() => UserEntity, (user) => user.advertisements)
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_advertisement_user',
   })
   user!: Relation<UserEntity>;

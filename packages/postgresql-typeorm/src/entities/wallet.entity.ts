@@ -5,7 +5,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
   UpdateDateColumn,
 } from 'typeorm';
@@ -15,14 +15,16 @@ import { UserEntity } from './user.entity';
 @Entity('wallet')
 @Index('IDX_wallet_user', ['userId'])
 export class WalletEntity extends AbstractEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_wallet_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_wallet_uid',
+  })
   uid!: string;
 
   @Column({ name: 'user_id' })
-  userId!: number;
+  userId!: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'FK_wallet_user' })

@@ -36,8 +36,8 @@ export class CommentSeeder1732031567099 implements Seeder {
     for (const user of users) {
       const randomArticleNumber = getRandomInt(0, articles.length - 1);
       await commentFactory.saveMany(5, {
-        authorId: user.id,
-        articleId: articles[randomArticleNumber].id,
+        authorId: user.uid,
+        articleId: articles[randomArticleNumber].uid,
       });
     }
   }

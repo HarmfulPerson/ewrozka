@@ -36,7 +36,7 @@ export class UserFavoritesSeeder1732032454792 implements Seeder {
     for (const user of users) {
       const randomArticleNumber = getRandomInt(0, articles.length - 1);
       const isExist = user.favorites.some(
-        (favorite) => favorite.id === articles[randomArticleNumber].id,
+        (favorite) => favorite.uid === articles[randomArticleNumber].uid,
       );
 
       if (!isExist) {

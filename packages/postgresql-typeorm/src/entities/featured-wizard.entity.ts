@@ -4,21 +4,23 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 
 @Entity('featured_wizard')
 export class FeaturedWizardEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_featured_wizard_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_featured_wizard_uid',
+  })
   uid!: string;
 
   @Column({ name: 'user_id' })
-  userId!: number;
+  userId!: string;
 
   @Column({ name: 'stripe_payment_intent_id', type: 'varchar', length: 255, nullable: true })
   stripePaymentIntentId!: string | null;
@@ -38,7 +40,7 @@ export class FeaturedWizardEntity {
   @ManyToOne(() => UserEntity)
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_featured_wizard_user',
   })
   user!: Relation<UserEntity>;

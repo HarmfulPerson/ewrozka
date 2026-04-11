@@ -2,16 +2,18 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('reminder_config')
 export class ReminderConfigEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_reminder_config_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_reminder_config_uid',
+  })
   uid!: string;
 
   @Column({ name: 'enabled_48h', type: 'boolean', default: true })

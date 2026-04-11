@@ -4,7 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
   type Relation,
 } from 'typeorm';
@@ -12,14 +12,16 @@ import { PlatformFeeConfigEntity } from './platform-fee-config.entity';
 
 @Entity('platform_fee_tier')
 export class PlatformFeeTierEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_platform_fee_tier_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_platform_fee_tier_uid',
+  })
   uid!: string;
 
   @Column({ name: 'config_id', type: 'int' })
-  configId!: number;
+  configId!: string;
 
   @ManyToOne(() => PlatformFeeConfigEntity, (c) => c.tiers, { onDelete: 'CASCADE' })
   @JoinColumn({

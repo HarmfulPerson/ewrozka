@@ -4,22 +4,24 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 
 @Entity('notification')
 export class NotificationEntity {
-  @PrimaryGeneratedColumn()
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_notification_uid',
+  })
   uid!: string;
 
   /** Odbiorca powiadomienia */
   @Column({ name: 'user_id' })
-  userId!: number;
+  userId!: string;
 
   /** Typ powiadomienia — klucz do obsługi na froncie */
   @Column({ type: 'varchar', length: 50 })
@@ -55,7 +57,7 @@ export class NotificationEntity {
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_notification_user',
   })
   user!: Relation<UserEntity>;

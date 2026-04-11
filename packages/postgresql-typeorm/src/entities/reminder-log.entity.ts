@@ -3,16 +3,18 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from 'typeorm';
 
 @Entity('reminder_log')
 @Index(['entityType', 'entityId', 'hoursBefore'], { unique: true })
 export class ReminderLogEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_reminder_log_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_reminder_log_uid',
+  })
   uid!: string;
 
   @Column({ name: 'entity_type', type: 'varchar', length: 20 })

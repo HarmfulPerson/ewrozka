@@ -3,17 +3,19 @@ import {
   Entity,
   Index,
   ManyToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
 } from 'typeorm';
 import { UserEntity } from './user.entity';
 
 @Entity('role')
 export class RoleEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_role_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_role_uid',
+  })
   uid!: string;
 
   @Column()

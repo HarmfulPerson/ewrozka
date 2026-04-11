@@ -8,7 +8,7 @@ export default setSeederFactory(ArticleEntity, (fake) => {
   article.slug = fake.lorem.slug();
   article.description = fake.lorem.sentence();
   article.body = fake.lorem.paragraphs(10);
-  article.authorId = 1;
+  article.authorId = '00000000-0000-0000-0000-000000000000';
 
   return article;
 });

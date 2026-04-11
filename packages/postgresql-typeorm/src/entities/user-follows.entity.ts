@@ -4,7 +4,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
 import { UserEntity } from './user.entity';
@@ -23,24 +23,25 @@ export class UserFollowsEntity extends AbstractEntity {
     Object.assign(this, data);
   }
 
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_user_follows_id' })
-  id: number;
-
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_user_follows_uid',
+  })
   uid!: string;
 
   @Column({ name: 'follower_id' })
   @Index('UQ_user_follows_follower_id', ['followerId'])
-  followerId: number;
+  followerId: string;
 
   @Column({ name: 'followee_id' })
   @Index('UQ_user_follows_followee_id', ['followeeId'])
-  followeeId: number;
+  followeeId: string;
 
   @ManyToOne(() => UserEntity, (user) => user.following)
   @JoinColumn({
     name: 'follower_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_user_follows_follower_id',
   })
   follower: UserEntity;
@@ -48,7 +49,7 @@ export class UserFollowsEntity extends AbstractEntity {
   @ManyToOne(() => UserEntity, (user) => user.followers)
   @JoinColumn({
     name: 'followee_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_user_follows_followee_id',
   })
   followee: UserEntity;

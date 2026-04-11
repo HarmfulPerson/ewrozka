@@ -3,7 +3,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
 } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
@@ -16,16 +16,15 @@ export class AvailabilityEntity extends AbstractEntity {
     Object.assign(this, data);
   }
 
-  @PrimaryGeneratedColumn({
-    primaryKeyConstraintName: 'PK_availability_id',
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_availability_uid',
   })
-  id!: number;
-
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
   uid!: string;
 
   @Column({ name: 'user_id' })
-  userId!: number;
+  userId!: string;
 
   @Column({ name: 'starts_at', type: 'timestamptz' })
   startsAt!: Date;
@@ -36,7 +35,7 @@ export class AvailabilityEntity extends AbstractEntity {
   @ManyToOne(() => UserEntity)
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_availability_user',
   })
   user!: Relation<UserEntity>;

@@ -4,7 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
 } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
@@ -18,25 +18,24 @@ export class AppointmentEntity extends AbstractEntity {
     Object.assign(this, data);
   }
 
-  @PrimaryGeneratedColumn({
-    primaryKeyConstraintName: 'PK_appointment_id',
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_appointment_uid',
   })
-  id!: number;
-
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
   uid!: string;
 
   @Column({ name: 'client_id' })
-  clientId!: number;
+  clientId!: string;
 
   @Column({ name: 'wrozka_id' })
-  wrozkaId!: number;
+  wrozkaId!: string;
 
   @Column({ name: 'advertisement_id', nullable: true, default: null })
-  advertisementId!: number | null;
+  advertisementId!: string | null;
 
   @Column({ name: 'meeting_request_id', type: 'int', nullable: true })
-  meetingRequestId!: number | null;
+  meetingRequestId!: string | null;
 
   @Column({ name: 'starts_at', type: 'timestamptz' })
   startsAt!: Date;
@@ -67,7 +66,7 @@ export class AppointmentEntity extends AbstractEntity {
   @ManyToOne(() => UserEntity)
   @JoinColumn({
     name: 'client_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_appointment_client',
   })
   client!: Relation<UserEntity>;
@@ -75,7 +74,7 @@ export class AppointmentEntity extends AbstractEntity {
   @ManyToOne(() => UserEntity)
   @JoinColumn({
     name: 'wrozka_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_appointment_wrozka',
   })
   wrozka!: Relation<UserEntity>;
@@ -83,7 +82,7 @@ export class AppointmentEntity extends AbstractEntity {
   @ManyToOne(() => AdvertisementEntity, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({
     name: 'advertisement_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_appointment_advertisement',
   })
   advertisement!: Relation<AdvertisementEntity>;

@@ -8,7 +8,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
   UpdateDateColumn,
 } from 'typeorm';
@@ -24,10 +24,11 @@ export class ArticleEntity extends AbstractEntity {
     Object.assign(this, data);
   }
 
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_article_id' })
-  id!: number;
-
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_article_uid',
+  })
   uid!: string;
 
   @Column()
@@ -44,12 +45,12 @@ export class ArticleEntity extends AbstractEntity {
   body!: string;
 
   @Column({ name: 'author_id' })
-  authorId: number;
+  authorId: string;
 
   @ManyToOne(() => UserEntity, (user) => user.articles)
   @JoinColumn({
     name: 'author_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_article_user',
   })
   author: UserEntity;
@@ -76,12 +77,12 @@ export class ArticleEntity extends AbstractEntity {
     joinColumn: {
       name: 'article_id',
       foreignKeyConstraintName: 'FK_article_to_tag_article',
-      referencedColumnName: 'id',
+      referencedColumnName: 'uid',
     },
     inverseJoinColumn: {
       name: 'tag_id',
       foreignKeyConstraintName: 'FK_article_to_tag_tag',
-      referencedColumnName: 'id',
+      referencedColumnName: 'uid',
     },
   })
   tags: Relation<TagEntity[]>;

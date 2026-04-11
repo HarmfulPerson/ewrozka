@@ -5,7 +5,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,14 +14,16 @@ import { UserEntity } from './user.entity';
 @Entity('withdrawal')
 @Index('IDX_withdrawal_user', ['userId'])
 export class WithdrawalEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_withdrawal_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_withdrawal_uid',
+  })
   uid!: string;
 
   @Column({ name: 'user_id' })
-  userId!: number;
+  userId!: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'FK_withdrawal_user' })

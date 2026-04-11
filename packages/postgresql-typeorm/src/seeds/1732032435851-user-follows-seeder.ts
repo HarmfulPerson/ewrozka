@@ -24,19 +24,19 @@ export class UserFollowsSeeder1732032435851 implements Seeder {
     const userFollowsRepository = dataSource.getRepository(UserFollowsEntity);
     for (const user of users) {
       const randomUserNumber = getRandomInt(0, users.length - 1);
-      const randomFoloweeId = users[randomUserNumber].id;
+      const randomFoloweeId = users[randomUserNumber].uid;
       const followeeId =
-        randomFoloweeId === user.id
-          ? users[randomUserNumber + 1].id
+        randomFoloweeId === user.uid
+          ? users[randomUserNumber + 1].uid
           : randomFoloweeId;
       const isExist = await userFollowsRepository.existsBy({
-        followerId: user.id,
+        followerId: user.uid,
         followeeId,
       });
 
       if (!isExist) {
         await userFollowsRepository.save({
-          followerId: user.id,
+          followerId: user.uid,
           followeeId,
         });
       }

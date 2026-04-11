@@ -5,7 +5,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,14 +14,16 @@ import { UserEntity } from './user.entity';
 @Entity('stripe_connect_account')
 @Index('IDX_stripe_connect_user', ['userId'], { unique: true })
 export class StripeConnectAccountEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_stripe_connect_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_stripe_connect_uid',
+  })
   uid!: string;
 
   @Column({ name: 'user_id' })
-  userId!: number;
+  userId!: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'FK_stripe_connect_user' })

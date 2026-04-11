@@ -1,12 +1,14 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
 
 @Entity('tag')
 export class TagEntity extends AbstractEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_tag_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_tag_uid',
+  })
   uid!: string;
 
   @Column()

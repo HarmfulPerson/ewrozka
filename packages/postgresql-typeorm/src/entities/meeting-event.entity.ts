@@ -4,7 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
 } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
@@ -13,19 +13,19 @@ import { UserEntity } from './user.entity';
 
 @Entity('meeting_event')
 export class MeetingEventEntity extends AbstractEntity {
-  @PrimaryGeneratedColumn({
-    primaryKeyConstraintName: 'PK_meeting_event_id',
-  })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_meeting_event_uid',
+  })
   uid!: string;
 
   @Column({ name: 'meeting_room_id' })
-  meetingRoomId!: number;
+  meetingRoomId!: string;
 
   @Column({ name: 'user_id' })
-  userId!: number;
+  userId!: string;
 
   /** 'joined' | 'left' */
   @Column({ name: 'event_type', type: 'varchar', length: 20 })
@@ -42,7 +42,7 @@ export class MeetingEventEntity extends AbstractEntity {
   @ManyToOne(() => MeetingRoomEntity, (room) => room.events)
   @JoinColumn({
     name: 'meeting_room_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_meeting_event_meeting_room',
   })
   meetingRoom!: Relation<MeetingRoomEntity>;
@@ -50,7 +50,7 @@ export class MeetingEventEntity extends AbstractEntity {
   @ManyToOne(() => UserEntity)
   @JoinColumn({
     name: 'user_id',
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
     foreignKeyConstraintName: 'FK_meeting_event_user',
   })
   user!: Relation<UserEntity>;

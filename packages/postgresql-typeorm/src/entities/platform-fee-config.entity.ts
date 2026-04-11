@@ -3,7 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
   type Relation,
 } from 'typeorm';
@@ -11,10 +11,12 @@ import { PlatformFeeTierEntity } from './platform-fee-tier.entity';
 
 @Entity('platform_fee_config')
 export class PlatformFeeConfigEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_platform_fee_config_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_platform_fee_config_uid',
+  })
   uid!: string;
 
   @Column({ name: 'window_days', type: 'int', default: 90 })

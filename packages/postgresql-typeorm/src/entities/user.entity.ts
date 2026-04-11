@@ -9,7 +9,7 @@ import {
   JoinTable,
   ManyToMany,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
 } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
@@ -22,10 +22,11 @@ import { UserFollowsEntity } from './user-follows.entity';
 
 @Entity('user')
 export class UserEntity extends AbstractEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_user_id' })
-  id!: number;
-
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_user_uid',
+  })
   uid!: string;
 
   @Column()
@@ -142,14 +143,14 @@ export class UserEntity extends AbstractEntity {
   @Index('UQ_user_referral_code', { unique: true, where: '"referral_code" IS NOT NULL' })
   referralCode!: string | null;
 
-  /** ID użytkownika, który polecił tego użytkownika. */
+  /** UID użytkownika, który polecił tego użytkownika. */
   @Column({
     name: 'referred_by',
-    type: 'int',
+    type: 'uuid',
     nullable: true,
     default: null,
   })
-  referredBy!: number | null;
+  referredBy!: string | null;
 
   /**
    * Prowizja platformy w % (tylko wróżki, 0–100). Null = domyślnie 20%.
@@ -184,12 +185,12 @@ export class UserEntity extends AbstractEntity {
     name: 'user_role',
     joinColumn: {
       name: 'user_id',
-      referencedColumnName: 'id',
+      referencedColumnName: 'uid',
       foreignKeyConstraintName: 'FK_user_role_user',
     },
     inverseJoinColumn: {
       name: 'role_id',
-      referencedColumnName: 'id',
+      referencedColumnName: 'uid',
       foreignKeyConstraintName: 'FK_user_role_role',
     },
   })
@@ -200,12 +201,12 @@ export class UserEntity extends AbstractEntity {
     name: 'user_favorites',
     joinColumn: {
       name: 'user_id',
-      referencedColumnName: 'id',
+      referencedColumnName: 'uid',
       foreignKeyConstraintName: 'FK_user_favorites_user',
     },
     inverseJoinColumn: {
       name: 'article_id',
-      referencedColumnName: 'id',
+      referencedColumnName: 'uid',
       foreignKeyConstraintName: 'FK_user_favorites_article',
     },
   })
@@ -225,12 +226,12 @@ export class UserEntity extends AbstractEntity {
     name: 'user_topic',
     joinColumn: {
       name: 'user_id',
-      referencedColumnName: 'id',
+      referencedColumnName: 'uid',
       foreignKeyConstraintName: 'FK_user_topic_user',
     },
     inverseJoinColumn: {
       name: 'topic_id',
-      referencedColumnName: 'id',
+      referencedColumnName: 'uid',
       foreignKeyConstraintName: 'FK_user_topic_topic',
     },
   })

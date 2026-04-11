@@ -3,7 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   Index,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
@@ -11,10 +11,12 @@ import { AbstractEntity } from './abstract.entity';
 @Entity('platform_revenue')
 @Index('IDX_platform_revenue_date', ['date'])
 export class PlatformRevenueEntity extends AbstractEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_platform_revenue_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_platform_revenue_uid',
+  })
   uid!: string;
 
   @Column({ type: 'date', unique: true })

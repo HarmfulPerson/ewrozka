@@ -5,7 +5,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   type Relation,
 } from 'typeorm';
 import { AbstractEntity } from './abstract.entity';
@@ -17,21 +17,23 @@ import { AppointmentEntity } from './appointment.entity';
 @Index('IDX_transaction_appointment', ['appointmentId'])
 @Index('IDX_transaction_created_at', ['createdAt'])
 export class TransactionEntity extends AbstractEntity {
-  @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_transaction_id' })
-  id!: number;
 
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_transaction_uid',
+  })
   uid!: string;
 
   @Column({ name: 'user_id', comment: 'Wizard (recipient) ID' })
-  userId!: number;
+  userId!: string;
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id', foreignKeyConstraintName: 'FK_transaction_user' })
   user!: Relation<UserEntity>;
 
   @Column({ name: 'appointment_id', nullable: true })
-  appointmentId!: number | null;
+  appointmentId!: string | null;
 
   @ManyToOne(() => AppointmentEntity, { nullable: true })
   @JoinColumn({ name: 'appointment_id', foreignKeyConstraintName: 'FK_transaction_appointment' })

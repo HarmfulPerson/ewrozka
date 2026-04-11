@@ -10,7 +10,7 @@ import {
 
   ManyToOne,
 
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
 
   type Relation,
 
@@ -36,34 +36,28 @@ export class MeetingRequestEntity extends AbstractEntity {
 
   }
 
-
-
-  @PrimaryGeneratedColumn({
-
-    primaryKeyConstraintName: 'PK_meeting_request_id',
-
+  @PrimaryColumn({
+    type: 'uuid',
+    default: () => 'gen_random_uuid()',
+    primaryKeyConstraintName: 'PK_meeting_request_uid',
   })
-
-  id!: number;
-
-  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
   uid!: string;
 
 
 
   @Column({ name: 'user_id' })
 
-  userId!: number;
+  userId!: string;
 
 
 
   @Column({ name: 'advertisement_id', nullable: true, default: null })
 
-  advertisementId!: number | null;
+  advertisementId!: string | null;
 
   /** ID wróżki (z ogłoszenia) – pozwala wyświetlać odrzucone wnioski po usunięciu ogłoszenia */
   @Column({ name: 'wizard_id', nullable: true, default: null })
-  wizardId!: number | null;
+  wizardId!: string | null;
 
 
 
@@ -123,7 +117,7 @@ export class MeetingRequestEntity extends AbstractEntity {
 
     name: 'user_id',
 
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
 
     foreignKeyConstraintName: 'FK_meeting_request_user',
 
@@ -142,7 +136,7 @@ export class MeetingRequestEntity extends AbstractEntity {
 
     name: 'advertisement_id',
 
-    referencedColumnName: 'id',
+    referencedColumnName: 'uid',
 
     foreignKeyConstraintName: 'FK_meeting_request_advertisement',
 
