@@ -54,7 +54,8 @@ export function ClientPastMeetings({ token }: ClientPastMeetingsProps) {
     if (!pending) return;
     setSubmittingRating(apt.id);
     try {
-      await apiRateAppointment(token, apt.id, pending.stars, pending.comment || undefined);
+      // Phase 3: rate by uid.
+      await apiRateAppointment(token, apt.uid, pending.stars, pending.comment || undefined);
       toast.success(`Oceniono na ${pending.stars} ${pending.stars === 1 ? 'gwiazdkę' : pending.stars < 5 ? 'gwiazdki' : 'gwiazdek'}!`);
       setAppointments(prev => prev.map(a => a.id === apt.id ? { ...a, rating: pending.stars } : a));
       setPendingRating(prev => { const n = { ...prev }; delete n[apt.id]; return n; });

@@ -217,6 +217,7 @@ export class MeetingRequestService {
     return {
       requests: requests.map((r) => ({
         id: r.id,
+        uid: r.uid,
         advertisementId: r.advertisementId,
         advertisementTitle: r.advertisement?.title ?? '(Ogłoszenie usunięte)',
         clientId: r.userId,
@@ -256,6 +257,7 @@ export class MeetingRequestService {
     return {
       requests: requests.map((r) => ({
         id: r.id,
+        uid: r.uid,
         advertisementId: r.advertisementId,
         advertisementTitle: r.advertisement?.title,
         wrozkaId: r.advertisement?.userId,
@@ -416,5 +418,28 @@ export class MeetingRequestService {
     );
 
     return { status: 'rejected' };
+  }
+
+  /**
+   * Phase 3 of the int-id → uid migration. Resolves uid → numeric id and
+   * delegates to the existing accept/reject methods so business logic stays
+   * single-sourced.
+   */
+  async acceptByUid(wrozkaUserId: number, uid: string) {
+    const request = await this.meetingRequestRepository.findOne({
+      where: { uid },
+      select: ['id'],
+    });
+    if (!request) throw new NotFoundException('Prośba o spotkanie nie istnieje');
+    return this.accept(wrozkaUserId, request.id);
+  }
+
+  async rejectByUid(wrozkaUserId: number, uid: string, reason?: string) {
+    const request = await this.meetingRequestRepository.findOne({
+      where: { uid },
+      select: ['id'],
+    });
+    if (!request) throw new NotFoundException('Prośba o spotkanie nie istnieje');
+    return this.reject(wrozkaUserId, request.id, reason);
   }
 }

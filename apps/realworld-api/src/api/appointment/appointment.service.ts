@@ -77,6 +77,7 @@ export class AppointmentService {
     return {
       appointments: appointments.map((a) => ({
         id: a.id,
+        uid: a.uid,
         startsAt: a.startsAt.toISOString(),
         durationMinutes: a.durationMinutes,
         priceGrosze: a.priceGrosze,
@@ -118,6 +119,7 @@ export class AppointmentService {
     return {
       appointments: appointments.map((a) => ({
         id: a.id,
+        uid: a.uid,
         startsAt: a.startsAt.toISOString(),
         durationMinutes: a.durationMinutes,
         advertisementTitle: a.advertisement?.title,
@@ -151,6 +153,7 @@ export class AppointmentService {
     return {
       appointments: appointments.map((a) => ({
         id: a.id,
+        uid: a.uid,
         startsAt: a.startsAt.toISOString(),
         durationMinutes: a.durationMinutes,
         advertisementTitle: a.advertisement?.title,
@@ -213,5 +216,28 @@ export class AppointmentService {
 
   async pay(clientUserId: number, appointmentId: number, clientEmail: string) {
     return this.stripeService.createCheckoutSession(appointmentId, clientUserId, clientEmail);
+  }
+
+  /**
+   * Phase 3 of the int-id → uid migration. Resolves uid → numeric id and
+   * delegates to the legacy method. Keeps a single source of truth for the
+   * Stripe checkout flow.
+   */
+  async payByUid(clientUserId: number, uid: string, clientEmail: string) {
+    const apt = await this.appointmentRepository.findOne({ where: { uid }, select: ['id'] });
+    if (!apt) throw new NotFoundException('Spotkanie nie istnieje');
+    return this.pay(clientUserId, apt.id, clientEmail);
+  }
+
+  /** Phase 3: rate by uid. Same delegation pattern as payByUid. */
+  async rateAppointmentByUid(
+    clientId: number,
+    uid: string,
+    rating: number,
+    comment?: string,
+  ): Promise<void> {
+    const apt = await this.appointmentRepository.findOne({ where: { uid }, select: ['id'] });
+    if (!apt) throw new NotFoundException('Spotkanie nie istnieje');
+    return this.rateAppointment(clientId, apt.id, rating, comment);
   }
 }

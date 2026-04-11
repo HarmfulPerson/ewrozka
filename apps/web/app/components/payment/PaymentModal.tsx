@@ -23,7 +23,7 @@ function apiUrl(path: string) {
 
 async function apiCreatePaymentIntent(
   token: string,
-  appointmentId: number,
+  appointmentUid: string,
 ): Promise<{ clientSecret: string }> {
   const res = await fetch(apiUrl('stripe/payment-intent'), {
     method: 'POST',
@@ -31,7 +31,7 @@ async function apiCreatePaymentIntent(
       Authorization: `Token ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ appointmentId }),
+    body: JSON.stringify({ appointmentUid }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -42,13 +42,13 @@ async function apiCreatePaymentIntent(
 
 // ── Wewnętrzny formularz płatności ────────────────────────────────────────
 interface CheckoutFormProps {
-  /** Używany wyłącznie w przepływie spotkań – przy featured przekazujemy 0. */
-  appointmentId: number;
-  onSuccess: (appointmentId: number) => void;
+  /** Used for the return URL breadcrumb and for fallback success reporting. Empty string for non-appointment flows. */
+  appointmentUid: string;
+  onSuccess: (appointmentUid: string) => void;
   onCancel: () => void;
 }
 
-function CheckoutForm({ appointmentId, onSuccess, onCancel }: CheckoutFormProps) {
+function CheckoutForm({ appointmentUid, onSuccess, onCancel }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
@@ -58,17 +58,17 @@ function CheckoutForm({ appointmentId, onSuccess, onCancel }: CheckoutFormProps)
   /** Wywołaj backend, żeby zaktualizował status spotkania i potwierdź sukces. */
   const verifyAndSucceed = async (paymentIntentId: string) => {
     try {
-      const res = await fetch(apiUrl('stripe/verify-payment-intent'), {
+      await fetch(apiUrl('stripe/verify-payment-intent'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentIntentId }),
       });
-      const data = await res.json();
-      // zwróć potwierdzony appointmentId lub fallback na prop
-      return (data.appointmentId as number | undefined) ?? appointmentId;
+      // Success path simply acknowledges — the verify response still carries a
+      // numeric appointmentId for legacy reasons but we propagate the uid we
+      // already know from the prop for consistency with the Phase 3 migration.
+      return appointmentUid;
     } catch {
-      // nawet jeśli weryfikacja się nie uda, przekaż znany appointmentId
-      return appointmentId;
+      return appointmentUid;
     }
   };
 
@@ -87,7 +87,7 @@ function CheckoutForm({ appointmentId, onSuccess, onCancel }: CheckoutFormProps)
         const data = await res.json();
         if (data.success) {
           setIsPolling(false);
-          onSuccess((data.appointmentId as number | undefined) ?? appointmentId);
+          onSuccess(appointmentUid);
           return;
         }
       } catch {
@@ -107,7 +107,7 @@ function CheckoutForm({ appointmentId, onSuccess, onCancel }: CheckoutFormProps)
     setIsLoading(true);
     setErrorMsg('');
 
-    const returnUrl = `${window.location.origin}/platnosc/sukces?appointment_id=${appointmentId}`;
+    const returnUrl = `${window.location.origin}/platnosc/sukces?appointment_uid=${appointmentUid}`;
 
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
@@ -124,8 +124,8 @@ function CheckoutForm({ appointmentId, onSuccess, onCancel }: CheckoutFormProps)
     if (paymentIntent?.status === 'succeeded') {
       // Karta / BLIK synchroniczny — weryfikuj backend PRZED wywołaniem onSuccess,
       // żeby appointment.status był już 'paid' gdy fetchData() odpytuje API.
-      const confirmedId = await verifyAndSucceed(paymentIntent.id);
-      onSuccess(confirmedId);
+      const confirmedUid = await verifyAndSucceed(paymentIntent.id);
+      onSuccess(confirmedUid);
     } else if (paymentIntent?.status === 'processing') {
       // BLIK / P24 asynchroniczny — czekamy na potwierdzenie w aplikacji bankowej
       pollUntilPaid(paymentIntent.id);
@@ -179,16 +179,16 @@ interface PaymentModalProps {
   amountZl: string;
   title: string;
   onClose: () => void;
-  onSuccess: (appointmentId: number) => void;
+  onSuccess: (appointmentUid: string) => void;
   /** Jeśli podany – przepływ spotkania (używa POST /stripe/payment-intent). */
-  appointmentId?: number;
-  /** Jeśli podany – dowolny dostawca clientSecret (nadpisuje appointmentId). */
+  appointmentUid?: string;
+  /** Jeśli podany – dowolny dostawca clientSecret (nadpisuje appointmentUid). */
   clientSecretLoader?: () => Promise<{ clientSecret: string }>;
 }
 
 export function PaymentModal({
   token,
-  appointmentId,
+  appointmentUid,
   amountZl,
   title,
   onClose,
@@ -202,7 +202,7 @@ export function PaymentModal({
   useEffect(() => {
     const loader = clientSecretLoader
       ? clientSecretLoader
-      : () => apiCreatePaymentIntent(token, appointmentId!);
+      : () => apiCreatePaymentIntent(token, appointmentUid!);
 
     loader()
       .then(({ clientSecret: cs }) => setClientSecret(cs))
@@ -268,7 +268,7 @@ export function PaymentModal({
               options={{ clientSecret, locale: 'pl', appearance }}
             >
               <CheckoutForm
-                appointmentId={appointmentId ?? 0}
+                appointmentUid={appointmentUid ?? ''}
                 onSuccess={onSuccess}
                 onCancel={onClose}
               />

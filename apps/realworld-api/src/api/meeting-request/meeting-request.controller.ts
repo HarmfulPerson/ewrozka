@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -87,8 +88,33 @@ export class MeetingRequestController {
     });
   }
 
+  @Patch('uid/:uid/accept')
+  @ApiAuth({ summary: 'Zaakceptuj prośbę po UID (preferowane) – tworzy wizytę' })
+  async acceptByUid(
+    @CurrentUser('id') userId: number,
+    @Param('uid', ParseUUIDPipe) uid: string,
+  ) {
+    return this.meetingRequestService.acceptByUid(userId, uid);
+  }
+
+  @Patch('uid/:uid/reject')
+  @ApiAuth({ summary: 'Odrzuć prośbę po UID (preferowane). Dla zaakceptowanego, nieopłaconego – wymagany powód.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { reason: { type: 'string', description: 'Wymagany przy odrzuceniu zaakceptowanego wniosku' } },
+    },
+  })
+  async rejectByUid(
+    @CurrentUser('id') userId: number,
+    @Param('uid', ParseUUIDPipe) uid: string,
+    @Body('reason') reason?: string,
+  ) {
+    return this.meetingRequestService.rejectByUid(userId, uid, reason);
+  }
+
   @Patch(':id/accept')
-  @ApiAuth({ summary: 'Zaakceptuj prośbę (specjalista) – tworzy wizytę' })
+  @ApiAuth({ summary: 'Zaakceptuj prośbę (deprecated — użyj /uid/:uid/accept)' })
   async accept(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
@@ -97,7 +123,7 @@ export class MeetingRequestController {
   }
 
   @Patch(':id/reject')
-  @ApiAuth({ summary: 'Odrzuć prośbę (specjalista). Dla zaakceptowanego, nieopłaconego – wymagany powód.' })
+  @ApiAuth({ summary: 'Odrzuć prośbę (deprecated — użyj /uid/:uid/reject)' })
   @ApiBody({
     schema: {
       type: 'object',

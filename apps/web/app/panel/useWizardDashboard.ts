@@ -123,7 +123,9 @@ export function useWizardDashboard() {
     setProcessingId(item.id);
     try {
       if (item.kind === 'regular') {
-        await apiAcceptMeetingRequest(user.token, Number(item.id));
+        // Phase 3: pass the meeting_request uid so the backend routes to the
+        // /meeting-requests/uid/:uid/accept endpoint.
+        await apiAcceptMeetingRequest(user.token, item.uid);
       } else {
         await apiAcceptGuestBooking(user.token, item.id);
       }
@@ -136,23 +138,26 @@ export function useWizardDashboard() {
   };
 
   const openRejectModal = (item: UnifiedRequestDto) => {
-    setRejectModal({ open: true, id: item.id, kind: item.kind, reason: '' });
+    // rejectModal.id carries the uid (meeting_request.uid for regular,
+    // guest_booking.id for guest). For guest the id column is already uuid,
+    // so item.id === item.uid.
+    setRejectModal({ open: true, id: item.uid, kind: item.kind, reason: '' });
   };
 
   const handleConfirmReject = async () => {
     if (!user || rejectModal.id === null) return;
-    const { id, kind, reason } = rejectModal;
+    const { id: uid, kind, reason } = rejectModal;
     if (!reason.trim()) {
       setRejectModal(m => ({ ...m, showError: true }));
       return;
     }
     setRejectModal(m => ({ ...m, open: false }));
-    setProcessingId(id);
+    setProcessingId(uid);
     try {
       if (kind === 'regular') {
-        await apiRejectMeetingRequest(user.token, Number(id), reason.trim());
+        await apiRejectMeetingRequest(user.token, uid, reason.trim());
       } else {
-        await apiRejectGuestBooking(user.token, id, reason.trim());
+        await apiRejectGuestBooking(user.token, uid, reason.trim());
       }
       toast.success('Wniosek odrzucony.');
       notifyChanged();

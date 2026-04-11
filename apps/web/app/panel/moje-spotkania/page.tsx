@@ -87,7 +87,7 @@ export default function MojeSpotkania() {
       {paymentModal && user && (
         <PaymentModal
           token={user.token}
-          appointmentId={paymentModal.appointmentId}
+          appointmentUid={paymentModal.appointmentUid}
           amountZl={paymentModal.amountZl}
           title={paymentModal.title}
           onClose={() => setPaymentModal(null)}

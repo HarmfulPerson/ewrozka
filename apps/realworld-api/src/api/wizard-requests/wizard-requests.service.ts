@@ -3,6 +3,14 @@ import { DataSource } from 'typeorm';
 
 export interface UnifiedRequestItem {
   id: string;
+  /**
+   * Stable external identifier for the row. For kind='regular' it's the
+   * meeting_request uid; for kind='guest' it's guest_booking.id (which is
+   * already a UUID). Prefer this over `id` for external consumers.
+   */
+  uid: string;
+  /** uid of the linked appointment, if one exists. */
+  appointmentUid: string | null;
   kind: 'regular' | 'guest';
   unifiedStatus: string;
   createdAt: string;
@@ -73,6 +81,8 @@ export class WizardRequestsService {
     const unionSql = `
       SELECT
         mr.id::text                     AS "id",
+        mr.uid::text                    AS "uid",
+        apt.uid::text                   AS "appointmentUid",
         'regular'                       AS "kind",
         CASE
           WHEN mr.status = 'accepted' AND apt.status = 'completed' THEN 'completed'
@@ -109,6 +119,8 @@ export class WizardRequestsService {
 
       SELECT
         gb.id::text                     AS "id",
+        gb.id::text                     AS "uid",
+        NULL                            AS "appointmentUid",
         'guest'                         AS "kind",
         gb.status                       AS "unifiedStatus",
         gb.created_at                   AS "createdAt",
@@ -204,6 +216,8 @@ export class WizardRequestsService {
     const unionSql = `
       SELECT
         mr.id::text                     AS "id",
+        mr.uid::text                    AS "uid",
+        NULL                            AS "appointmentUid",
         'request'                       AS "kind",
         mr.status                       AS "unifiedStatus",
         mr.created_at                   AS "createdAt",
@@ -229,6 +243,8 @@ export class WizardRequestsService {
 
       SELECT
         apt.id::text                    AS "id",
+        apt.uid::text                   AS "uid",
+        apt.uid::text                   AS "appointmentUid",
         'appointment'                   AS "kind",
         CASE
           WHEN apt.status = 'accepted'
@@ -290,6 +306,14 @@ export class WizardRequestsService {
 
 export interface ClientRequestItem {
   id: string;
+  /**
+   * Stable external identifier for the row. For kind='request' it's the
+   * meeting_request uid; for kind='appointment' it's the appointment uid.
+   * Prefer this over `id` for external consumers.
+   */
+  uid: string;
+  /** uid of the linked appointment. Equals `uid` for kind='appointment', null for kind='request'. */
+  appointmentUid: string | null;
   kind: 'request' | 'appointment';
   unifiedStatus: string;
   createdAt: string;

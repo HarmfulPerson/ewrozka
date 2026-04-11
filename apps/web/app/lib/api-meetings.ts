@@ -31,6 +31,8 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
 
 export interface MeetingRequestDto {
   id: number;
+  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
+  uid: string;
   advertisementId: number;
   advertisementTitle?: string;
   clientId?: number;
@@ -103,8 +105,20 @@ export async function apiGetMyClientRequests(
   });
 }
 
-export async function apiAcceptMeetingRequest(token: string, id: number): Promise<{ appointmentId: number; startsAt: string; status: string }> {
-  return fetchApi(`meeting-requests/${id}/accept`, {
+/**
+ * Accept a meeting request. Accepts either the new uid (preferred) or the
+ * legacy numeric id — routes to the corresponding backend endpoint. Once
+ * every caller migrates to uid the legacy branch can be deleted.
+ */
+export async function apiAcceptMeetingRequest(
+  token: string,
+  uidOrId: string | number,
+): Promise<{ appointmentId: number; startsAt: string; status: string }> {
+  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
+  const path = isUid
+    ? `meeting-requests/uid/${uidOrId}/accept`
+    : `meeting-requests/${uidOrId}/accept`;
+  return fetchApi(path, {
     method: 'PATCH',
     headers: {
       Authorization: `Token ${token}`,
@@ -114,10 +128,14 @@ export async function apiAcceptMeetingRequest(token: string, id: number): Promis
 
 export async function apiRejectMeetingRequest(
   token: string,
-  id: number,
+  uidOrId: string | number,
   reason?: string,
 ): Promise<{ status: string }> {
-  return fetchApi(`meeting-requests/${id}/reject`, {
+  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
+  const path = isUid
+    ? `meeting-requests/uid/${uidOrId}/reject`
+    : `meeting-requests/${uidOrId}/reject`;
+  return fetchApi(path, {
     method: 'PATCH',
     headers: {
       Authorization: `Token ${token}`,
@@ -127,8 +145,13 @@ export async function apiRejectMeetingRequest(
   });
 }
 
-export async function apiPayForAppointment(token: string, id: number): Promise<{ url: string }> {
-  return fetchApi(`appointments/${id}/pay`, {
+export async function apiPayForAppointment(
+  token: string,
+  uidOrId: string | number,
+): Promise<{ url: string }> {
+  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
+  const path = isUid ? `appointments/uid/${uidOrId}/pay` : `appointments/${uidOrId}/pay`;
+  return fetchApi(path, {
     method: 'POST',
     headers: {
       Authorization: `Token ${token}`,
@@ -254,6 +277,10 @@ export async function apiGetWizardGuestBookingMeetingRoom(
 
 export interface UnifiedRequestDto {
   id: string;
+  /** Stable external identifier. For kind='regular' → meeting_request uid; for kind='guest' → guest_booking id (already uuid). */
+  uid: string;
+  /** uid of the linked appointment, if one exists. */
+  appointmentUid: string | null;
   kind: 'regular' | 'guest';
   unifiedStatus: string;
   createdAt: string;
@@ -293,6 +320,10 @@ export async function apiGetWizardUnifiedRequests(
 
 export interface ClientRequestDto {
   id: string;
+  /** Stable external identifier. For kind='request' → meeting_request uid; for kind='appointment' → appointment uid. */
+  uid: string;
+  /** uid of the linked appointment. Equals `uid` for kind='appointment', null for kind='request'. */
+  appointmentUid: string | null;
   kind: 'request' | 'appointment';
   unifiedStatus: string;
   createdAt: string;

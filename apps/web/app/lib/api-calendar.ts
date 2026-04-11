@@ -39,6 +39,8 @@ export interface AvailabilityDto {
 
 export interface AppointmentDto {
   id: number;
+  /** Stable non-sequential external identifier. Prefer this over `id` for API calls. */
+  uid: string;
   wrozkaId: number;
   clientId: number;
   startsAt: string;
@@ -53,13 +55,21 @@ export interface AppointmentDto {
   rating?: number | null;
 }
 
+/**
+ * Rate a completed appointment. Accepts either the new uid (preferred) or
+ * the legacy numeric id — routes to the corresponding backend endpoint.
+ */
 export async function apiRateAppointment(
   token: string,
-  id: number,
+  uidOrId: string | number,
   rating: number,
   comment?: string,
 ): Promise<void> {
-  const res = await fetch(`${getApiBaseUrl()}/appointments/${id}/rate`, {
+  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
+  const path = isUid
+    ? `appointments/uid/${uidOrId}/rate`
+    : `appointments/${uidOrId}/rate`;
+  const res = await fetch(`${getApiBaseUrl()}/${path}`, {
     method: 'POST',
     headers: { Authorization: `Token ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ rating, comment: comment?.trim() || undefined }),

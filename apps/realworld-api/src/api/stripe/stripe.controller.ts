@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -9,16 +10,23 @@ import {
   Req,
 } from '@nestjs/common';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '@repo/nest-common';
 import { CurrentUser } from '@repo/api';
 import { ApiAuth } from '@repo/api/decorators/http.decorators';
+import { AppointmentEntity } from '@repo/postgresql-typeorm';
+import { Repository } from 'typeorm';
 import { StripeService } from './stripe.service';
 
 @ApiTags('Stripe')
 @Controller('stripe')
 export class StripeController {
-  constructor(private readonly stripeService: StripeService) {}
+  constructor(
+    private readonly stripeService: StripeService,
+    @InjectRepository(AppointmentEntity)
+    private readonly appointmentRepository: Repository<AppointmentEntity>,
+  ) {}
 
   @Post('webhook')
   @Public()
@@ -42,9 +50,24 @@ export class StripeController {
   @HttpCode(HttpStatus.OK)
   async createPaymentIntent(
     @CurrentUser('id') userId: number,
-    @Body() body: { appointmentId: number },
+    @Body() body: { appointmentId?: number; appointmentUid?: string },
   ) {
-    return this.stripeService.createPaymentIntent(body.appointmentId, userId);
+    // Accept either numeric id (legacy) or uid (Phase 3+). Prefer uid when
+    // provided, resolve to the numeric id and delegate to the existing
+    // service method — business logic is untouched.
+    let appointmentId = body.appointmentId;
+    if (body.appointmentUid) {
+      const apt = await this.appointmentRepository.findOne({
+        where: { uid: body.appointmentUid },
+        select: ['id'],
+      });
+      if (!apt) throw new BadRequestException('Wizyta nie istnieje');
+      appointmentId = apt.id;
+    }
+    if (!appointmentId) {
+      throw new BadRequestException('Brak appointmentId lub appointmentUid');
+    }
+    return this.stripeService.createPaymentIntent(appointmentId, userId);
   }
 
   @Post('verify-payment-intent')

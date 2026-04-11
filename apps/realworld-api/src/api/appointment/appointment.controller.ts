@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@repo/api';
 import { ApiAuth } from '@repo/api/decorators/http.decorators';
@@ -53,9 +53,22 @@ export class AppointmentController {
     });
   }
 
+  @Post('uid/:uid/rate')
+  @HttpCode(HttpStatus.OK)
+  @ApiAuth({ summary: 'Oceń zakończone spotkanie po UID (preferowane)' })
+  async rateByUid(
+    @CurrentUser('id') userId: number,
+    @Param('uid', ParseUUIDPipe) uid: string,
+    @Body('rating') rating: number,
+    @Body('comment') comment?: string,
+  ) {
+    await this.appointmentService.rateAppointmentByUid(userId, uid, Number(rating), comment);
+    return { message: 'Ocena zapisana' };
+  }
+
   @Post(':id/rate')
   @HttpCode(HttpStatus.OK)
-  @ApiAuth({ summary: 'Oceń zakończone spotkanie (klient, 0–5)' })
+  @ApiAuth({ summary: 'Oceń zakończone spotkanie (deprecated — użyj /uid/:uid/rate)' })
   async rate(
     @CurrentUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
@@ -85,8 +98,18 @@ export class AppointmentController {
     );
   }
 
+  @Post('uid/:uid/pay')
+  @ApiAuth({ summary: 'Opłać wizytę po UID (preferowane) — tworzy Stripe Checkout session' })
+  async payByUid(
+    @CurrentUser('id') userId: number,
+    @CurrentUser('email') email: string,
+    @Param('uid', ParseUUIDPipe) uid: string,
+  ) {
+    return this.appointmentService.payByUid(userId, uid, email);
+  }
+
   @Post(':id/pay')
-  @ApiAuth({ summary: 'Opłać wizytę (klient) - tworzy Stripe Checkout session' })
+  @ApiAuth({ summary: 'Opłać wizytę (deprecated — użyj /uid/:uid/pay)' })
   async pay(
     @CurrentUser('id') userId: number,
     @CurrentUser('email') email: string,

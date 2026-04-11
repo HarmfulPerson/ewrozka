@@ -104,13 +104,16 @@ export class StripeService {
       ],
       metadata: {
         appointmentId: String(appointmentId),
+        // Phase 3 of the uid migration: carry both so future consumers can
+        // correlate without touching the PK.
+        appointmentUid: appointment.uid,
         clientUserId: String(clientUserId),
         wrozkaId: String(appointment.wrozkaId),
         priceGrosze: String(priceGrosze),
         platformFeePercent: String(platformFeePercentage),
         isDestinationCharge: hasActiveConnect ? 'true' : 'false',
       },
-      success_url: `${appUrl}/platnosc/sukces?session_id={CHECKOUT_SESSION_ID}&appointment_id=${appointmentId}`,
+      success_url: `${appUrl}/platnosc/sukces?session_id={CHECKOUT_SESSION_ID}&appointment_uid=${appointment.uid}`,
       cancel_url: `${appUrl}/panel/moje-spotkania?payment=cancelled`,
     };
 
@@ -161,6 +164,9 @@ export class StripeService {
       payment_method_types: this.paymentMethods,
       metadata: {
         appointmentId: String(appointmentId),
+        // Phase 3 of the uid migration: carry the uid alongside the numeric
+        // id so future consumers can correlate without touching the PK.
+        appointmentUid: appointment.uid,
         clientUserId: String(clientUserId),
         wrozkaId: String(appointment.wrozkaId),
         priceGrosze: String(priceGrosze),

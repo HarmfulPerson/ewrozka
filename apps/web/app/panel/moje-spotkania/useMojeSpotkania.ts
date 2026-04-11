@@ -32,7 +32,7 @@ export function useMojeSpotkania() {
   const [submittingRating, setSubmittingRating] = useState<string | null>(null);
 
   const [paymentModal, setPaymentModal] = useState<{
-    appointmentId: number;
+    appointmentUid: string;
     amountZl: string;
     title: string;
   } | null>(null);
@@ -57,9 +57,9 @@ export function useMojeSpotkania() {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   const handlePay = (item: ClientRequestDto) => {
-    if (!item.appointmentId) return;
+    if (!item.appointmentUid) return;
     setPaymentModal({
-      appointmentId: item.appointmentId,
+      appointmentUid: item.appointmentUid,
       amountZl: item.priceGrosze ? `${(item.priceGrosze / 100).toFixed(2)} zł` : 'Płatność',
       title: item.advertisementTitle || 'Konsultacja',
     });
@@ -79,12 +79,12 @@ export function useMojeSpotkania() {
   };
 
   const handleSubmitRating = async (item: ClientRequestDto) => {
-    if (!user || !item.appointmentId) return;
+    if (!user || !item.appointmentUid) return;
     const pending = pendingRating[item.id];
     if (!pending) return;
     setSubmittingRating(item.id);
     try {
-      await apiRateAppointment(user.token, item.appointmentId, pending.stars, pending.comment || undefined);
+      await apiRateAppointment(user.token, item.appointmentUid, pending.stars, pending.comment || undefined);
       toast.success(`Oceniłeś spotkanie na ${pending.stars} ${pending.stars === 1 ? 'gwiazdkę' : pending.stars < 5 ? 'gwiazdki' : 'gwiazdek'}!`);
       setItems(prev => prev.map(i => i.id === item.id ? { ...i, rating: pending.stars } : i));
       setPendingRating(prev => {
