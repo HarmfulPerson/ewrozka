@@ -56,7 +56,7 @@ export default function AdvertisementClient() {
     booking.setSubmitting(true);
     try {
       await apiCreateMeetingRequest(user.token, {
-        advertisementId: advertisement.id,
+        advertisementUid: advertisement.uid,
         requestedStartsAt: booking.selectedSlot.startsAt,
         message: '',
       });
@@ -75,7 +75,7 @@ export default function AdvertisementClient() {
     booking.setSubmitting(true);
     try {
       await apiCreateGuestBooking({
-        advertisementId: advertisement.id,
+        advertisementUid: advertisement.uid,
         guestName: booking.guestForm.name.trim(),
         guestEmail: booking.guestForm.email.trim(),
         guestPhone: booking.guestForm.phone.trim() || undefined,

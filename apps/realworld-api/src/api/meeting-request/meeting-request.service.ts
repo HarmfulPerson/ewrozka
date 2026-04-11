@@ -59,13 +59,23 @@ export class MeetingRequestService {
       );
     }
 
+    // Phase 2+ of the uid migration: accept either advertisementId (legacy)
+    // or advertisementUid. Resolve uid → id once at the top and mutate the
+    // dto so the rest of the method can stay unchanged.
+    if (!dto.advertisementId && !dto.advertisementUid) {
+      throw new BadRequestException('Podaj advertisementId lub advertisementUid');
+    }
+
     const ad = await this.advertisementRepository.findOne({
-      where: { id: dto.advertisementId },
+      where: dto.advertisementUid
+        ? { uid: dto.advertisementUid }
+        : { id: dto.advertisementId },
       relations: ['user'],
     });
     if (!ad) {
       throw new NotFoundException('Ogłoszenie nie istnieje');
     }
+    dto.advertisementId = ad.id;
 
     if (ad.userId === userId) {
       throw new ForbiddenException('Nie możesz aplikować na własne ogłoszenie.');

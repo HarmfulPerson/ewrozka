@@ -24,11 +24,21 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { buildMeetingPaidNotification, buildNewRequestNotification } from '../notifications/handlers';
 import { PaymentService } from '../payment/payment.service';
 
-import { IsEmail, IsInt, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEmail, IsInt, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class CreateGuestBookingDto {
+  /**
+   * Legacy numeric advertisement id. Kept for backward compat during the uid
+   * migration — prefer `advertisementUid`. Runtime check in create() ensures
+   * at least one of the two is provided.
+   */
+  @IsOptional()
   @IsInt()
-  advertisementId!: number;
+  advertisementId?: number;
+
+  @IsOptional()
+  @IsUUID()
+  advertisementUid?: string;
 
   @IsString()
   @MaxLength(100)
@@ -87,8 +97,14 @@ export class GuestBookingService {
   // ── Tworzenie rezerwacji przez gościa ──────────────────────────────────────
 
   async create(dto: CreateGuestBookingDto): Promise<{ id: string }> {
+    // Accept either advertisementId (legacy) or advertisementUid (Phase 2+).
+    if (!dto.advertisementId && !dto.advertisementUid) {
+      throw new BadRequestException('Podaj advertisementId lub advertisementUid');
+    }
     const ad = await this.adRepo.findOne({
-      where: { id: dto.advertisementId },
+      where: dto.advertisementUid
+        ? { uid: dto.advertisementUid }
+        : { id: dto.advertisementId },
     });
     if (!ad) throw new NotFoundException('Ogłoszenie nie istnieje');
 

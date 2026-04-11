@@ -55,7 +55,9 @@ export interface MeetingRequestDto {
 export async function apiCreateMeetingRequest(
   token: string,
   data: {
-    advertisementId: number;
+    /** Prefer advertisementUid. Kept for legacy callers during the migration. */
+    advertisementId?: number;
+    advertisementUid?: string;
     requestedStartsAt: string;
     message?: string;
   }
@@ -177,7 +179,9 @@ export interface GuestBookingDto {
 }
 
 export async function apiCreateGuestBooking(data: {
-  advertisementId: number;
+  /** Prefer advertisementUid. Kept for legacy callers during the migration. */
+  advertisementId?: number;
+  advertisementUid?: string;
   guestName: string;
   guestEmail: string;
   guestPhone?: string;
