@@ -70,19 +70,6 @@ async function bootstrap() {
     // Required for Stripe webhook signature verification
     bodyLimit: 10485760,
 
-    // Workaround for @nestjs/platform-fastify bug: sanitizeUrl() crashes with
-    // "Cannot read properties of undefined (reading 'ignoreDuplicateSlashes')"
-    // because Fastify 5.x leaves initialConfig.routerOptions undefined unless
-    // we pass it here. Defining it (even as {}) is enough to prevent the crash.
-    // Cast required: @nestjs/platform-fastify types don't expose routerOptions
-    // yet, even though Fastify 5 accepts it at runtime.
-    ...({
-      routerOptions: {
-        ignoreDuplicateSlashes: true,
-        ignoreTrailingSlash: true,
-      },
-    } as Record<string, unknown>),
-
   });
 
 
