@@ -14,6 +14,9 @@ export class FeaturedWizardEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_featured_wizard_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ name: 'user_id' })
   userId!: number;
 

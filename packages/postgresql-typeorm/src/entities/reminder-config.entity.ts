@@ -11,6 +11,9 @@ export class ReminderConfigEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_reminder_config_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ name: 'enabled_48h', type: 'boolean', default: true })
   enabled48h!: boolean;
 

@@ -14,6 +14,9 @@ export class PlatformRevenueEntity extends AbstractEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_platform_revenue_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ type: 'date', unique: true })
   date!: string; // Format: YYYY-MM-DD
 

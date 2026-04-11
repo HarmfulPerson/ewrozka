@@ -13,6 +13,9 @@ export class RoleEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_role_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column()
   @Index('UQ_role_name', ['name'], { unique: true })
   name!: string;

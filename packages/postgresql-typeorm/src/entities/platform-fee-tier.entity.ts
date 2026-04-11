@@ -15,6 +15,9 @@ export class PlatformFeeTierEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_platform_fee_tier_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ name: 'config_id', type: 'int' })
   configId!: number;
 

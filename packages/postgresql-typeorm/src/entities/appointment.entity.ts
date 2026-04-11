@@ -23,6 +23,9 @@ export class AppointmentEntity extends AbstractEntity {
   })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ name: 'client_id' })
   clientId!: number;
 

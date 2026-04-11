@@ -26,6 +26,9 @@ export class UserFollowsEntity extends AbstractEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_user_follows_id' })
   id: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ name: 'follower_id' })
   @Index('UQ_user_follows_follower_id', ['followerId'])
   followerId: number;

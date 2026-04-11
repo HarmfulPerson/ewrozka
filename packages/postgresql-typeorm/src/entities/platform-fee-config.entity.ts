@@ -14,6 +14,9 @@ export class PlatformFeeConfigEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_platform_fee_config_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ name: 'window_days', type: 'int', default: 90 })
   windowDays!: number;
 

@@ -25,6 +25,9 @@ export class UserEntity extends AbstractEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_user_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column()
   @Index('UQ_user_username', ['username'], { unique: true })
   username!: string;

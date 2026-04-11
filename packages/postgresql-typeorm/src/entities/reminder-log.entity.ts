@@ -12,6 +12,9 @@ export class ReminderLogEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_reminder_log_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ name: 'entity_type', type: 'varchar', length: 20 })
   entityType!: 'appointment' | 'guest_booking';
 

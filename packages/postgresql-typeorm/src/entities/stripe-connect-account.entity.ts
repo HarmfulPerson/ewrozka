@@ -17,6 +17,9 @@ export class StripeConnectAccountEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_stripe_connect_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ name: 'user_id' })
   userId!: number;
 

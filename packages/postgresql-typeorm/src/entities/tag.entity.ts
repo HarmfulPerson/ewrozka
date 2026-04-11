@@ -6,6 +6,9 @@ export class TagEntity extends AbstractEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_tag_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column()
   @Index('UQ_tag_name', ['name'], { unique: true })
   name!: string;

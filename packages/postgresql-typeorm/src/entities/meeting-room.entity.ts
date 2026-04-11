@@ -19,6 +19,9 @@ export class MeetingRoomEntity extends AbstractEntity {
   })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column({ name: 'appointment_id', unique: true })
   appointmentId!: number;
 

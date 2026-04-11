@@ -7,6 +7,9 @@ export class TopicEntity extends AbstractEntity {
   @PrimaryGeneratedColumn({ primaryKeyConstraintName: 'PK_topic_id' })
   id!: number;
 
+  @Column({ type: 'uuid', unique: true, default: () => 'gen_random_uuid()' })
+  uid!: string;
+
   @Column()
   @Index('UQ_topic_name', ['name'], { unique: true })
   name!: string;
