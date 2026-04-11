@@ -18,7 +18,9 @@ export type WizardData = Awaited<ReturnType<typeof apiGetAdminWizard>>;
 export function useWizardProfile() {
   const router = useRouter();
   const params = useParams();
-  const id = Number(params.id);
+  // Route segment may hold the new uid (UUID) or legacy numeric id during
+  // the migration — apiGetAdminWizard handles both.
+  const idOrUid = params.id as string | undefined;
   const [user] = useState(() => getStoredUser());
   const [wizard, setWizard] = useState<WizardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,18 +36,18 @@ export function useWizardProfile() {
       router.replace('/panel');
       return;
     }
-    if (Number.isNaN(id) || id < 1) {
+    if (!idOrUid) {
       router.replace('/panel/admin/wrozki');
       return;
     }
-    apiGetAdminWizard(user.token, id)
+    apiGetAdminWizard(user.token, idOrUid)
       .then(setWizard)
       .catch((err) => {
         toast.error(err instanceof Error ? err.message : 'Nie udało się pobrać danych specjalisty.');
         router.replace('/panel/admin/wrozki');
       })
       .finally(() => setLoading(false));
-  }, [user, id, router]);
+  }, [user, idOrUid, router]);
 
   useEffect(() => {
     if (wizard?.platformFeePercent != null) {
@@ -59,7 +61,7 @@ export function useWizardProfile() {
     if (!user || !wizard) return;
     setFeaturedLoading(true);
     try {
-      await apiSetAdminWizardFeatured(user.token, wizard.id);
+      await apiSetAdminWizardFeatured(user.token, wizard.uid);
       toast.success('Wyróżnienie ustawione bez płatności.');
       setWizard((prev) =>
         prev
@@ -70,7 +72,7 @@ export function useWizardProfile() {
             }
           : null,
       );
-      const updated = await apiGetAdminWizard(user.token, wizard.id);
+      const updated = await apiGetAdminWizard(user.token, wizard.uid);
       setWizard(updated);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Wystąpił błąd.');
@@ -83,9 +85,9 @@ export function useWizardProfile() {
     if (!user || !wizard) return;
     setResetToTierLoading(true);
     try {
-      await apiResetWizardPlatformFeeToTier(user.token, wizard.id);
+      await apiResetWizardPlatformFeeToTier(user.token, wizard.uid);
       toast.success('Prowizja z progów. Specjalista używa teraz naliczania z liczby spotkań.');
-      const updated = await apiGetAdminWizard(user.token, wizard.id);
+      const updated = await apiGetAdminWizard(user.token, wizard.uid);
       setWizard(updated);
       setFeePercent(String(updated.tierBasedFee?.feePercent ?? 20));
     } catch (err) {
@@ -99,9 +101,9 @@ export function useWizardProfile() {
     if (!user || !wizard) return;
     setVideoApproveLoading(true);
     try {
-      await apiApproveWizardVideo(user.token, wizard.id);
+      await apiApproveWizardVideo(user.token, wizard.uid);
       toast.success('Filmik zatwierdzony.');
-      const updated = await apiGetAdminWizard(user.token, wizard.id);
+      const updated = await apiGetAdminWizard(user.token, wizard.uid);
       setWizard(updated);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Błąd zatwierdzenia');
@@ -114,9 +116,9 @@ export function useWizardProfile() {
     if (!user || !wizard) return;
     setVideoRejectLoading(true);
     try {
-      await apiRejectWizardVideo(user.token, wizard.id);
+      await apiRejectWizardVideo(user.token, wizard.uid);
       toast.success('Filmik odrzucony.');
-      const updated = await apiGetAdminWizard(user.token, wizard.id);
+      const updated = await apiGetAdminWizard(user.token, wizard.uid);
       setWizard(updated);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Błąd odrzucenia');
@@ -134,7 +136,7 @@ export function useWizardProfile() {
     }
     setFeeSaving(true);
     try {
-      await apiUpdateAdminWizardPlatformFee(user.token, wizard.id, val);
+      await apiUpdateAdminWizardPlatformFee(user.token, wizard.uid, val);
       toast.success(`Prowizja ustawiona na ${val}%`);
       setWizard((prev) => (prev ? { ...prev, platformFeePercent: val } : null));
     } catch (err) {

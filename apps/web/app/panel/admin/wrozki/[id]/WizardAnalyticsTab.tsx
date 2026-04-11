@@ -56,7 +56,8 @@ const RATING_SERIES: ChartSeries[] = [
 ];
 
 interface WizardAnalyticsTabProps {
-  wizardId: number;
+  /** Accepts either the new uid (preferred) or the legacy numeric id. */
+  wizardId: string | number;
 }
 
 export function WizardAnalyticsTab({ wizardId }: WizardAnalyticsTabProps) {

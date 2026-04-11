@@ -133,7 +133,7 @@ export function WizardsTable({
   onRowClick,
 }: {
   data: AdminWizardRow[];
-  onRowClick: (id: number) => void;
+  onRowClick: (uid: string) => void;
 }) {
   return (
     <div className="aw-table-wrap">
@@ -155,7 +155,7 @@ export function WizardsTable({
             <tr
               key={row.id}
               className="aw-table__row"
-              onClick={() => onRowClick(row.id)}
+              onClick={() => onRowClick(row.uid)}
             >
               <td>
                 <div className="aw-table__wizard">

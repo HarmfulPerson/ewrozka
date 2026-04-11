@@ -74,7 +74,7 @@ export default function AdminWrozkiPage() {
         <>
           <WizardsTable
             data={data}
-            onRowClick={(id) => router.push(`/panel/admin/wrozki/${id}`)}
+            onRowClick={(uid) => router.push(`/panel/admin/wrozki/${uid}`)}
           />
 
           <WizardsPagination

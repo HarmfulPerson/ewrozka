@@ -136,6 +136,9 @@ export interface AdminWizardRowDto {
 
   id: number;
 
+  /** Stable non-sequential external identifier. Prefer this over `id` for URLs. */
+  uid: string;
+
   username: string;
 
   email: string;
@@ -177,6 +180,9 @@ export interface AdminWizardsPageDto {
 export interface AdminWizardDetailDto {
 
   id: number;
+
+  /** Stable non-sequential external identifier. Prefer this over `id` for URLs. */
+  uid: string;
 
   username: string;
 
@@ -577,6 +583,8 @@ export class AdminService {
 
       .select('u.id', 'id')
 
+      .addSelect('u.uid', 'uid')
+
       .addSelect('u.username', 'username')
 
       .addSelect('u.email', 'email')
@@ -760,6 +768,8 @@ export class AdminService {
 
         id: Number(r.id),
 
+        uid: String(r.uid),
+
         username: String(r.username),
 
         email: String(r.email),
@@ -885,6 +895,8 @@ export class AdminService {
     return {
 
       id: user.id,
+
+      uid: user.uid,
 
       username: user.username,
 
@@ -1629,6 +1641,63 @@ export class AdminService {
         totalRatings: totalRatingCount,
       },
     };
+  }
+
+  // ── Phase 4 of the int-id → uid migration ───────────────────────────────
+  // Each *ByUid wrapper resolves the wizard's uid to the numeric id and
+  // delegates to the existing by-id method so business logic stays
+  // single-sourced.
+
+  private async resolveWizardIdByUid(uid: string): Promise<number> {
+    const user = await this.userRepo.findOne({
+      where: { uid },
+      select: ['id'],
+    });
+    if (!user) throw new NotFoundException('Specjalista nie istnieje.');
+    return user.id;
+  }
+
+  async getWizardByUid(uid: string) {
+    return this.getWizardById(await this.resolveWizardIdByUid(uid));
+  }
+
+  async approveWizardVideoByUid(uid: string) {
+    return this.approveWizardVideo(await this.resolveWizardIdByUid(uid));
+  }
+
+  async rejectWizardVideoByUid(uid: string) {
+    return this.rejectWizardVideo(await this.resolveWizardIdByUid(uid));
+  }
+
+  async updateWizardPlatformFeeByUid(uid: string, platformFeePercent: number) {
+    return this.updateWizardPlatformFee(
+      await this.resolveWizardIdByUid(uid),
+      platformFeePercent,
+    );
+  }
+
+  async resetWizardPlatformFeeToTierByUid(uid: string) {
+    return this.resetWizardPlatformFeeToTier(
+      await this.resolveWizardIdByUid(uid),
+    );
+  }
+
+  async setWizardFeaturedByUid(uid: string) {
+    return this.setWizardFeatured(await this.resolveWizardIdByUid(uid));
+  }
+
+  async getWizardAnalyticsByUid(
+    uid: string,
+    from: string,
+    to: string,
+    groupBy?: 'day' | 'week' | 'month',
+  ) {
+    return this.getWizardAnalytics(
+      await this.resolveWizardIdByUid(uid),
+      from,
+      to,
+      groupBy,
+    );
   }
 
 }

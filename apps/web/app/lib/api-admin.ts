@@ -123,6 +123,8 @@ export type AdminWizardsSortBy =
 
 export interface AdminWizardRow {
   id: number;
+  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
+  uid: string;
   username: string;
   email: string;
   image: string;
@@ -173,6 +175,8 @@ export async function apiGetAdminWizards(
 
 export interface AdminWizardDetail {
   id: number;
+  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
+  uid: string;
   username: string;
   email: string;
   image: string;
@@ -192,29 +196,41 @@ export interface AdminWizardDetail {
   videoPending: string | null;
 }
 
+/**
+ * Build the admin wizard path. Accepts either a UUID (preferred) or legacy
+ * numeric id, routes to /wizards/uid/:uid or /wizards/:id accordingly.
+ * Suffix is appended after the identifier (e.g. '/platform-fee', '/featured').
+ */
+function adminWizardPath(uidOrId: string | number, suffix = ''): string {
+  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
+  return isUid
+    ? `admin/wizards/uid/${uidOrId}${suffix}`
+    : `admin/wizards/${uidOrId}${suffix}`;
+}
+
 export async function apiGetAdminWizard(
   token: string,
-  wizardId: number,
+  wizardUidOrId: string | number,
 ): Promise<AdminWizardDetail> {
-  return fetchAdmin<AdminWizardDetail>(`admin/wizards/${wizardId}`, token);
+  return fetchAdmin<AdminWizardDetail>(adminWizardPath(wizardUidOrId), token);
 }
 
 export async function apiSetAdminWizardFeatured(
   token: string,
-  wizardId: number,
+  wizardUidOrId: string | number,
 ): Promise<void> {
-  await fetchAdmin<unknown>(`admin/wizards/${wizardId}/featured`, token, {
+  await fetchAdmin<unknown>(adminWizardPath(wizardUidOrId, '/featured'), token, {
     method: 'POST',
   });
 }
 
 export async function apiUpdateAdminWizardPlatformFee(
   token: string,
-  wizardId: number,
+  wizardUidOrId: string | number,
   platformFeePercent: number,
 ): Promise<void> {
   await fetchAdmin<unknown>(
-    `admin/wizards/${wizardId}/platform-fee`,
+    adminWizardPath(wizardUidOrId, '/platform-fee'),
     token,
     {
       method: 'PATCH',
@@ -225,10 +241,10 @@ export async function apiUpdateAdminWizardPlatformFee(
 
 export async function apiResetWizardPlatformFeeToTier(
   token: string,
-  wizardId: number,
+  wizardUidOrId: string | number,
 ): Promise<void> {
   await fetchAdmin<unknown>(
-    `admin/wizards/${wizardId}/platform-fee/reset-to-tier`,
+    adminWizardPath(wizardUidOrId, '/platform-fee/reset-to-tier'),
     token,
     { method: 'POST' },
   );
@@ -236,10 +252,10 @@ export async function apiResetWizardPlatformFeeToTier(
 
 export async function apiApproveWizardVideo(
   token: string,
-  wizardId: number,
+  wizardUidOrId: string | number,
 ): Promise<void> {
   await fetchAdmin<unknown>(
-    `admin/wizards/${wizardId}/video/approve`,
+    adminWizardPath(wizardUidOrId, '/video/approve'),
     token,
     { method: 'POST' },
   );
@@ -247,10 +263,10 @@ export async function apiApproveWizardVideo(
 
 export async function apiRejectWizardVideo(
   token: string,
-  wizardId: number,
+  wizardUidOrId: string | number,
 ): Promise<void> {
   await fetchAdmin<unknown>(
-    `admin/wizards/${wizardId}/video/reject`,
+    adminWizardPath(wizardUidOrId, '/video/reject'),
     token,
     { method: 'POST' },
   );
@@ -434,13 +450,17 @@ export interface WizardAnalytics {
 
 export async function apiGetWizardAnalytics(
   token: string,
-  wizardId: number,
+  wizardUidOrId: string | number,
   from: string,
   to: string,
   groupBy: 'day' | 'week' | 'month' = 'day',
 ): Promise<WizardAnalytics> {
+  const isUid = typeof wizardUidOrId === 'string' && /^[0-9a-f]{8}-/i.test(wizardUidOrId);
+  const base = isUid
+    ? `admin/analytics/wizard/uid/${wizardUidOrId}`
+    : `admin/analytics/wizard/${wizardUidOrId}`;
   return fetchAdmin<WizardAnalytics>(
-    `admin/analytics/wizard/${wizardId}?from=${from}&to=${to}&groupBy=${groupBy}`,
+    `${base}?from=${from}&to=${to}&groupBy=${groupBy}`,
     token,
   );
 }

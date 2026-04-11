@@ -109,7 +109,7 @@ export default function AdminWizardProfilePage() {
       )}
 
       {tab === 'analityka' && (
-        <WizardAnalyticsTab wizardId={wizard.id} />
+        <WizardAnalyticsTab wizardId={wizard.uid} />
       )}
     </div>
   );
