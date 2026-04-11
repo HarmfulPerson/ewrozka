@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@repo/api';
 import { ApiAuth } from '@repo/api/decorators/http.decorators';
@@ -73,10 +73,15 @@ export class AppointmentController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
+    const parsedPage = parsePositiveInt(page, 1, 'page');
+    const parsedLimit = parsePositiveInt(limit, 5, 'limit');
+    if (parsedLimit > 50) {
+      throw new BadRequestException('limit must be ≤ 50');
+    }
     return this.appointmentService.getWizardReviews(
       wizardId,
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 5,
+      parsedPage,
+      parsedLimit,
     );
   }
 
@@ -89,4 +94,13 @@ export class AppointmentController {
   ) {
     return this.appointmentService.pay(userId, id, email);
   }
+}
+
+function parsePositiveInt(raw: string | undefined, fallback: number, fieldName: string): number {
+  if (raw === undefined || raw === '') return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1) {
+    throw new BadRequestException(`${fieldName} must be a positive integer`);
+  }
+  return n;
 }
