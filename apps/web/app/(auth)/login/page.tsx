@@ -136,6 +136,7 @@ export default function LoginPage() {
     <AuthFormShell
       title="Zaloguj się"
       subtitle="Wejdź na swoje konto eWróżka"
+      backHref="/"
     >
       <Suspense fallback={<p style={{ textAlign: 'center' }}>Ładowanie…</p>}>
         <LoginForm />
