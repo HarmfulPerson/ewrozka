@@ -36,10 +36,20 @@ export interface SlotDto {
   startTime: string;
 }
 
+/**
+ * Fetch available slots for an advertisement. Accepts either the new uid
+ * (preferred) or the legacy numeric id.
+ */
 export async function apiGetAvailableSlots(
-  advertisementId: number,
+  advertisementUidOrId: string | number,
   fromDate: string,
   toDate: string,
 ): Promise<{ slots: SlotDto[]; count: number }> {
-  return fetchApi(`availability/slots/${advertisementId}?fromDate=${fromDate}&toDate=${toDate}`);
+  const isUid =
+    typeof advertisementUidOrId === 'string' &&
+    /^[0-9a-f]{8}-/i.test(advertisementUidOrId);
+  const path = isUid
+    ? `availability/slots/uid/${advertisementUidOrId}`
+    : `availability/slots/${advertisementUidOrId}`;
+  return fetchApi(`${path}?fromDate=${fromDate}&toDate=${toDate}`);
 }

@@ -40,10 +40,10 @@ export default function WizardProfileClient() {
         // apiGetWizard handles both internally.
         const wizardResponse = await apiGetWizard(params.id as string);
         setWizard(wizardResponse.wizard);
-        // Advertisements endpoint still uses numeric wizard.id (Phase 2+ will
-        // migrate it). Use the numeric id that came back on the wizard DTO.
+        // Phase 5: advertisements endpoint now supports uid. Use wizard.uid
+        // so the numeric id never leaks on the public profile path.
         const adsResponse = await apiGetWizardAdvertisements(
-          wizardResponse.wizard.id,
+          wizardResponse.wizard.uid,
         );
         setAdvertisements(adsResponse.advertisements);
       } catch (error) {
@@ -57,11 +57,11 @@ export default function WizardProfileClient() {
   }, [params.id]);
 
   useEffect(() => {
-    // Reviews endpoint still takes numeric wizardId — fetch only after the
-    // wizard profile has loaded so we have its numeric id available.
+    // Phase 5: reviews endpoint now supports uid. Use wizard.uid for the
+    // public profile path so the wizard's numeric id doesn't leak.
     if (!wizard) return;
     setReviewsLoading(true);
-    apiGetWizardReviews(wizard.id, reviewsPage, REVIEWS_LIMIT)
+    apiGetWizardReviews(wizard.uid, reviewsPage, REVIEWS_LIMIT)
       .then((res) => {
         setReviews(res.reviews);
         setReviewsTotal(res.total);

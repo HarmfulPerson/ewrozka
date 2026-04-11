@@ -11,7 +11,7 @@ export default function WizytyPage() {
     appointments,
     loading,
     error,
-    payingId,
+    payingUid,
     filterType,
     offset,
     limit,
@@ -76,7 +76,7 @@ export default function WizytyPage() {
                 <WizytyCard
                   key={appointment.id}
                   appointment={appointment}
-                  payingId={payingId}
+                  payingUid={payingUid}
                   onPay={handlePay}
                 />
               ))}

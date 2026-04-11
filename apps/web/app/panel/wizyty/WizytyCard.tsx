@@ -16,12 +16,12 @@ function getStatusBadge(status: string) {
 
 interface WizytyCardProps {
   appointment: AppointmentDto;
-  payingId: number | null;
-  onPay: (id: number) => void;
+  payingUid: string | null;
+  onPay: (uid: string) => void;
 }
 
-export function WizytyCard({ appointment, payingId, onPay }: WizytyCardProps) {
-  const isPaying = payingId === appointment.id;
+export function WizytyCard({ appointment, payingUid, onPay }: WizytyCardProps) {
+  const isPaying = payingUid === appointment.uid;
   const date = new Date(appointment.startsAt);
   const canPay = appointment.status === 'accepted';
 
@@ -73,7 +73,7 @@ export function WizytyCard({ appointment, payingId, onPay }: WizytyCardProps) {
         <div className="wizyty-card__actions">
           <button
             className="wizyty-card__button wizyty-card__button--pay"
-            onClick={() => onPay(appointment.id)}
+            onClick={() => onPay(appointment.uid)}
             disabled={isPaying}
           >
             {isPaying ? 'Przetwarzanie...' : '💳 Zapłać teraz'}

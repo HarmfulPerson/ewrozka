@@ -296,8 +296,19 @@ export interface AdvertisementDetailDto {
   };
 }
 
-export async function apiGetWizardAdvertisements(wizardId: number): Promise<{ advertisements: AdvertisementDto[]; advertisementsCount: number }> {
-  return fetchApi(`advertisements/wizard/${wizardId}`);
+/**
+ * Fetch all advertisements for a wizard. Accepts either the new uid
+ * (preferred) or the legacy numeric id.
+ */
+export async function apiGetWizardAdvertisements(
+  wizardUidOrId: string | number,
+): Promise<{ advertisements: AdvertisementDto[]; advertisementsCount: number }> {
+  const isUid =
+    typeof wizardUidOrId === 'string' && /^[0-9a-f]{8}-/i.test(wizardUidOrId);
+  const path = isUid
+    ? `advertisements/wizard/uid/${wizardUidOrId}`
+    : `advertisements/wizard/${wizardUidOrId}`;
+  return fetchApi(path);
 }
 
 /**

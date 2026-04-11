@@ -88,12 +88,21 @@ export interface ReviewDto {
   createdAt: string;
 }
 
+/**
+ * Fetch reviews for a wizard. Accepts either the new uid (preferred) or the
+ * legacy numeric id — auto-routes to the corresponding backend endpoint.
+ */
 export async function apiGetWizardReviews(
-  wizardId: number,
+  wizardUidOrId: string | number,
   page = 1,
   limit = 5,
 ): Promise<{ reviews: ReviewDto[]; total: number; pages: number }> {
-  return fetchApi(`appointments/reviews/${wizardId}?page=${page}&limit=${limit}`);
+  const isUid =
+    typeof wizardUidOrId === 'string' && /^[0-9a-f]{8}-/i.test(wizardUidOrId);
+  const path = isUid
+    ? `appointments/reviews/uid/${wizardUidOrId}`
+    : `appointments/reviews/${wizardUidOrId}`;
+  return fetchApi(`${path}?page=${page}&limit=${limit}`);
 }
 
 export async function apiGetMyAvailability(

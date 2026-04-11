@@ -58,6 +58,18 @@ export class AdvertisementService {
     };
   }
 
+  /** Phase 5: public wizard-ads lookup by wizard uid. */
+  async getAdvertisementsByWizardUid(wizardUid: string) {
+    const wizard = await this.userRepository.findOne({
+      where: { uid: wizardUid },
+      select: ['id'],
+    });
+    if (!wizard) {
+      throw new NotFoundException('Specjalista nie znaleziony');
+    }
+    return this.getAdvertisementsByWizardId(wizard.id);
+  }
+
   async getMyAdvertisements(userId: number) {
     const advertisements = await this.advertisementRepository.find({
       where: { userId },

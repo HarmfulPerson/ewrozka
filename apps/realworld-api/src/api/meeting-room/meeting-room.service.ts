@@ -268,4 +268,17 @@ export class MeetingRoomService {
     if (!room) return null;
     return { token: room.token };
   }
+
+  /** Phase 5: resolve appointment uid → id, delegate. */
+  async getMeetingLinkByUid(
+    appointmentUid: string,
+    userId: number,
+  ): Promise<{ token: string } | null> {
+    const apt = await this.appointmentRepository.findOne({
+      where: { uid: appointmentUid },
+      select: ['id'],
+    });
+    if (!apt) return null;
+    return this.getMeetingLink(apt.id, userId);
+  }
 }

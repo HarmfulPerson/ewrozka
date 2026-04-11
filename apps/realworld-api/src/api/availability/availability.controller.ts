@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@repo/api';
 import { ApiAuth, ApiPublic } from '@repo/api/decorators/http.decorators';
@@ -56,9 +56,24 @@ export class AvailabilityController {
     });
   }
 
+  @Get('slots/uid/:advertisementUid')
+  @ApiPublic({ summary: 'Pobierz sloty dla ogłoszenia po UID (preferowane)' })
+  async getSlotsByUid(
+    @Param('advertisementUid', ParseUUIDPipe) advertisementUid: string,
+    @Query('fromDate') fromDate: string,
+    @Query('toDate') toDate: string,
+  ) {
+    const slots = await this.availabilityService.getSlotsForAdvertisementUid(
+      advertisementUid,
+      fromDate,
+      toDate,
+    );
+    return { slots, count: slots.length };
+  }
+
   @Get('slots/:advertisementId')
   @ApiPublic({
-    summary: 'Pobierz dostępne sloty dla ogłoszenia',
+    summary: 'Pobierz dostępne sloty dla ogłoszenia (deprecated — użyj /slots/uid/:uid)',
   })
   async getSlots(
     @Param('advertisementId', ParseIntPipe) advertisementId: number,

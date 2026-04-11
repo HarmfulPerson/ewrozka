@@ -623,7 +623,9 @@ export class GuestBookingService {
         isDestinationCharge: hasActiveConnect ? 'true' : 'false',
       },
       success_url: `${appUrl}/guest/platnosc/sukces?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/ogloszenie/${booking.advertisementId}?payment=cancelled`,
+      // Phase 5: use advertisement.uid instead of numeric id so the cancel
+      // redirect lands on the public /ogloszenie/:uid route.
+      cancel_url: `${appUrl}/ogloszenie/${ad?.uid ?? booking.advertisementId}?payment=cancelled`,
     };
 
     if (hasActiveConnect) {

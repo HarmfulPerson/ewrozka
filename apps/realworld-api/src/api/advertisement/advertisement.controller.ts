@@ -31,8 +31,14 @@ export class AdvertisementController {
     return this.advertisementService.getMyAdvertisements(userId);
   }
 
+  @Get('wizard/uid/:wizardUid')
+  @ApiPublic({ summary: 'Get advertisements by wizard UID (preferred)' })
+  async getByWizardUid(@Param('wizardUid', ParseUUIDPipe) wizardUid: string) {
+    return this.advertisementService.getAdvertisementsByWizardUid(wizardUid);
+  }
+
   @Get('wizard/:wizardId')
-  @ApiPublic({ summary: 'Get advertisements by wizard ID' })
+  @ApiPublic({ summary: 'Get advertisements by wizard ID (deprecated — use /wizard/uid/:wizardUid)' })
   async getByWizardId(@Param('wizardId', ParseIntPipe) wizardId: number) {
     return this.advertisementService.getAdvertisementsByWizardId(wizardId);
   }

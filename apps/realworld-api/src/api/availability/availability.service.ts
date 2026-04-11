@@ -279,6 +279,20 @@ export class AvailabilityService {
     return false;
   }
 
+  /** Phase 5: public slot lookup by advertisement uid. Resolves → id → delegates. */
+  async getSlotsForAdvertisementUid(
+    advertisementUid: string,
+    fromDate: string,
+    toDate: string,
+  ): Promise<SlotDto[]> {
+    const ad = await this.advertisementRepository.findOne({
+      where: { uid: advertisementUid },
+      select: ['id'],
+    });
+    if (!ad) throw new NotFoundException('Ogłoszenie nie istnieje');
+    return this.getSlotsForAdvertisement(ad.id, fromDate, toDate);
+  }
+
   async getSlotsForAdvertisement(
     advertisementId: number,
     fromDate: string,

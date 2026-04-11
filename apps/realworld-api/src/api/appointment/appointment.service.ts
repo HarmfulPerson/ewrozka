@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AppointmentEntity } from '@repo/postgresql-typeorm';
+import { AppointmentEntity, UserEntity } from '@repo/postgresql-typeorm';
 import { I18nService } from 'nestjs-i18n';
 import { Repository } from 'typeorm';
 import { ErrorCode } from '@/constants/error-code.constant';
@@ -239,5 +239,23 @@ export class AppointmentService {
     const apt = await this.appointmentRepository.findOne({ where: { uid }, select: ['id'] });
     if (!apt) throw new NotFoundException('Spotkanie nie istnieje');
     return this.rateAppointment(clientId, apt.id, rating, comment);
+  }
+
+  /**
+   * Phase 5: public wizard reviews lookup by UID. Resolves the wizard uid
+   * via the shared entity manager (no new DI dependency needed) and
+   * delegates to the existing by-id method.
+   */
+  async getWizardReviewsByUid(
+    wizardUid: string,
+    page: number,
+    limit: number,
+  ): Promise<{ reviews: ReviewDto[]; total: number; pages: number }> {
+    const user = await this.appointmentRepository.manager.findOne(UserEntity, {
+      where: { uid: wizardUid },
+      select: ['id'],
+    });
+    if (!user) throw new NotFoundException('Specjalista nie istnieje');
+    return this.getWizardReviews(user.id, page, limit);
   }
 }

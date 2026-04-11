@@ -52,20 +52,32 @@ export class MeetingRoomController {
 
   @Get('link')
   @ApiAuth({
-    summary: 'Pobierz token (link) do spotkania dla opłaconej wizyty',
+    summary: 'Pobierz token (link) do spotkania. Akceptuje appointmentUid (preferowane) lub appointmentId (deprecated).',
   })
-  @ApiQuery({ name: 'appointmentId', required: true, type: Number })
+  @ApiQuery({ name: 'appointmentUid', required: false, type: String })
+  @ApiQuery({ name: 'appointmentId', required: false, type: Number })
   async getLink(
     @CurrentUser('id') userId: number,
-    @Query('appointmentId', ParseIntPipe) appointmentId: number,
+    @Query('appointmentUid') appointmentUidRaw?: string,
+    @Query('appointmentId') appointmentIdRaw?: string,
   ) {
     const uid = typeof userId === 'string' ? parseInt(userId, 10) : userId;
-    const result = await this.meetingRoomService.getMeetingLink(
-      appointmentId,
-      uid,
-    );
-    if (!result) return { token: null };
-    return result;
+
+    // Phase 5: prefer uid when provided.
+    if (appointmentUidRaw) {
+      const result = await this.meetingRoomService.getMeetingLinkByUid(
+        appointmentUidRaw,
+        uid,
+      );
+      return result ?? { token: null };
+    }
+
+    const parsedId = appointmentIdRaw ? parseInt(appointmentIdRaw, 10) : NaN;
+    if (!Number.isInteger(parsedId) || parsedId < 1) {
+      return { token: null };
+    }
+    const result = await this.meetingRoomService.getMeetingLink(parsedId, uid);
+    return result ?? { token: null };
   }
 
   @Get(':id/stats')

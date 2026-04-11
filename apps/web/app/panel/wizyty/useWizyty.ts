@@ -12,7 +12,7 @@ export function useWizyty() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [payingId, setPayingId] = useState<number | null>(null);
+  const [payingUid, setPayingUid] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string>('upcoming');
   const [offset, setOffset] = useState(0);
   const [limit, setLimit] = useState(10);
@@ -39,19 +39,19 @@ export function useWizyty() {
     fetchAppointments();
   }, [fetchAppointments]);
 
-  const handlePay = async (id: number) => {
+  const handlePay = async (uid: string) => {
     if (!user) return;
-    setPayingId(id);
+    setPayingUid(uid);
     setError(null);
 
     try {
-      await apiPayForAppointment(user.token, id);
+      await apiPayForAppointment(user.token, uid);
       toast.success('Płatność została przetworzona!');
       await fetchAppointments();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nie udało się przetworzyć płatności');
     } finally {
-      setPayingId(null);
+      setPayingUid(null);
     }
   };
 
@@ -72,7 +72,7 @@ export function useWizyty() {
     appointments,
     loading,
     error,
-    payingId,
+    payingUid,
     filterType,
     offset,
     limit,

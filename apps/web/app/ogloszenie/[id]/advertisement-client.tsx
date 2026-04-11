@@ -28,7 +28,7 @@ export default function AdvertisementClient() {
   const isOwner = !!user && !!advertisement && user.roles?.includes('wizard') && user.id === advertisement.wizard.id;
   const isOtherWizard = !!user && user.roles?.includes('wizard') && !isOwner;
 
-  const booking = useBooking(advertisement?.id);
+  const booking = useBooking(advertisement?.uid);
   const edit = useEditAdvertisement(advertisement, user?.token, (updated) => {
     setAdvertisement(prev => prev ? { ...prev, ...updated } : prev);
   });

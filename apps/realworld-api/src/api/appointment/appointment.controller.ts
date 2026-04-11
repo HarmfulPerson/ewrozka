@@ -79,6 +79,25 @@ export class AppointmentController {
     return { message: 'Ocena zapisana' };
   }
 
+  @Get('reviews/uid/:uid')
+  @Public()
+  async getWizardReviewsByUid(
+    @Param('uid', ParseUUIDPipe) wizardUid: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const parsedPage = parsePositiveInt(page, 1, 'page');
+    const parsedLimit = parsePositiveInt(limit, 5, 'limit');
+    if (parsedLimit > 50) {
+      throw new BadRequestException('limit must be ≤ 50');
+    }
+    return this.appointmentService.getWizardReviewsByUid(
+      wizardUid,
+      parsedPage,
+      parsedLimit,
+    );
+  }
+
   @Get('reviews/:wizardId')
   @Public()
   async getWizardReviews(
