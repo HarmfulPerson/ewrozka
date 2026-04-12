@@ -26,25 +26,25 @@ export class AdvertisementController {
 
   @Get('mine')
   @ApiAuth({ summary: 'Get my advertisements (wizard)' })
-  async getMine(@CurrentUser('id') userId: number) {
+  async getMine(@CurrentUser('id') userId: string) {
     return this.advertisementService.getMyAdvertisements(userId);
   }
 
   @Get('wizard/uid/:wizardUid')
   @ApiPublic({ summary: "Get advertisements by wizard UID" })
   async getByWizardUid(@Param('wizardUid', ParseUUIDPipe) wizardUid: string) {
-    return this.advertisementService.getAdvertisementsByWizardUid(wizardUid);
+    return this.advertisementService.getAdvertisementsByWizardId(wizardUid);
   }
 
   @Get('uid/:uid')
   @ApiPublic({ summary: 'Get advertisement by UID' })
   async getByUid(@Param('uid', ParseUUIDPipe) uid: string) {
-    return this.advertisementService.getAdvertisementByUid(uid);
+    return this.advertisementService.getAdvertisementById(uid);
   }
 
   @Post()
   @ApiAuth({ summary: 'Create advertisement (wizard only)' })
-  async create(@CurrentUser('id') userId: number, @Req() req: FastifyRequest) {
+  async create(@CurrentUser('id') userId: string, @Req() req: FastifyRequest) {
     const parts = await (req as any).parts();
 
     let title: string | undefined;
@@ -99,22 +99,22 @@ export class AdvertisementController {
 
     // Przenieś plik do właściwego folderu
     if (imageFile) {
-      const adId = result.advertisement.id;
+      const adUid = result.advertisement.uid;
       const finalPath = path.join(
         process.cwd(),
         'uploads',
         'advertisements',
-        String(adId),
+        adUid,
       );
       fs.mkdirSync(finalPath, { recursive: true });
 
       const newFilePath = path.join(finalPath, imageFile.filename);
       fs.renameSync(imageFile.filepath, newFilePath);
 
-      const imageUrl = `/uploads/advertisements/${adId}/${imageFile.filename}`;
+      const imageUrl = `/uploads/advertisements/${adUid}/${imageFile.filename}`;
 
       // Aktualizuj imageUrl w bazie
-      await this.advertisementService.updateAdvertisementImage(adId, imageUrl);
+      await this.advertisementService.updateAdvertisementImage(adUid, imageUrl);
       result.advertisement.imageUrl = imageUrl;
     }
 
@@ -124,7 +124,7 @@ export class AdvertisementController {
   @Patch('uid/:uid')
   @ApiAuth({ summary: 'Update advertisement (wizard only)' })
   async update(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('uid', ParseUUIDPipe) uid: string,
     @Body()
     body: {
@@ -134,16 +134,16 @@ export class AdvertisementController {
       durationMinutes?: number;
     },
   ) {
-    return this.advertisementService.updateAdvertisementByUid(userId, uid, body);
+    return this.advertisementService.updateAdvertisement(userId, uid, body);
   }
 
   @Delete('uid/:uid')
   @ApiAuth({ summary: 'Delete advertisement (wizard only)' })
   async delete(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('uid', ParseUUIDPipe) uid: string,
   ) {
-    await this.advertisementService.deleteAdvertisementByUid(userId, uid);
+    await this.advertisementService.deleteAdvertisement(userId, uid);
     return { ok: true };
   }
 }

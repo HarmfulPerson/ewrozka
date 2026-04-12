@@ -10,14 +10,14 @@ export function toArticleDto(
   const author = article?.author?.toDto(ProfileDto) || new ProfileDto();
   author.following =
     user?.following?.some(
-      (followee) => followee.followeeId === article?.author?.id,
+      (followee) => followee.followeeId === article?.author?.uid,
     ) || false;
 
   const articleDto = article?.toDto(ArticleDto) || new ArticleDto();
   articleDto.author = author;
   articleDto.tagList = article?.tags?.map((tag) => tag.name) || [];
   articleDto.favorited =
-    article?.favoritedBy?.some((fUser) => fUser.id === user.id) || false;
+    article?.favoritedBy?.some((fUser) => fUser.uid === user.uid) || false;
   articleDto.favoritesCount = article?.favoritedBy?.length || 0;
 
   for (const field of fieldsToRemove) {

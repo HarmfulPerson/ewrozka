@@ -119,7 +119,7 @@ export class AuthController {
       }
       const roleNames = user.roles?.map((r) => r.name) ?? [];
       const token = await this.authService.createToken({
-        id: user.id,
+        id: user.uid,
         roles: roleNames,
       });
       return reply.redirect(

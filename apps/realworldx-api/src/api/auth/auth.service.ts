@@ -33,7 +33,7 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const token = await this.createToken({ id: user.id });
+    const token = await this.createToken({ id: user.uid });
 
     return {
       user: {
@@ -56,7 +56,7 @@ export class AuthService {
     return payload;
   }
 
-  async createToken(data: { id: number }): Promise<string> {
+  async createToken(data: { id: string }): Promise<string> {
     const tokenExpiresIn = this.configService.getOrThrow('auth.expires', {
       infer: true,
     });
@@ -67,8 +67,8 @@ export class AuthService {
       },
       {
         secret: this.configService.getOrThrow('auth.secret', { infer: true }),
-        expiresIn: tokenExpiresIn,
-      },
+        expiresIn: tokenExpiresIn as string,
+      } as any,
     );
 
     return accessToken;

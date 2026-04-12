@@ -24,18 +24,9 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { buildMeetingPaidNotification, buildNewRequestNotification } from '../notifications/handlers';
 import { PaymentService } from '../payment/payment.service';
 
-import { IsEmail, IsInt, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class CreateGuestBookingDto {
-  /**
-   * Legacy numeric advertisement id. Kept for backward compat during the uid
-   * migration — prefer `advertisementUid`. Runtime check in create() ensures
-   * at least one of the two is provided.
-   */
-  @IsOptional()
-  @IsInt()
-  advertisementId?: number;
-
   @IsOptional()
   @IsUUID()
   advertisementUid?: string;
@@ -97,14 +88,11 @@ export class GuestBookingService {
   // ── Tworzenie rezerwacji przez gościa ──────────────────────────────────────
 
   async create(dto: CreateGuestBookingDto): Promise<{ id: string }> {
-    // Accept either advertisementId (legacy) or advertisementUid (Phase 2+).
-    if (!dto.advertisementId && !dto.advertisementUid) {
-      throw new BadRequestException('Podaj advertisementId lub advertisementUid');
+    if (!dto.advertisementUid) {
+      throw new BadRequestException('Podaj advertisementUid');
     }
     const ad = await this.adRepo.findOne({
-      where: dto.advertisementUid
-        ? { uid: dto.advertisementUid }
-        : { id: dto.advertisementId },
+      where: { uid: dto.advertisementUid },
     });
     if (!ad) throw new NotFoundException('Ogłoszenie nie istnieje');
 
@@ -120,7 +108,7 @@ export class GuestBookingService {
     const existing = await this.bookingRepo.findOne({
       where: {
         guestEmail,
-        advertisementId: ad.id,
+        advertisementId: ad.uid,
         scheduledAt,
         status: In(['pending', 'accepted']),
       },
@@ -133,7 +121,7 @@ export class GuestBookingService {
 
     const booking = this.bookingRepo.create({
       wizardId: ad.userId,
-      advertisementId: ad.id,
+      advertisementId: ad.uid,
       guestName: dto.guestName.trim(),
       guestEmail: dto.guestEmail.trim().toLowerCase(),
       guestPhone: dto.guestPhone?.trim() ?? null,
@@ -168,7 +156,7 @@ export class GuestBookingService {
   // ── Wróżka: lista wniosków ─────────────────────────────────────────────────
 
   async getForWizard(
-    wizardId: number,
+    wizardId: string,
     options: {
       status?: string;
       limit?: number;
@@ -215,7 +203,7 @@ export class GuestBookingService {
 
   // ── Wróżka: akceptacja ────────────────────────────────────────────────────
 
-  async accept(wizardId: number, bookingId: string): Promise<void> {
+  async accept(wizardId: string, bookingId: string): Promise<void> {
     const booking = await this.findOwned(wizardId, bookingId);
     if (booking.status !== 'pending')
       throw new BadRequestException('Wniosek nie jest w stanie oczekującym');
@@ -236,7 +224,7 @@ export class GuestBookingService {
 
     void this.notificationsService.notifyWizard(wizardId);
 
-    const wizard = await this.userRepo.findOne({ where: { id: wizardId } });
+    const wizard = await this.userRepo.findOne({ where: { uid: wizardId } });
     const appUrl =
       this.config.get('stripe.frontendUrl', { infer: true }) ??
       'http://localhost:4000';
@@ -371,7 +359,7 @@ export class GuestBookingService {
   // ── Wróżka: odrzucenie ────────────────────────────────────────────────────
 
   async reject(
-    wizardId: number,
+    wizardId: string,
     bookingId: string,
     reason?: string,
   ): Promise<void> {
@@ -385,7 +373,7 @@ export class GuestBookingService {
 
     void this.notificationsService.notifyWizard(wizardId);
 
-    const wizard = await this.userRepo.findOne({ where: { id: wizardId } });
+    const wizard = await this.userRepo.findOne({ where: { uid: wizardId } });
     const appUrl =
       this.config.get('stripe.frontendUrl', { infer: true }) ??
       'http://localhost:4000';
@@ -442,7 +430,7 @@ export class GuestBookingService {
     await this.bookingRepo.save(booking);
 
     const wizard = await this.userRepo.findOne({
-      where: { id: booking.wizardId },
+      where: { uid: booking.wizardId },
     });
     const appUrl =
       this.config.get('stripe.frontendUrl', { infer: true }) ??
@@ -467,15 +455,15 @@ export class GuestBookingService {
     });
 
     // Powiadom wróżkę o opłaceniu spotkania przez gościa
-    const advertisement = await this.adRepo.findOne({
-      where: { id: booking.advertisementId ?? 0 },
-    });
+    const advertisement = booking.advertisementId
+      ? await this.adRepo.findOne({ where: { uid: booking.advertisementId } })
+      : null;
     void this.notificationsService.createAndEmit(
       buildMeetingPaidNotification({
         wizardId: booking.wizardId,
         clientName: booking.guestName,
         advertisementTitle: advertisement?.title ?? 'Konsultacja',
-        appointmentId: 0,
+        appointmentId: booking.id,
         startsAt: booking.scheduledAt?.toISOString?.() ?? '',
       }),
     );
@@ -534,7 +522,7 @@ export class GuestBookingService {
 
   /** Wróżka: pokój spotkania po ID rezerwacji gościa (do przycisku "Dołącz") */
   async getWizardMeetingRoom(
-    wizardId: number,
+    wizardId: string,
     bookingId: string,
   ): Promise<{
     roomUrl: string;
@@ -560,7 +548,7 @@ export class GuestBookingService {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   private async findOwned(
-    wizardId: number,
+    wizardId: string,
     bookingId: string,
   ): Promise<GuestBookingEntity> {
     const booking = await this.bookingRepo.findOne({
@@ -578,11 +566,11 @@ export class GuestBookingService {
     const appUrl =
       this.config.get('stripe.frontendUrl', { infer: true }) ??
       'http://localhost:4000';
-    const ad = await this.adRepo.findOne({
-      where: { id: booking.advertisementId! },
-    });
+    const ad = booking.advertisementId
+      ? await this.adRepo.findOne({ where: { uid: booking.advertisementId } })
+      : null;
     const wizard = await this.userRepo.findOne({
-      where: { id: booking.wizardId },
+      where: { uid: booking.wizardId },
     });
     const scheduledPl = booking.scheduledAt.toLocaleString('pl-PL', {
       timeZone: 'Europe/Warsaw',

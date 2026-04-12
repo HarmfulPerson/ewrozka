@@ -1,9 +1,9 @@
 import { ProfileDto } from '@/api/profile/dto/profile.dto';
-import { ClassField, DateField, NumberField, StringField } from '@repo/api';
+import { ClassField, DateField, StringField } from '@repo/api';
 
 export class CommentDto {
-  @NumberField({ expose: true })
-  id: number;
+  @StringField({ expose: true })
+  uid: string;
 
   @StringField({ expose: true })
   body: string;

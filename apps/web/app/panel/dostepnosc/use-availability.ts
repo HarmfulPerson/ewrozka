@@ -127,7 +127,7 @@ export function useAvailability() {
     if (!user || !deleteTarget) return;
     setDeleting(true);
     try {
-      await apiDeleteAvailability(user.token, deleteTarget.id);
+      await apiDeleteAvailability(user.token, deleteTarget.uid);
       toast.success('Dostępność usunięta');
       setDeleteTarget(null);
       await fetchData();

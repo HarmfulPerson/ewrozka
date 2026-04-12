@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Query,
 } from '@nestjs/common';
@@ -20,9 +20,8 @@ export class MeetingRoomController {
   @ApiAuth({
     summary: 'Wejdź na spotkanie (walidacja tokenu + rejestracja wejścia)',
   })
-  async joinByPath(@CurrentUser('id') userId: number, @Param('token') token: string) {
-    const uid = typeof userId === 'string' ? parseInt(userId, 10) : userId;
-    return this.meetingRoomService.join(token, uid);
+  async joinByPath(@CurrentUser('id') userId: string, @Param('token') token: string) {
+    return this.meetingRoomService.join(token, userId);
   }
 
   @Get('join')
@@ -34,59 +33,45 @@ export class MeetingRoomController {
     required: true,
     description: 'Token z linku spotkania',
   })
-  async join(@CurrentUser('id') userId: number, @Query('token') token: string) {
-    const uid = typeof userId === 'string' ? parseInt(userId, 10) : userId;
-    return this.meetingRoomService.join(token, uid);
+  async join(@CurrentUser('id') userId: string, @Query('token') token: string) {
+    return this.meetingRoomService.join(token, userId);
   }
 
   @Post('leave')
   @ApiAuth({ summary: 'Zarejestruj wyjście ze spotkania' })
   async leave(
-    @CurrentUser() user: { id: number },
+    @CurrentUser('id') userId: string,
     @Query('token') token: string,
   ) {
-    const uid = typeof user.id === 'string' ? parseInt(user.id, 10) : user.id;
-    await this.meetingRoomService.leave(token, uid);
+    await this.meetingRoomService.leave(token, userId);
     return { ok: true };
   }
 
   @Get('link')
   @ApiAuth({
-    summary: 'Pobierz token (link) do spotkania. Akceptuje appointmentUid (preferowane) lub appointmentId (deprecated).',
+    summary: 'Pobierz token (link) do spotkania po appointmentUid.',
   })
-  @ApiQuery({ name: 'appointmentUid', required: false, type: String })
-  @ApiQuery({ name: 'appointmentId', required: false, type: Number })
+  @ApiQuery({ name: 'appointmentUid', required: true, type: String })
   async getLink(
-    @CurrentUser('id') userId: number,
-    @Query('appointmentUid') appointmentUidRaw?: string,
-    @Query('appointmentId') appointmentIdRaw?: string,
+    @CurrentUser('id') userId: string,
+    @Query('appointmentUid') appointmentUid?: string,
   ) {
-    const uid = typeof userId === 'string' ? parseInt(userId, 10) : userId;
-
-    // Phase 5: prefer uid when provided.
-    if (appointmentUidRaw) {
-      const result = await this.meetingRoomService.getMeetingLinkByUid(
-        appointmentUidRaw,
-        uid,
-      );
-      return result ?? { token: null };
-    }
-
-    const parsedId = appointmentIdRaw ? parseInt(appointmentIdRaw, 10) : NaN;
-    if (!Number.isInteger(parsedId) || parsedId < 1) {
+    if (!appointmentUid) {
       return { token: null };
     }
-    const result = await this.meetingRoomService.getMeetingLink(parsedId, uid);
+    const result = await this.meetingRoomService.getMeetingLink(
+      appointmentUid,
+      userId,
+    );
     return result ?? { token: null };
   }
 
-  @Get(':id/stats')
+  @Get(':uid/stats')
   @ApiAuth({ summary: 'Statystyki spotkania: kto kiedy wszedł/wyszedł' })
   async getStats(
-    @CurrentUser('id') userId: number,
-    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('id') userId: string,
+    @Param('uid', ParseUUIDPipe) uid: string,
   ) {
-    const uid = typeof userId === 'string' ? parseInt(userId, 10) : userId;
-    return this.meetingRoomService.getStats(id, uid);
+    return this.meetingRoomService.getStats(uid, userId);
   }
 }

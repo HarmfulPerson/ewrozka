@@ -17,9 +17,9 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  async get(currentUser: { id: number; token: string }): Promise<UserResDto> {
+  async get(currentUser: { id: string; token: string }): Promise<UserResDto> {
     const user = await this.userRepository.findOneByOrFail({
-      id: currentUser.id,
+      uid: currentUser.id,
     });
 
     return { user: { ...user, token: currentUser.token } };
@@ -42,30 +42,30 @@ export class UserService {
     return {
       user: {
         ...savedUser,
-        token: await this.authService.createToken({ id: savedUser.id }),
+        token: await this.authService.createToken({ id: savedUser.uid }),
       },
     };
   }
 
   async update(
-    userId: number,
+    userId: string,
     userData: UpdateUserReqDto,
   ): Promise<UserResDto> {
-    const user = await this.userRepository.findOneBy({ id: userId });
+    const user = await this.userRepository.findOneBy({ uid: userId });
 
     if (!user) {
       throw new ValidationException(ErrorCode.E002);
     }
 
     const savedUser = await this.userRepository.save({
-      id: userId,
+      uid: userId,
       ...userData,
     });
 
     return {
       user: {
         ...savedUser,
-        token: await this.authService.createToken({ id: savedUser.id }),
+        token: await this.authService.createToken({ id: savedUser.uid }),
       },
     };
   }

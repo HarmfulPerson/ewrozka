@@ -72,7 +72,7 @@ export function ClientUpcomingMeetings({ token }: ClientUpcomingMeetingsProps) {
             const isPast = now >= end;
 
             return (
-              <div key={apt.id} className="dashboard__card">
+              <div key={apt.uid} className="dashboard__card">
                 <div className="dashboard__card-date">
                   <span className="dashboard__card-date-day">{formatDate(apt.startsAt)}</span>
                   <span className="dashboard__card-date-time">{formatTime(apt.startsAt)}</span>

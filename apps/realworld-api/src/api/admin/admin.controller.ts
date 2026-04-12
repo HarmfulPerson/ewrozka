@@ -104,50 +104,50 @@ export class AdminController {
   // and are deprecated in their ApiAuth summary. ──
 
   @Get('wizards/uid/:uid')
-  @ApiAuth({ summary: 'Szczegóły specjalisty po UID (preferowane)' })
+  @ApiAuth({ summary: 'Szczegóły specjalisty po UID' })
   getWizardByUid(@Param('uid', ParseUUIDPipe) uid: string) {
-    return this.adminService.getWizardByUid(uid);
+    return this.adminService.getWizardById(uid);
   }
 
   @Patch('wizards/uid/:uid/platform-fee')
-  @ApiAuth({ summary: 'Zmień prowizję platformy po UID (preferowane)' })
+  @ApiAuth({ summary: 'Zmień prowizję platformy po UID' })
   @HttpCode(HttpStatus.OK)
   updateWizardPlatformFeeByUid(
     @Param('uid', ParseUUIDPipe) uid: string,
     @Body() body: { platformFeePercent: number },
   ) {
-    return this.adminService.updateWizardPlatformFeeByUid(
+    return this.adminService.updateWizardPlatformFee(
       uid,
       Number(body.platformFeePercent),
     );
   }
 
   @Post('wizards/uid/:uid/platform-fee/reset-to-tier')
-  @ApiAuth({ summary: 'Reset prowizji po UID (preferowane)' })
+  @ApiAuth({ summary: 'Reset prowizji po UID' })
   @HttpCode(HttpStatus.OK)
   resetWizardPlatformFeeToTierByUid(@Param('uid', ParseUUIDPipe) uid: string) {
-    return this.adminService.resetWizardPlatformFeeToTierByUid(uid);
+    return this.adminService.resetWizardPlatformFeeToTier(uid);
   }
 
   @Post('wizards/uid/:uid/featured')
-  @ApiAuth({ summary: 'Ustaw wyróżnienie po UID (preferowane)' })
+  @ApiAuth({ summary: 'Ustaw wyróżnienie po UID' })
   @HttpCode(HttpStatus.OK)
   setWizardFeaturedByUid(@Param('uid', ParseUUIDPipe) uid: string) {
-    return this.adminService.setWizardFeaturedByUid(uid);
+    return this.adminService.setWizardFeatured(uid);
   }
 
   @Post('wizards/uid/:uid/video/approve')
-  @ApiAuth({ summary: 'Zatwierdź filmik po UID (preferowane)' })
+  @ApiAuth({ summary: 'Zatwierdź filmik po UID' })
   @HttpCode(HttpStatus.OK)
   approveWizardVideoByUid(@Param('uid', ParseUUIDPipe) uid: string) {
-    return this.adminService.approveWizardVideoByUid(uid);
+    return this.adminService.approveWizardVideo(uid);
   }
 
   @Post('wizards/uid/:uid/video/reject')
-  @ApiAuth({ summary: 'Odrzuć filmik po UID (preferowane)' })
+  @ApiAuth({ summary: 'Odrzuć filmik po UID' })
   @HttpCode(HttpStatus.OK)
   rejectWizardVideoByUid(@Param('uid', ParseUUIDPipe) uid: string) {
-    return this.adminService.rejectWizardVideoByUid(uid);
+    return this.adminService.rejectWizardVideo(uid);
   }
 
   // Legacy :id routes removed in Phase 6. All wizard ops go through /wizards/uid/:uid/*.
@@ -244,7 +244,7 @@ export class AdminController {
     @Query('to') to: string,
     @Query('groupBy') groupBy?: 'day' | 'week' | 'month',
   ) {
-    return this.adminService.getWizardAnalyticsByUid(uid, from, to, groupBy);
+    return this.adminService.getWizardAnalytics(uid, from, to, groupBy);
   }
 
 }

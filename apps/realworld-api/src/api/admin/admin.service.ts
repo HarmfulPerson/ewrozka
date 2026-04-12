@@ -134,9 +134,6 @@ export type AdminWizardsSortBy =
 
 export interface AdminWizardRowDto {
 
-  id: number;
-
-  /** Stable non-sequential external identifier. Prefer this over `id` for URLs. */
   uid: string;
 
   username: string;
@@ -179,9 +176,7 @@ export interface AdminWizardsPageDto {
 
 export interface AdminWizardDetailDto {
 
-  id: number;
-
-  /** Stable non-sequential external identifier. Prefer this over `id` for URLs. */
+  /** Stable non-sequential identifier (uuid PK). */
   uid: string;
 
   username: string;
@@ -438,13 +433,13 @@ export class AdminService {
 
 
     // Resolve referral code from wizard application
-    let referredBy: number | null = null;
+    let referredBy: string | null = null;
     if (app.referralCodeUsed) {
       const referrer = await this.userRepo.findOne({
         where: { referralCode: app.referralCodeUsed },
-        select: ['id'],
+        select: ['uid'],
       });
-      if (referrer) referredBy = referrer.id;
+      if (referrer) referredBy = referrer.uid;
     }
 
     // Utwórz użytkownika – hasło jest już zahashowane, @BeforeInsert nie rehashuje argon2
@@ -482,7 +477,7 @@ export class AdminService {
 
     if (app.topicIds?.length) {
 
-      const topics = await this.topicRepo.findBy({ id: In(app.topicIds) });
+      const topics = await this.topicRepo.findBy({ uid: In(app.topicIds) });
 
       user.topics = topics;
 
@@ -581,9 +576,7 @@ export class AdminService {
 
       .innerJoin('u.roles', 'r', "r.name = 'wizard'")
 
-      .select('u.id', 'id')
-
-      .addSelect('u.uid', 'uid')
+      .select('u.uid', 'uid')
 
       .addSelect('u.username', 'username')
 
@@ -597,7 +590,7 @@ export class AdminService {
 
       .addSelect(
 
-        `(SELECT COUNT(*)::int FROM appointment a WHERE a.wrozka_id = u.id)`,
+        `(SELECT COUNT(*)::int FROM appointment a WHERE a.wrozka_id = u.uid)`,
 
         'meetingsCount',
 
@@ -605,7 +598,7 @@ export class AdminService {
 
       .addSelect(
 
-        `(SELECT COALESCE(SUM(t.wizard_amount), 0)::bigint FROM transaction t WHERE t.user_id = u.id AND t.status = :txStatus)`,
+        `(SELECT COALESCE(SUM(t.wizard_amount), 0)::bigint FROM transaction t WHERE t.user_id = u.uid AND t.status = :txStatus)`,
 
         'earnedGrosze',
 
@@ -613,7 +606,7 @@ export class AdminService {
 
       .addSelect(
 
-        `(SELECT COUNT(*)::int FROM advertisement ad WHERE ad.user_id = u.id)`,
+        `(SELECT COUNT(*)::int FROM advertisement ad WHERE ad.user_id = u.uid)`,
 
         'announcementsCount',
 
@@ -621,7 +614,7 @@ export class AdminService {
 
       .addSelect(
 
-        `(SELECT EXISTS (SELECT 1 FROM availability av WHERE av.user_id = u.id AND av.starts_at <= :now AND av.ends_at >= :now))`,
+        `(SELECT EXISTS (SELECT 1 FROM availability av WHERE av.user_id = u.uid AND av.starts_at <= :now AND av.ends_at >= :now))`,
 
         'isAvailableNow',
 
@@ -637,7 +630,7 @@ export class AdminService {
 
       qb.andWhere(
 
-        '(SELECT COUNT(*) FROM appointment a2 WHERE a2.wrozka_id = u.id) >= :minMeetings',
+        '(SELECT COUNT(*) FROM appointment a2 WHERE a2.wrozka_id = u.uid) >= :minMeetings',
 
         { minMeetings: filters.minMeetings },
 
@@ -649,7 +642,7 @@ export class AdminService {
 
       qb.andWhere(
 
-        '(SELECT COUNT(*) FROM appointment a2 WHERE a2.wrozka_id = u.id) <= :maxMeetings',
+        '(SELECT COUNT(*) FROM appointment a2 WHERE a2.wrozka_id = u.uid) <= :maxMeetings',
 
         { maxMeetings: filters.maxMeetings },
 
@@ -661,7 +654,7 @@ export class AdminService {
 
       qb.andWhere(
 
-        '(SELECT COALESCE(SUM(t2.wizard_amount), 0) FROM transaction t2 WHERE t2.user_id = u.id AND t2.status = :txStatus) >= :minEarned',
+        '(SELECT COALESCE(SUM(t2.wizard_amount), 0) FROM transaction t2 WHERE t2.user_id = u.uid AND t2.status = :txStatus) >= :minEarned',
 
         { minEarned: filters.minEarnedGrosze },
 
@@ -673,7 +666,7 @@ export class AdminService {
 
       qb.andWhere(
 
-        '(SELECT COALESCE(SUM(t2.wizard_amount), 0) FROM transaction t2 WHERE t2.user_id = u.id AND t2.status = :txStatus) <= :maxEarned',
+        '(SELECT COALESCE(SUM(t2.wizard_amount), 0) FROM transaction t2 WHERE t2.user_id = u.uid AND t2.status = :txStatus) <= :maxEarned',
 
         { maxEarned: filters.maxEarnedGrosze },
 
@@ -685,7 +678,7 @@ export class AdminService {
 
       qb.andWhere(
 
-        'EXISTS (SELECT 1 FROM availability av2 WHERE av2.user_id = u.id AND av2.starts_at <= :now AND av2.ends_at >= :now)',
+        'EXISTS (SELECT 1 FROM availability av2 WHERE av2.user_id = u.uid AND av2.starts_at <= :now AND av2.ends_at >= :now)',
 
       );
 
@@ -713,7 +706,7 @@ export class AdminService {
 
       qb.orderBy(
 
-        '(SELECT COALESCE(SUM(t3.wizard_amount), 0) FROM transaction t3 WHERE t3.user_id = u.id AND t3.status = :txStatus)',
+        '(SELECT COALESCE(SUM(t3.wizard_amount), 0) FROM transaction t3 WHERE t3.user_id = u.uid AND t3.status = :txStatus)',
 
         orderDir,
 
@@ -723,7 +716,7 @@ export class AdminService {
 
       qb.orderBy(
 
-        '(SELECT COUNT(*) FROM appointment a3 WHERE a3.wrozka_id = u.id)',
+        '(SELECT COUNT(*) FROM appointment a3 WHERE a3.wrozka_id = u.uid)',
 
         orderDir,
 
@@ -733,7 +726,7 @@ export class AdminService {
 
       qb.orderBy(
 
-        '(SELECT COUNT(*) FROM advertisement ad3 WHERE ad3.user_id = u.id)',
+        '(SELECT COUNT(*) FROM advertisement ad3 WHERE ad3.user_id = u.uid)',
 
         orderDir,
 
@@ -766,8 +759,6 @@ export class AdminService {
     const data: AdminWizardRowDto[] = rawItems.map(
       (r: Record<string, unknown>) => ({
 
-        id: Number(r.id),
-
         uid: String(r.uid),
 
         username: String(r.username),
@@ -786,7 +777,7 @@ export class AdminService {
 
         isAvailableNow: Number(r.isAvailableNow ?? 0) === 1,
 
-        isFeatured: featuredIds.has(Number(r.id)),
+        isFeatured: featuredIds.has(String(r.uid)),
 
         hasPendingVideo: !!r.videoPending,
 
@@ -811,11 +802,11 @@ export class AdminService {
 
 
 
-  async getWizardById(id: number): Promise<AdminWizardDetailDto> {
+  async getWizardById(uid: string): Promise<AdminWizardDetailDto> {
 
     const user = await this.userRepo.findOne({
 
-      where: { id },
+      where: { uid },
 
       relations: ['roles', 'topics'],
 
@@ -837,9 +828,9 @@ export class AdminService {
 
       .createQueryBuilder('a')
 
-      .select('COUNT(a.id)', 'cnt')
+      .select('COUNT(a.uid)', 'cnt')
 
-      .where('a.wrozka_id = :id', { id })
+      .where('a.wrozka_id = :uid', { uid })
 
       .getRawMany<{ cnt: string }>();
 
@@ -851,7 +842,7 @@ export class AdminService {
 
       .select('COALESCE(SUM(t.wizard_amount), 0)', 'total')
 
-      .where('t.user_id = :id', { id })
+      .where('t.user_id = :uid', { uid })
 
       .andWhere('t.status = :status', { status: 'completed' })
 
@@ -863,9 +854,9 @@ export class AdminService {
 
       .createQueryBuilder('ad')
 
-      .select('COUNT(ad.id)', 'cnt')
+      .select('COUNT(ad.uid)', 'cnt')
 
-      .where('ad.user_id = :id', { id })
+      .where('ad.user_id = :uid', { uid })
 
       .getRawMany<{ cnt: string }>();
 
@@ -875,7 +866,7 @@ export class AdminService {
 
       .createQueryBuilder('av')
 
-      .where('av.user_id = :id', { id })
+      .where('av.user_id = :uid', { uid })
 
       .andWhere('av.starts_at <= :now', { now })
 
@@ -886,15 +877,13 @@ export class AdminService {
 
 
     const { isFeatured, expiresAt } =
-      await this.featuredService.getWizardFeaturedStatus(id);
+      await this.featuredService.getWizardFeaturedStatus(uid);
 
-    const tierStatus = await this.commissionTierService.getTierStatus(id);
+    const tierStatus = await this.commissionTierService.getTierStatus(uid);
 
 
 
     return {
-
-      id: user.id,
 
       uid: user.uid,
 
@@ -962,9 +951,9 @@ export class AdminService {
 
 
 
-  async approveWizardVideo(wizardId: number): Promise<void> {
+  async approveWizardVideo(wizardId: string): Promise<void> {
 
-    const user = await this.userRepo.findOne({ where: { id: wizardId }, relations: ['roles'] });
+    const user = await this.userRepo.findOne({ where: { uid: wizardId }, relations: ['roles'] });
 
     if (!user) throw new NotFoundException('Specjalista nie istnieje.');
 
@@ -996,9 +985,9 @@ export class AdminService {
 
 
 
-  async rejectWizardVideo(wizardId: number): Promise<void> {
+  async rejectWizardVideo(wizardId: string): Promise<void> {
 
-    const user = await this.userRepo.findOne({ where: { id: wizardId }, relations: ['roles'] });
+    const user = await this.userRepo.findOne({ where: { uid: wizardId }, relations: ['roles'] });
 
     if (!user) throw new NotFoundException('Specjalista nie istnieje.');
 
@@ -1030,7 +1019,7 @@ export class AdminService {
 
   async updateWizardPlatformFee(
 
-    id: number,
+    uid: string,
 
     platformFeePercent: number,
 
@@ -1038,7 +1027,7 @@ export class AdminService {
 
     const user = await this.userRepo.findOne({
 
-      where: { id },
+      where: { uid },
 
       relations: ['roles'],
 
@@ -1062,7 +1051,7 @@ export class AdminService {
 
     this.logger.log(
 
-      `Admin ustawił prowizję dla specjalisty ${id} na ${platformFeePercent}%`,
+      `Admin ustawił prowizję dla specjalisty ${uid} na ${platformFeePercent}%`,
 
     );
 
@@ -1072,11 +1061,11 @@ export class AdminService {
 
   /** Czyści override prowizji – specjalista przechodzi na prowizję z progów. */
 
-  async resetWizardPlatformFeeToTier(id: number): Promise<void> {
+  async resetWizardPlatformFeeToTier(uid: string): Promise<void> {
 
     const user = await this.userRepo.findOne({
 
-      where: { id },
+      where: { uid },
 
       relations: ['roles'],
 
@@ -1094,7 +1083,7 @@ export class AdminService {
 
     this.logger.log(
 
-      `Admin zresetował prowizję specjalisty ${id} – używana prowizja z progów`,
+      `Admin zresetował prowizję specjalisty ${uid} – używana prowizja z progów`,
 
     );
 
@@ -1102,11 +1091,11 @@ export class AdminService {
 
 
 
-  async setWizardFeatured(id: number): Promise<void> {
+  async setWizardFeatured(uid: string): Promise<void> {
 
     const user = await this.userRepo.findOne({
 
-      where: { id },
+      where: { uid },
 
       relations: ['roles'],
 
@@ -1121,7 +1110,7 @@ export class AdminService {
 
 
     const { isFeatured } =
-      await this.featuredService.getWizardFeaturedStatus(id);
+      await this.featuredService.getWizardFeaturedStatus(uid);
 
     if (isFeatured) {
 
@@ -1135,10 +1124,10 @@ export class AdminService {
 
     const durationHours = cfg?.durationHours ?? 6;
 
-    await this.featuredService.activateFeatured(id, null, durationHours);
+    await this.featuredService.activateFeatured(uid, null, durationHours);
 
     this.logger.log(
-      `Admin ustawił wyróżnienie dla specjalisty ${id} (bez płatności)`,
+      `Admin ustawił wyróżnienie dla specjalisty ${uid} (bez płatności)`,
     );
 
   }
@@ -1161,7 +1150,7 @@ export class AdminService {
 
     const config = await this.platformFeeConfigRepo.findOne({
 
-      where: { id: 1 },
+      where: {},
 
     });
 
@@ -1173,7 +1162,7 @@ export class AdminService {
 
     const tiers = await this.platformFeeTierRepo.find({
 
-      where: { configId: config.id },
+      where: { configId: config.uid },
 
       order: { sortOrder: 'ASC' },
 
@@ -1215,7 +1204,7 @@ export class AdminService {
 
     const config = await this.platformFeeConfigRepo.findOne({
 
-      where: { id: 1 },
+      where: {},
 
     });
 
@@ -1309,7 +1298,7 @@ export class AdminService {
 
       }
 
-      await this.platformFeeTierRepo.delete({ configId: config.id });
+      await this.platformFeeTierRepo.delete({ configId: config.uid });
 
       for (let i = 0; i < body.tiers.length; i++) {
 
@@ -1317,7 +1306,7 @@ export class AdminService {
 
         const tier = this.platformFeeTierRepo.create({
 
-          configId: config.id,
+          configId: config.uid,
 
           minMeetings: t.minMeetings,
 
@@ -1352,7 +1341,7 @@ export class AdminService {
     hoursSlot2: number;
     hoursSlot3: number;
   }> {
-    const config = await this.reminderConfigRepo.findOne({ where: { id: 1 } });
+    const config = await this.reminderConfigRepo.findOne({ where: {} });
     if (!config) {
       return { enabled48h: true, enabled24h: true, enabled1h: true, hoursSlot1: 48, hoursSlot2: 24, hoursSlot3: 1 };
     }
@@ -1375,7 +1364,7 @@ export class AdminService {
     hoursSlot2?: number;
     hoursSlot3?: number;
   }): Promise<void> {
-    const config = await this.reminderConfigRepo.findOne({ where: { id: 1 } });
+    const config = await this.reminderConfigRepo.findOne({ where: {} });
     if (!config) {
       throw new NotFoundException(
         'Brak konfiguracji przypomnień. Uruchom migrację bazy danych.',
@@ -1461,15 +1450,15 @@ export class AdminService {
       .addSelect('COUNT(*)::int', 'total')
       .addSelect(
         `COUNT(*) FILTER (WHERE EXISTS (
-          SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.id
-          WHERE ur.user_id = u.id AND r.name = 'client'
+          SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.uid
+          WHERE ur.user_id = u.uid AND r.name = 'client'
         ))::int`,
         'clients',
       )
       .addSelect(
         `COUNT(*) FILTER (WHERE EXISTS (
-          SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.id
-          WHERE ur.user_id = u.id AND r.name = 'wizard'
+          SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.uid
+          WHERE ur.user_id = u.uid AND r.name = 'wizard'
         ))::int`,
         'wizards',
       )
@@ -1507,7 +1496,7 @@ export class AdminService {
     const rows = await this.transactionRepo
       .createQueryBuilder('t')
       .innerJoin('t.user', 'u')
-      .select('u.id', 'wizardId')
+      .select('u.uid', 'wizardId')
       .addSelect('u.username', 'username')
       .addSelect('u.image', 'image')
       .addSelect('SUM(t.wizard_amount)::bigint', 'wizardEarnedGrosze')
@@ -1516,7 +1505,7 @@ export class AdminService {
       .where('t.status = :status', { status: 'completed' })
       .andWhere('t.created_at >= :from', { from })
       .andWhere('t.created_at <= :to', { to: to + 'T23:59:59.999Z' })
-      .groupBy('u.id')
+      .groupBy('u.uid')
       .addGroupBy('u.username')
       .addGroupBy('u.image')
       .orderBy('SUM(t.wizard_amount)', 'DESC')
@@ -1525,7 +1514,7 @@ export class AdminService {
 
     return {
       data: rows.map((r) => ({
-        wizardId: Number(r.wizardId),
+        wizardId: String(r.wizardId),
         username: r.username,
         image: r.image,
         wizardEarned: Number(r.wizardEarnedGrosze) / 100,
@@ -1536,7 +1525,7 @@ export class AdminService {
   }
 
   async getWizardAnalytics(
-    wizardId: number,
+    wizardId: string,
     from: string,
     to: string,
     groupBy: 'day' | 'week' | 'month' = 'day',
@@ -1641,63 +1630,6 @@ export class AdminService {
         totalRatings: totalRatingCount,
       },
     };
-  }
-
-  // ── Phase 4 of the int-id → uid migration ───────────────────────────────
-  // Each *ByUid wrapper resolves the wizard's uid to the numeric id and
-  // delegates to the existing by-id method so business logic stays
-  // single-sourced.
-
-  private async resolveWizardIdByUid(uid: string): Promise<number> {
-    const user = await this.userRepo.findOne({
-      where: { uid },
-      select: ['id'],
-    });
-    if (!user) throw new NotFoundException('Specjalista nie istnieje.');
-    return user.id;
-  }
-
-  async getWizardByUid(uid: string) {
-    return this.getWizardById(await this.resolveWizardIdByUid(uid));
-  }
-
-  async approveWizardVideoByUid(uid: string) {
-    return this.approveWizardVideo(await this.resolveWizardIdByUid(uid));
-  }
-
-  async rejectWizardVideoByUid(uid: string) {
-    return this.rejectWizardVideo(await this.resolveWizardIdByUid(uid));
-  }
-
-  async updateWizardPlatformFeeByUid(uid: string, platformFeePercent: number) {
-    return this.updateWizardPlatformFee(
-      await this.resolveWizardIdByUid(uid),
-      platformFeePercent,
-    );
-  }
-
-  async resetWizardPlatformFeeToTierByUid(uid: string) {
-    return this.resetWizardPlatformFeeToTier(
-      await this.resolveWizardIdByUid(uid),
-    );
-  }
-
-  async setWizardFeaturedByUid(uid: string) {
-    return this.setWizardFeatured(await this.resolveWizardIdByUid(uid));
-  }
-
-  async getWizardAnalyticsByUid(
-    uid: string,
-    from: string,
-    to: string,
-    groupBy?: 'day' | 'week' | 'month',
-  ) {
-    return this.getWizardAnalytics(
-      await this.resolveWizardIdByUid(uid),
-      from,
-      to,
-      groupBy,
-    );
   }
 
 }

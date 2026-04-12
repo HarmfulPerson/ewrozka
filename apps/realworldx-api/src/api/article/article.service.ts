@@ -28,10 +28,10 @@ export class ArticleService {
 
   async list(
     reqDto: ArticleListReqDto,
-    userId: number,
+    userId: string,
   ): Promise<ArticleListResDto> {
     const user = await this.userRepository.findOne({
-      where: { id: userId },
+      where: { uid: userId },
       relations: ['following'],
     });
 
@@ -76,18 +76,18 @@ export class ArticleService {
   }
 
   async getFeed(
-    userId: number,
+    userId: string,
     reqDto: ArticleFeedReqDto,
   ): Promise<ArticleListResDto> {
     const userWithFollowing = await this.userRepository.findOne({
       select: {
-        id: true,
+        uid: true,
         following: {
-          id: true,
+          uid: true,
           followeeId: true,
         },
       },
-      where: { id: userId },
+      where: { uid: userId },
       relations: ['following'],
     });
 
@@ -134,9 +134,9 @@ export class ArticleService {
     };
   }
 
-  async get(userId: number, slug: string): Promise<ArticleResDto> {
+  async get(userId: string, slug: string): Promise<ArticleResDto> {
     const user = await this.userRepository.findOneOrFail({
-      where: { id: userId },
+      where: { uid: userId },
       relations: ['following'],
     });
 
@@ -153,14 +153,14 @@ export class ArticleService {
       article: {
         ...toArticleDto(article, user),
         tagList: article.tags.map((tag) => tag.name),
-        favorited: article.favoritedBy.some((user) => user.id === userId),
+        favorited: article.favoritedBy.some((user) => user.uid === userId),
         favoritesCount: article.favoritedBy.length,
       },
     };
   }
 
   async create(
-    userId: number,
+    userId: string,
     articleData: CreateArticleReqDto,
   ): Promise<ArticleResDto> {
     const { title, description, body, tagList } = articleData;

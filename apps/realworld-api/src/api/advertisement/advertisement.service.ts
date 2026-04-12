@@ -32,9 +32,9 @@ export class AdvertisementService {
     private readonly config: ConfigService<AllConfigType>,
   ) {}
 
-  async getAdvertisementsByWizardId(wizardId: number) {
+  async getAdvertisementsByWizardId(wizardId: string) {
     const wizard = await this.userRepository.findOne({
-      where: { id: wizardId },
+      where: { uid: wizardId },
       relations: ['roles'],
     });
 
@@ -58,19 +58,7 @@ export class AdvertisementService {
     };
   }
 
-  /** Phase 5: public wizard-ads lookup by wizard uid. */
-  async getAdvertisementsByWizardUid(wizardUid: string) {
-    const wizard = await this.userRepository.findOne({
-      where: { uid: wizardUid },
-      select: ['id'],
-    });
-    if (!wizard) {
-      throw new NotFoundException('Specjalista nie znaleziony');
-    }
-    return this.getAdvertisementsByWizardId(wizard.id);
-  }
-
-  async getMyAdvertisements(userId: number) {
+  async getMyAdvertisements(userId: string) {
     const advertisements = await this.advertisementRepository.find({
       where: { userId },
       order: { createdAt: 'DESC' },
@@ -84,7 +72,6 @@ export class AdvertisementService {
 
   private mapAd(ad: AdvertisementEntity) {
     return {
-      id: ad.id,
       uid: ad.uid,
       title: ad.title,
       description: ad.description,
@@ -95,9 +82,9 @@ export class AdvertisementService {
     };
   }
 
-  async getAdvertisementById(id: number) {
+  async getAdvertisementById(uid: string) {
     const advertisement = await this.advertisementRepository.findOne({
-      where: { id },
+      where: { uid },
       relations: ['user', 'user.topics'],
     });
 
@@ -107,7 +94,6 @@ export class AdvertisementService {
 
     return {
       advertisement: {
-        id: advertisement.id,
         uid: advertisement.uid,
         title: advertisement.title,
         description: advertisement.description,
@@ -115,7 +101,6 @@ export class AdvertisementService {
         priceGrosze: advertisement.priceGrosze,
         durationMinutes: advertisement.durationMinutes,
         wizard: {
-          id: advertisement.user.id,
           uid: advertisement.user.uid,
           username: advertisement.user.username,
           image: advertisement.user.image,
@@ -125,50 +110,8 @@ export class AdvertisementService {
     };
   }
 
-  /**
-   * Public lookup by UUID. Phase 2 of the int-id → uid migration.
-   * Resolves uid → id and delegates to getAdvertisementById so the response
-   * shape stays identical between the two paths.
-   */
-  async getAdvertisementByUid(uid: string) {
-    const ad = await this.advertisementRepository.findOne({
-      where: { uid },
-      select: ['id'],
-    });
-
-    if (!ad) {
-      throw new NotFoundException('Ogłoszenie nie znalezione');
-    }
-
-    return this.getAdvertisementById(ad.id);
-  }
-
-  /** Phase 6: update an advertisement by uid. Resolves → id → delegates. */
-  async updateAdvertisementByUid(
-    userId: number,
-    uid: string,
-    data: { description?: string },
-  ) {
-    const ad = await this.advertisementRepository.findOne({
-      where: { uid },
-      select: ['id'],
-    });
-    if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
-    return this.updateAdvertisement(userId, ad.id, data);
-  }
-
-  /** Phase 6: delete an advertisement by uid. Resolves → id → delegates. */
-  async deleteAdvertisementByUid(userId: number, uid: string) {
-    const ad = await this.advertisementRepository.findOne({
-      where: { uid },
-      select: ['id'],
-    });
-    if (!ad) throw new NotFoundException('Ogłoszenie nie znalezione');
-    return this.deleteAdvertisement(userId, ad.id);
-  }
-
   async createAdvertisement(
-    userId: number,
+    userId: string,
     data: {
       title: string;
       description: string;
@@ -186,7 +129,6 @@ export class AdvertisementService {
 
     return {
       advertisement: {
-        id: saved.id,
         uid: saved.uid,
         title: saved.title,
         description: saved.description,
@@ -199,13 +141,13 @@ export class AdvertisementService {
   }
 
   async updateAdvertisement(
-    userId: number,
-    id: number,
+    userId: string,
+    uid: string,
     data: {
       description?: string;
     },
   ) {
-    const advertisement = await this.advertisementRepository.findOne({ where: { id } });
+    const advertisement = await this.advertisementRepository.findOne({ where: { uid } });
 
     if (!advertisement) {
       throw new NotFoundException('Ogłoszenie nie znalezione');
@@ -222,13 +164,13 @@ export class AdvertisementService {
     return { advertisement: this.mapAd(saved) };
   }
 
-  async updateAdvertisementImage(id: number, imageUrl: string) {
-    await this.advertisementRepository.update(id, { imageUrl });
+  async updateAdvertisementImage(uid: string, imageUrl: string) {
+    await this.advertisementRepository.update({ uid }, { imageUrl });
   }
 
-  async deleteAdvertisement(userId: number, id: number) {
+  async deleteAdvertisement(userId: string, uid: string) {
     const advertisement = await this.advertisementRepository.findOne({
-      where: { id },
+      where: { uid },
       relations: ['user'],
     });
 
@@ -245,13 +187,13 @@ export class AdvertisementService {
 
     // 1. Wnioski o spotkanie (zalogowani) – odrzuć tylko nieopłacone, wyślij email
     const requestsForAd = await this.meetingRequestRepository.find({
-      where: { advertisementId: id, status: In(['pending', 'accepted']) },
+      where: { advertisementId: uid, status: In(['pending', 'accepted']) },
       relations: ['user', 'advertisement', 'advertisement.user'],
     });
 
     for (const req of requestsForAd) {
       const apt = await this.appointmentRepository.findOne({
-        where: { meetingRequestId: req.id },
+        where: { meetingRequestId: req.uid },
       });
       // Pomijamy wnioski z opłaconym lub zakończonym appointmentem
       if (apt && ['paid', 'completed'].includes(apt.status)) continue;
@@ -284,12 +226,12 @@ export class AdvertisementService {
             this.logger.error(`Failed to send meeting request cancellation email to ${userEmail}: ${err instanceof Error ? err.message : String(err)}`),
           );
       }
-      this.logger.log(`Meeting request ${req.id} rejected due to advertisement removal`);
+      this.logger.log(`Meeting request ${req.uid} rejected due to advertisement removal`);
     }
 
     // 2. Rezerwacje gości – odrzuć tylko pending i accepted (nieopłacone)
     const guestBookingsForAd = await this.guestBookingRepository.find({
-      where: { advertisementId: id },
+      where: { advertisementId: uid },
       relations: ['wizard', 'advertisement'],
     });
 
@@ -319,13 +261,13 @@ export class AdvertisementService {
 
     // 3. Appointments bez powiązanego wniosku (fallback) – anuluj tylko accepted
     const appointmentsForAd = await this.appointmentRepository.find({
-      where: { advertisementId: id },
+      where: { advertisementId: uid },
     });
     for (const apt of appointmentsForAd) {
       if (apt.status === 'accepted') {
         apt.status = 'cancelled';
         await this.appointmentRepository.save(apt);
-        this.logger.log(`Appointment ${apt.id} cancelled due to advertisement removal`);
+        this.logger.log(`Appointment ${apt.uid} cancelled due to advertisement removal`);
       }
     }
 

@@ -17,8 +17,8 @@ export interface WalletDto {
 }
 
 export interface TransactionDto {
-  id: number;
-  appointmentId: number;
+  uid: string;
+  appointmentId: string | null;
   advertisementTitle?: string;
   totalAmount: number;
   platformFee: number;
@@ -68,7 +68,7 @@ export interface ConnectStatusDto {
 }
 
 export interface WithdrawalDto {
-  id: number;
+  uid: string;
   amountGrosze: number;
   amountFormatted: string;
   status: string;

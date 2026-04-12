@@ -176,7 +176,7 @@ export default function WizardProfileClient() {
           ) : (
             <div className="wizard-services__grid">
               {advertisements.map((ad) => (
-                <Link key={ad.id} href={`/ogloszenie/${ad.uid}`} className="wizard-ad-card">
+                <Link key={ad.uid} href={`/ogloszenie/${ad.uid}`} className="wizard-ad-card">
                   {ad.imageUrl && (
                     <div className="wizard-ad-card__image">
                       <Image
@@ -223,7 +223,7 @@ export default function WizardProfileClient() {
             <>
               <div className="wizard-reviews__list">
                 {reviews.map((r) => (
-                  <div key={r.id} className="review-card">
+                  <div key={r.uid} className="review-card">
                     <div className="review-card__header">
                       <div className="review-card__avatar">
                         {r.clientUsername.charAt(0).toUpperCase()}

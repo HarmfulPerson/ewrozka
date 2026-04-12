@@ -35,7 +35,7 @@ export class ReminderService {
   ) {}
 
   async sendReminders(): Promise<void> {
-    const config = await this.configRepo.findOne({ where: { id: 1 } });
+    const config = await this.configRepo.findOne({ where: {} });
     if (!config) {
       this.logger.warn(
         'ReminderService: brak tabeli reminder_config lub pusty rekord – uruchom migrację AddReminderConfig1741200000000',
@@ -97,7 +97,7 @@ export class ReminderService {
       const alreadySent = await this.logRepo.findOne({
         where: {
           entityType: 'appointment',
-          entityId: String(apt.id),
+          entityId: apt.uid,
           hoursBefore,
         },
       });
@@ -113,10 +113,10 @@ export class ReminderService {
 
       try {
         if (apt.status === 'paid') {
-          const tokens = await this.meetingRoomService.getTokensByAppointmentIds([apt.id]);
-          const token = tokens[apt.id];
+          const tokens = await this.meetingRoomService.getTokensByAppointmentIds([apt.uid]);
+          const token = tokens[apt.uid];
           if (!token) {
-            this.logger.warn(`Brak tokenu spotkania dla appointment ${apt.id}`);
+            this.logger.warn(`Brak tokenu spotkania dla appointment ${apt.uid}`);
             continue;
           }
           const meetingUrl = `${appUrl}/spotkanie/${token}`;
@@ -132,7 +132,7 @@ export class ReminderService {
           );
         } else {
           const { url } = await this.stripeService.createCheckoutSession(
-            apt.id,
+            apt.uid,
             apt.clientId,
             to,
           );
@@ -154,14 +154,14 @@ export class ReminderService {
         await this.logRepo.save(
           this.logRepo.create({
             entityType: 'appointment',
-            entityId: String(apt.id),
+            entityId: apt.uid,
             hoursBefore,
           }),
         );
-        this.logger.log(`Reminder ${hoursBefore}h sent for appointment ${apt.id}`);
+        this.logger.log(`Reminder ${hoursBefore}h sent for appointment ${apt.uid}`);
       } catch (err) {
         this.logger.error(
-          `Failed to send reminder for appointment ${apt.id}: ${err instanceof Error ? err.message : String(err)}`,
+          `Failed to send reminder for appointment ${apt.uid}: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
     }

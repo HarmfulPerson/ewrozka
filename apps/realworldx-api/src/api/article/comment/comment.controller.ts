@@ -29,7 +29,7 @@ export class CommentController {
   async create(
     @Param('slug') slug: string,
     @Body('comment') commentData: CreateCommentReqDto,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
   ): Promise<CommentResDto> {
     return await this.commentService.create(slug, commentData, userId);
   }
@@ -50,8 +50,8 @@ export class CommentController {
     summary: 'Delete Comment',
   })
   async delete(
-    @CurrentUser('id') userId: number,
-    @Param('id') commentId: number,
+    @CurrentUser('id') userId: string,
+    @Param('id') commentId: string,
   ) {
     return await this.commentService.delete(commentId, userId);
   }

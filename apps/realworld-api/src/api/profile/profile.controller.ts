@@ -28,7 +28,7 @@ export class ProfileController {
     isAuthOptional: true,
   })
   getProfile(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('username') username: string,
   ): Promise<ProfileResDto> {
     return this.profileService.getProfile(userId, username);
@@ -41,7 +41,7 @@ export class ProfileController {
     type: ProfileResDto,
   })
   follow(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('username') username: string,
   ): Promise<ProfileResDto> {
     return this.profileService.follow(userId, username);
@@ -54,7 +54,7 @@ export class ProfileController {
     type: ProfileResDto,
   })
   unfollow(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('username') username: string,
   ): Promise<ProfileResDto> {
     return this.profileService.unfollow(userId, username);

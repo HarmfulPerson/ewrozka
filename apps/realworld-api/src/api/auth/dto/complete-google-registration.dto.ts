@@ -1,4 +1,4 @@
-import { IsArray, IsInt, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsArray, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 
 export class CompleteGoogleRegistrationDto {
   @IsString()
@@ -24,8 +24,8 @@ export class CompleteGoogleRegistrationDto {
 
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  topicIds?: number[];
+  @IsUUID('4', { each: true })
+  topicIds?: string[];
 
   @IsOptional()
   @IsString()

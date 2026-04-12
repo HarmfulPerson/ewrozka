@@ -120,7 +120,7 @@ export function WithdrawCard({
               {withdrawals.map((w) => {
                 const { label, color } = formatWithdrawalStatus(w.status);
                 return (
-                  <div key={w.id} className="portfel-withdrawals-mini__row">
+                  <div key={w.uid} className="portfel-withdrawals-mini__row">
                     <span className="portfel-withdrawals-mini__amount">−{w.amountFormatted}</span>
                     <span className="portfel-withdrawals-mini__date">{formatDate(w.createdAt)}</span>
                     <span style={{ color, fontSize: '0.75rem', fontWeight: 600 }}>{label}</span>

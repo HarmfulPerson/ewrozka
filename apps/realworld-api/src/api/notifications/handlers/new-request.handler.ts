@@ -4,10 +4,10 @@ import { NotificationType, CreateNotificationPayload } from '../notification-typ
  * Nowy wniosek o spotkanie — powiadomienie dla wróżki.
  */
 export function buildNewRequestNotification(opts: {
-  wizardId: number;
+  wizardId: string;
   clientName: string;
   advertisementTitle: string;
-  requestId: number | string;
+  requestId: string;
   isGuest: boolean;
 }): CreateNotificationPayload {
   const who = opts.isGuest ? `Gość ${opts.clientName}` : opts.clientName;

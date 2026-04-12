@@ -81,7 +81,7 @@ export function TransactionHistory({
         <>
           <div className="portfel-history__list">
             {transactions.map((t) => (
-              <div key={t.id} className="portfel-history__row">
+              <div key={t.uid} className="portfel-history__row">
                 <span className="portfel-history__amount">
                   +{(t.wizardAmount / 100).toFixed(2)} zł
                 </span>

@@ -33,7 +33,7 @@ export class MeetingRoomService {
 
   /** Tworzy pokój spotkania dla opłaconej wizyty (wywołane po pay()). */
   async createForAppointment(
-    appointmentId: number,
+    appointmentId: string,
   ): Promise<MeetingRoomEntity> {
     const existing = await this.meetingRoomRepository.findOne({
       where: { appointmentId },
@@ -69,10 +69,10 @@ export class MeetingRoomService {
   /** Walidacja: czy użytkownik może wejść (klient lub wróżka tej wizyty), czy okno czasowe OK. */
   async join(
     token: string,
-    userId: number,
+    userId: string,
   ): Promise<{
-    roomId: number;
-    appointmentId: number;
+    roomUid: string;
+    appointmentUid: string;
     otherParticipantUsername: string;
     startsAt: string;
     endsAt: string;
@@ -131,7 +131,7 @@ export class MeetingRoomService {
 
     await this.meetingEventRepository.save(
       this.meetingEventRepository.create({
-        meetingRoomId: room.id,
+        meetingRoomId: room.uid,
         userId,
         eventType: 'joined',
       }),
@@ -152,8 +152,8 @@ export class MeetingRoomService {
     );
 
     return {
-      roomId: room.id,
-      appointmentId: appointment.id,
+      roomUid: room.uid,
+      appointmentUid: appointment.uid,
       otherParticipantUsername: otherUsername,
       startsAt: appointment.startsAt.toISOString(),
       endsAt: meetingEnd.toISOString(),
@@ -163,7 +163,7 @@ export class MeetingRoomService {
     };
   }
 
-  async leave(token: string, userId: number): Promise<void> {
+  async leave(token: string, userId: string): Promise<void> {
     const room = await this.meetingRoomRepository.findOne({
       where: { token },
       relations: ['appointment'],
@@ -180,7 +180,7 @@ export class MeetingRoomService {
 
     await this.meetingEventRepository.save(
       this.meetingEventRepository.create({
-        meetingRoomId: room.id,
+        meetingRoomId: room.uid,
         userId,
         eventType: 'left',
       }),
@@ -189,19 +189,19 @@ export class MeetingRoomService {
 
   /** Statystyki: kto kiedy wszedł, kiedy wyszedł (dla uczestnika lub wróżki). */
   async getStats(
-    meetingRoomId: number,
-    userId: number,
+    meetingRoomUid: string,
+    userId: string,
   ): Promise<{
-    appointmentId: number;
+    appointmentUid: string;
     events: {
-      userId: number;
+      userId: string;
       username: string;
       eventType: string;
       createdAt: string;
     }[];
   }> {
     const room = await this.meetingRoomRepository.findOne({
-      where: { id: meetingRoomId },
+      where: { uid: meetingRoomUid },
       relations: ['appointment', 'events', 'events.user'],
     });
     if (!room) {
@@ -231,54 +231,41 @@ export class MeetingRoomService {
         })) ?? [];
 
     return {
-      appointmentId: room.appointmentId,
+      appointmentUid: room.appointmentId,
       events,
     };
   }
 
   /** Mapowanie appointmentId → token dla wielu wizyt (do listy). */
   async getTokensByAppointmentIds(
-    appointmentIds: number[],
-  ): Promise<Record<number, string>> {
+    appointmentIds: string[],
+  ): Promise<Record<string, string>> {
     if (appointmentIds.length === 0) return {};
     const rooms = await this.meetingRoomRepository.find({
       where: { appointmentId: In(appointmentIds) },
       select: ['appointmentId', 'token'],
     });
-    const map: Record<number, string> = {};
+    const map: Record<string, string> = {};
     for (const r of rooms) map[r.appointmentId] = r.token;
     return map;
   }
 
   /** Pobiera link (token) dla wizyty – dla uczestnika (klient/wróżka). */
   async getMeetingLink(
-    appointmentId: number,
-    userId: number,
+    appointmentUid: string,
+    userId: string,
   ): Promise<{ token: string } | null> {
     const appointment = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentUid },
     });
     if (!appointment || appointment.status !== 'paid') return null;
     if (userId !== appointment.clientId && userId !== appointment.wrozkaId)
       return null;
 
     const room = await this.meetingRoomRepository.findOne({
-      where: { appointmentId },
+      where: { appointmentId: appointmentUid },
     });
     if (!room) return null;
     return { token: room.token };
-  }
-
-  /** Phase 5: resolve appointment uid → id, delegate. */
-  async getMeetingLinkByUid(
-    appointmentUid: string,
-    userId: number,
-  ): Promise<{ token: string } | null> {
-    const apt = await this.appointmentRepository.findOne({
-      where: { uid: appointmentUid },
-      select: ['id'],
-    });
-    if (!apt) return null;
-    return this.getMeetingLink(apt.id, userId);
   }
 }

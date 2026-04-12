@@ -74,7 +74,7 @@ export default function WizytyPage() {
             <div className="wizyty-list">
               {appointments.map((appointment) => (
                 <WizytyCard
-                  key={appointment.id}
+                  key={appointment.uid}
                   appointment={appointment}
                   payingUid={payingUid}
                   onPay={handlePay}

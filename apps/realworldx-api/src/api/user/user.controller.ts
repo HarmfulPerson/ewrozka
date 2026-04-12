@@ -26,7 +26,7 @@ export class UserController {
     type: UserResDto,
   })
   getCurrent(
-    @CurrentUser() currentUser: { id: number; token: string },
+    @CurrentUser() currentUser: { id: string; token: string },
   ): Promise<UserResDto> {
     return this.userService.get(currentUser);
   }
@@ -74,7 +74,7 @@ export class UserController {
     },
   })
   async update(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Body('user') userData: UpdateUserReqDto,
   ): Promise<UserResDto> {
     return this.userService.update(userId, userData);

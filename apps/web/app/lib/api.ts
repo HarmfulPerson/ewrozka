@@ -26,6 +26,7 @@ export function getUploadUrl(path: string | null | undefined): string {
 }
 
 export interface ApiUser {
+  uid: string;
   email: string;
   token: string | null;
   username: string;
@@ -34,18 +35,13 @@ export interface ApiUser {
   image2?: string;
   image3?: string;
   roles: string[];
-  topicIds?: number[];
+  topicIds?: string[];
   topicNames?: string[];
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this over `id` for cross-resource comparisons. */
-  uid: string;
   emailVerified?: boolean;
   gender?: 'female' | 'male' | null;
 }
 
 export interface WizardDto {
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
   uid: string;
   username: string;
   bio: string;
@@ -53,7 +49,7 @@ export interface WizardDto {
   image2?: string;
   image3?: string;
   video?: string | null;
-  topicIds: number[];
+  topicIds: string[];
   topicNames: string[];
   avgRating?: number | null;
   ratingsCount?: number;
@@ -80,13 +76,13 @@ export interface RegisterData {
   phone?: string;
   /** Płeć: 'female' | 'male' */
   gender?: 'female' | 'male';
-  topicIds?: number[];
+  topicIds?: string[];
   roleNames?: string[];
   referralCode?: string;
 }
 
 export interface TopicDto {
-  id: number;
+  uid: string;
   name: string;
 }
 
@@ -98,7 +94,7 @@ export interface UpdateUserData {
   image3?: string;
   email?: string;
   password?: string;
-  topicIds?: number[];
+  topicIds?: string[];
 }
 
 async function fetchApi(endpoint: string, options?: RequestInit) {
@@ -182,7 +178,7 @@ export async function apiCompleteGoogleRegistration(data: {
   bio?: string;
   phone?: string;
   gender?: 'female' | 'male';
-  topicIds?: number[];
+  topicIds?: string[];
   referralCode?: string;
 }): Promise<{ user: ApiUser } | { id: string }> {
   return fetchApi('auth/register-google', {
@@ -240,7 +236,7 @@ export async function apiGetWizards(params?: {
   limit?: number;
   offset?: number;
   name?: string;
-  topicIds?: number[];
+  topicIds?: string[];
   minRating?: number;
 }): Promise<WizardsListResponse> {
   const query = new URLSearchParams();
@@ -254,34 +250,22 @@ export async function apiGetWizards(params?: {
 }
 
 
-/**
- * Fetch a wizard profile. Accepts either the new uid (preferred) or the legacy
- * numeric id — the route is picked automatically. Once every caller migrates
- * to uid we can delete the legacy branch.
- */
-export async function apiGetWizard(
-  uidOrId: string | number,
-): Promise<{ wizard: WizardDto }> {
-  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
-  const path = isUid ? `wizards/uid/${uidOrId}` : `wizards/${uidOrId}`;
-  return fetchApi(path);
+/** Fetch a wizard profile by uid. */
+export async function apiGetWizard(uid: string): Promise<{ wizard: WizardDto }> {
+  return fetchApi(`wizards/uid/${uid}`);
 }
 
 export interface AdvertisementDto {
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
   uid: string;
   title: string;
   description: string;
   imageUrl: string;
   priceGrosze: number;
   durationMinutes: number;
-  userId: number;
+  userId: string;
 }
 
 export interface AdvertisementDetailDto {
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
   uid: string;
   title: string;
   description: string;
@@ -289,8 +273,6 @@ export interface AdvertisementDetailDto {
   priceGrosze: number;
   durationMinutes: number;
   wizard: {
-    id: number;
-    /** Stable non-sequential external identifier. Prefer over `id` in URLs. */
     uid: string;
     username: string;
     image: string;
@@ -298,32 +280,18 @@ export interface AdvertisementDetailDto {
   };
 }
 
-/**
- * Fetch all advertisements for a wizard. Accepts either the new uid
- * (preferred) or the legacy numeric id.
- */
+/** Fetch all advertisements for a wizard by uid. */
 export async function apiGetWizardAdvertisements(
-  wizardUidOrId: string | number,
+  wizardUid: string,
 ): Promise<{ advertisements: AdvertisementDto[]; advertisementsCount: number }> {
-  const isUid =
-    typeof wizardUidOrId === 'string' && /^[0-9a-f]{8}-/i.test(wizardUidOrId);
-  const path = isUid
-    ? `advertisements/wizard/uid/${wizardUidOrId}`
-    : `advertisements/wizard/${wizardUidOrId}`;
-  return fetchApi(path);
+  return fetchApi(`advertisements/wizard/uid/${wizardUid}`);
 }
 
-/**
- * Fetch an advertisement. Accepts either the new uid (preferred) or the
- * legacy numeric id — the route is picked automatically. Once every caller
- * migrates to uid we can delete the legacy branch.
- */
+/** Fetch an advertisement by uid. */
 export async function apiGetAdvertisement(
-  uidOrId: string | number,
+  uid: string,
 ): Promise<{ advertisement: AdvertisementDetailDto }> {
-  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
-  const path = isUid ? `advertisements/uid/${uidOrId}` : `advertisements/${uidOrId}`;
-  return fetchApi(path);
+  return fetchApi(`advertisements/uid/${uid}`);
 }
 
 export async function apiGetTopics(): Promise<TopicDto[]> {
@@ -339,7 +307,7 @@ export async function apiSubmitWizardApplication(data: {
   bio: string;
   phone?: string;
   gender?: 'female' | 'male';
-  topicIds?: number[];
+  topicIds?: string[];
   referralCode?: string;
 }): Promise<{ id: string }> {
   const url = `${getBaseUrl()}/wizard-applications`;

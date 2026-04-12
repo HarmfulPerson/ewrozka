@@ -14,7 +14,7 @@ export class FavoriteResolver {
     description: 'Favorite an article',
   })
   async create(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Args('slug') slug: string,
     @Info() info: GraphQLResolveInfo,
   ): Promise<Article> {
@@ -32,7 +32,7 @@ export class FavoriteResolver {
     description: 'Unfavorite an article',
   })
   async delete(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Args('slug') slug: string,
     @Info() info: GraphQLResolveInfo,
   ): Promise<Article> {

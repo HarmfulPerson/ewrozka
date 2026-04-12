@@ -36,15 +36,13 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
 }
 
 export interface AdvertisementDto {
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
   uid: string;
   title: string;
   description: string;
   imageUrl?: string;
   priceGrosze: number;
   durationMinutes: number;
-  userId: number;
+  userId: string;
 }
 
 export async function apiGetMyAdvertisements(token: string): Promise<{ advertisements: AdvertisementDto[]; advertisementsCount: number }> {

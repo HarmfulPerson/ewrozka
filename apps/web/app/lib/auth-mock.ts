@@ -2,19 +2,13 @@ import type { ApiUser } from './api';
 
 export interface StoredUser {
   token: string;
+  uid: string;
   email: string;
   username: string;
   bio: string;
   image: string;
   roles: string[];
-  /**
-   * Kept for backward compat with entries already persisted in localStorage.
-   * New code should prefer `uid`. Will be removed when all consumers migrate.
-   */
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this for comparisons. */
-  uid: string;
-  topicIds: number[];
+  topicIds: string[];
   topicNames: string[];
 }
 
@@ -25,7 +19,14 @@ export function getStoredUser(): StoredUser | null {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) return null;
   try {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored);
+    // Force logout legacy entries (pre-uid migration) that don't have `uid`.
+    // These were persisted with numeric `id` only and will crash current code.
+    if (!parsed || typeof parsed.uid !== 'string') {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return parsed as StoredUser;
   } catch {
     return null;
   }
@@ -44,13 +45,12 @@ export function clearStoredUser(): void {
 export function userFromApi(apiUser: ApiUser): StoredUser {
   return {
     token: apiUser.token ?? '',
+    uid: apiUser.uid,
     email: apiUser.email,
     username: apiUser.username,
     bio: apiUser.bio,
     image: apiUser.image,
     roles: apiUser.roles,
-    id: apiUser.id,
-    uid: apiUser.uid,
     topicIds: apiUser.topicIds ?? [],
     topicNames: apiUser.topicNames ?? [],
   };

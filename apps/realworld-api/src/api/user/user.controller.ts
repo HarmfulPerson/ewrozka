@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   ParseUUIDPipe,
   Post,
   Put,
@@ -44,7 +43,7 @@ export class UserController {
     type: UserResDto,
   })
   getCurrent(
-    @CurrentUser() currentUser: { id: number; token: string },
+    @CurrentUser() currentUser: { id: string; token: string },
   ): Promise<UserResDto> {
     return this.userService.get(currentUser);
   }
@@ -93,7 +92,7 @@ export class UserController {
     },
   })
   async update(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Body('user') userData: UpdateUserReqDto,
   ): Promise<UserResDto> {
     return this.userService.update(userId, userData);
@@ -104,7 +103,7 @@ export class UserController {
   @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @ApiAuth({ summary: 'Zmień hasło' })
   async changePassword(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Body('currentPassword') currentPassword: string,
     @Body('newPassword') newPassword: string,
   ): Promise<{ message: string }> {
@@ -147,7 +146,7 @@ export class UserController {
     }),
   )
   async uploadPhotos(
-    @CurrentUser() currentUser: { id: number; token: string },
+    @CurrentUser() currentUser: { id: string; token: string },
     @UploadedFile() file: Express.Multer.File,
     @Req() req: any,
   ): Promise<UserResDto> {
@@ -191,7 +190,7 @@ export class UserController {
     }),
   )
   async uploadVideo(
-    @CurrentUser() currentUser: { id: number; token: string },
+    @CurrentUser() currentUser: { id: string; token: string },
     @UploadedFile() file: Express.Multer.File,
   ): Promise<{ videoUrl: string }> {
     const videoUrl = `/uploads/users/${currentUser.id}/${file.filename}`;
@@ -203,13 +202,13 @@ export class UserController {
   @Delete('user/video')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiAuth({ summary: 'Usuń film prezentacyjny specjalisty' })
-  async deleteVideo(@CurrentUser('id') userId: number): Promise<void> {
+  async deleteVideo(@CurrentUser('id') userId: string): Promise<void> {
     await this.userService.updateUserVideo(userId, null as any);
   }
 
   @Get('user/referral-stats')
   @ApiAuth({ summary: 'Statystyki reflinka' })
-  async getReferralStats(@CurrentUser('id') userId: number) {
+  async getReferralStats(@CurrentUser('id') userId: string) {
     return this.userService.getReferralStats(userId);
   }
 
@@ -219,11 +218,11 @@ export class UserController {
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('name') name?: string,
-    @Query('topicIds') topicIds?: string,   // przecinkami: "1,3,5"
+    @Query('topicIds') topicIds?: string,   // przecinkami: "uid1,uid2,uid3"
     @Query('minRating') minRating?: string,
   ) {
     const parsedTopicIds = topicIds
-      ? topicIds.split(',').map(Number).filter(n => !isNaN(n) && n > 0)
+      ? topicIds.split(',').map((s) => s.trim()).filter((s) => s.length > 0)
       : [];
 
     return this.userService.getWizards(
@@ -240,7 +239,7 @@ export class UserController {
   @Get('wizards/uid/:uid')
   @ApiPublic({ summary: 'Profil specjalisty po UID' })
   async getWizardByUid(@Param('uid', ParseUUIDPipe) uid: string) {
-    return this.userService.getWizardByUid(uid);
+    return this.userService.getWizardById(uid);
   }
 
   @Get('topics')

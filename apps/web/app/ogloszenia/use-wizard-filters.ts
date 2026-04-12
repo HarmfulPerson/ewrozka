@@ -15,12 +15,12 @@ export function useWizardFilters() {
 
   // Pending filters (not yet applied)
   const [pendingName, setPendingName] = useState('');
-  const [pendingTopics, setPendingTopics] = useState<number[]>([]);
+  const [pendingTopics, setPendingTopics] = useState<string[]>([]);
   const [pendingRating, setPendingRating] = useState(0);
 
   // Active filters (currently applied)
   const [activeName, setActiveName] = useState('');
-  const [activeTopics, setActiveTopics] = useState<number[]>([]);
+  const [activeTopics, setActiveTopics] = useState<string[]>([]);
   const [activeRating, setActiveRating] = useState(0);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -41,7 +41,7 @@ export function useWizardFilters() {
   const fetchWizards = useCallback(async (
     currentOffset: number,
     name: string,
-    topicIds: number[],
+    topicIds: string[],
     minRating: number,
     append: boolean,
   ) => {

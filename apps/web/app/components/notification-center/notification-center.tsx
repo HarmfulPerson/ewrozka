@@ -54,7 +54,7 @@ function NotificationList({
   }, [hasMore, loadingMore, loadMore]);
 
   const handleClick = async (item: NotificationDto) => {
-    if (!item.isRead) await markAsRead(item.id);
+    if (!item.isRead) await markAsRead(item.uid);
     if (item.link) { router.push(item.link); onClose(); }
   };
 
@@ -78,7 +78,7 @@ function NotificationList({
           <>
             {items.map(item => (
               <button
-                key={item.id}
+                key={item.uid}
                 className={`notif-center__item${!item.isRead ? ' notif-center__item--unread' : ''}`}
                 onClick={() => handleClick(item)}
               >

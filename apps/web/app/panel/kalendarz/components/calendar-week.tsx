@@ -502,7 +502,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
             if (block.type === 'available') {
               return (
                 <div
-                  key={`${avail.id}-avail-${idx}`}
+                  key={`${avail.uid}-avail-${idx}`}
                   className="calendar-week__availability"
                   style={{ top: `${top}px`, height: `${height}px` }}
                   title={showText ? undefined : 'Dostępny'}
@@ -527,7 +527,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                   const clientLabel = apt.clientUsername || 'klient';
                   if (isAvailable) {
                     return (
-                      <Link key={`${avail.id}-busy-${idx}`} href={`/spotkanie/${meetingToken}`}
+                      <Link key={`${avail.uid}-busy-${idx}`} href={`/spotkanie/${meetingToken}`}
                         className="calendar-week__appointment calendar-week__appointment--clickable"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
@@ -539,7 +539,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                   } else if (aptNow < fiveMinsBefore) {
                     const timeUntilMins = Math.ceil((fiveMinsBefore.getTime() - aptNow.getTime()) / 60000);
                     return (
-                      <div key={`${avail.id}-busy-${idx}`}
+                      <div key={`${avail.uid}-busy-${idx}`}
                         className="calendar-week__appointment calendar-week__appointment--locked"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
@@ -550,7 +550,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                     );
                   } else {
                     return (
-                      <div key={`${avail.id}-busy-${idx}`}
+                      <div key={`${avail.uid}-busy-${idx}`}
                         className="calendar-week__appointment calendar-week__appointment--ended"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
@@ -573,7 +573,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
 
                 if (guest.status === 'completed') {
                   return (
-                    <div key={`${avail.id}-busy-${idx}`}
+                    <div key={`${avail.uid}-busy-${idx}`}
                       className="calendar-week__appointment calendar-week__appointment--ended calendar-week__appointment--guest"
                       style={{ top: `${top}px`, height: `${height}px` }}
                       data-tooltip-id="meeting-tooltip"
@@ -588,7 +588,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                   const isAvailable = aptNow >= fiveMinsBefore && aptNow <= meetingEnd;
                   if (isAvailable) {
                     return (
-                      <Link key={`${avail.id}-busy-${idx}`} href={`/panel/spotkanie-gosc/${guest.id}`}
+                      <Link key={`${avail.uid}-busy-${idx}`} href={`/panel/spotkanie-gosc/${guest.id}`}
                         className="calendar-week__appointment calendar-week__appointment--clickable calendar-week__appointment--guest"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
@@ -600,7 +600,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                   } else if (aptNow < fiveMinsBefore) {
                     const timeUntilMins = Math.ceil((fiveMinsBefore.getTime() - aptNow.getTime()) / 60000);
                     return (
-                      <div key={`${avail.id}-busy-${idx}`}
+                      <div key={`${avail.uid}-busy-${idx}`}
                         className="calendar-week__appointment calendar-week__appointment--locked calendar-week__appointment--guest"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
@@ -611,7 +611,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                     );
                   } else {
                     return (
-                      <div key={`${avail.id}-busy-${idx}`}
+                      <div key={`${avail.uid}-busy-${idx}`}
                         className="calendar-week__appointment calendar-week__appointment--ended calendar-week__appointment--guest"
                         style={{ top: `${top}px`, height: `${height}px` }}
                         data-tooltip-id="meeting-tooltip"
@@ -623,7 +623,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                   }
                 }
                 return (
-                  <div key={`${avail.id}-busy-${idx}`}
+                  <div key={`${avail.uid}-busy-${idx}`}
                     className="calendar-week__appointment calendar-week__appointment--guest"
                     style={{ top: `${top}px`, height: `${height}px` }}
                     data-tooltip-id="meeting-tooltip"
@@ -638,7 +638,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
                 ? `Spotkanie z ${item.apt.clientUsername || 'klientem'}`
                 : 'Spotkanie z gościem';
               return (
-                <div key={`${avail.id}-busy-${idx}`}
+                <div key={`${avail.uid}-busy-${idx}`}
                   className="calendar-week__appointment"
                   style={{ top: `${top}px`, height: `${height}px` }}
                   data-tooltip-id="meeting-tooltip"

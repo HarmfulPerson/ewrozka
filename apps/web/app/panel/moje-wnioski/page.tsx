@@ -70,7 +70,7 @@ export default function MojeWnioskiPage() {
           <>
             <div className="moje-wnioski-list">
               {requests.map((request) => (
-                <WnioskiCard key={request.id} request={request} />
+                <WnioskiCard key={request.uid} request={request} />
               ))}
             </div>
 

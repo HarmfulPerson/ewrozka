@@ -4,7 +4,7 @@ import { Field, HideField, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 export class Article {
   @HideField()
-  id?: number;
+  uid?: string;
 
   @Field(() => String)
   slug: string;
@@ -37,5 +37,5 @@ export class Article {
   author?: Profile;
 
   @HideField()
-  authorId?: number;
+  authorId?: string;
 }

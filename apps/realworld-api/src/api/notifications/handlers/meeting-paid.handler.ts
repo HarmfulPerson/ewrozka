@@ -4,10 +4,10 @@ import { NotificationType, CreateNotificationPayload } from '../notification-typ
  * Spotkanie opłacone — powiadomienie dla wróżki.
  */
 export function buildMeetingPaidNotification(opts: {
-  wizardId: number;
+  wizardId: string;
   clientName: string;
   advertisementTitle: string;
-  appointmentId: number;
+  appointmentId: string;
   startsAt: string;
 }): CreateNotificationPayload {
   return {

@@ -20,7 +20,7 @@ export interface UseNotificationsResult {
   loading: boolean;
   loadingMore: boolean;
   hasMore: boolean;
-  markAsRead: (id: number) => Promise<void>;
+  markAsRead: (uid: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   loadMore: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -67,10 +67,10 @@ export function useNotifications(token: string | null | undefined): UseNotificat
     }
   }, [token, loadingMore, hasMore, notifications.length]);
 
-  const markAsRead = useCallback(async (id: number) => {
+  const markAsRead = useCallback(async (uid: string) => {
     if (!token) return;
-    await apiMarkNotificationRead(token, id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    await apiMarkNotificationRead(token, uid);
+    setNotifications(prev => prev.map(n => n.uid === uid ? { ...n, isRead: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
   }, [token]);
 

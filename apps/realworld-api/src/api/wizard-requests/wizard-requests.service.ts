@@ -2,11 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 
 export interface UnifiedRequestItem {
-  id: string;
   /**
    * Stable external identifier for the row. For kind='regular' it's the
-   * meeting_request uid; for kind='guest' it's guest_booking.id (which is
-   * already a UUID). Prefer this over `id` for external consumers.
+   * meeting_request uid; for kind='guest' it's guest_booking.id (uuid).
    */
   uid: string;
   /** uid of the linked appointment, if one exists. */
@@ -20,9 +18,8 @@ export interface UnifiedRequestItem {
   clientEmail: string | null;
   clientPhone: string | null;
   advertisementTitle: string | null;
-  advertisementId: number | null;
+  advertisementId: string | null;
   rejectionReason: string | null;
-  appointmentId: number | null;
   appointmentStatus: string | null;
   appointmentStartsAt: string | null;
   meetingToken: string | null;
@@ -35,7 +32,7 @@ export class WizardRequestsService {
   constructor(private readonly dataSource: DataSource) {}
 
   async getUnifiedRequests(
-    wizardId: number,
+    wizardId: string,
     options?: {
       status?: string;
       limit?: number;
@@ -80,7 +77,6 @@ export class WizardRequestsService {
 
     const unionSql = `
       SELECT
-        mr.id::text                     AS "id",
         mr.uid::text                    AS "uid",
         apt.uid::text                   AS "appointmentUid",
         'regular'                       AS "kind",
@@ -97,28 +93,26 @@ export class WizardRequestsService {
         NULL                            AS "clientEmail",
         NULL                            AS "clientPhone",
         ad.title                        AS "advertisementTitle",
-        mr.advertisement_id             AS "advertisementId",
+        mr.advertisement_id::text       AS "advertisementId",
         mr.rejection_reason             AS "rejectionReason",
-        apt.id                          AS "appointmentId",
         apt.status                      AS "appointmentStatus",
         apt.starts_at                   AS "appointmentStartsAt",
         room.token                      AS "meetingToken",
         apt.duration_minutes            AS "durationMinutes",
         apt.price_grosze                AS "priceGrosze"
       FROM meeting_request mr
-      LEFT JOIN appointment apt ON apt.meeting_request_id = mr.id
-      LEFT JOIN meeting_room room ON room.appointment_id = apt.id
-      LEFT JOIN "user" u ON u.id = mr.user_id
-      LEFT JOIN advertisement ad ON ad.id = mr.advertisement_id
+      LEFT JOIN appointment apt ON apt.meeting_request_id = mr.uid
+      LEFT JOIN meeting_room room ON room.appointment_id = apt.uid
+      LEFT JOIN "user" u ON u.uid = mr.user_id
+      LEFT JOIN advertisement ad ON ad.uid = mr.advertisement_id
       WHERE (
-        mr.advertisement_id IN (SELECT id FROM advertisement WHERE user_id = $1)
+        mr.advertisement_id IN (SELECT uid FROM advertisement WHERE user_id = $1)
         OR (mr.advertisement_id IS NULL AND mr.wizard_id = $1)
       )
 
       UNION ALL
 
       SELECT
-        gb.id::text                     AS "id",
         gb.id::text                     AS "uid",
         NULL                            AS "appointmentUid",
         'guest'                         AS "kind",
@@ -130,20 +124,19 @@ export class WizardRequestsService {
         gb.guest_email                  AS "clientEmail",
         gb.guest_phone                  AS "clientPhone",
         ad.title                        AS "advertisementTitle",
-        gb.advertisement_id             AS "advertisementId",
+        gb.advertisement_id::text       AS "advertisementId",
         gb.rejection_reason             AS "rejectionReason",
-        NULL::int                       AS "appointmentId",
         NULL                            AS "appointmentStatus",
         NULL::timestamptz               AS "appointmentStartsAt",
         NULL                            AS "meetingToken",
         gb.duration_minutes             AS "durationMinutes",
         gb.price_grosze                 AS "priceGrosze"
       FROM guest_booking gb
-      LEFT JOIN advertisement ad ON ad.id = gb.advertisement_id
+      LEFT JOIN advertisement ad ON ad.uid = gb.advertisement_id
       WHERE gb.wizard_id = $1
     `;
 
-    const params: (string | number)[] = [wizardId];
+    const params: string[] = [wizardId];
     let whereClause = '';
     if (statusFilter) {
       params.push(statusFilter);
@@ -156,7 +149,7 @@ export class WizardRequestsService {
       ORDER BY ${sortExpr} ${sortDir}
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
-    const dataParams = [...params, limit, offset];
+    const dataParams: (string | number)[] = [...params, limit, offset];
 
     const countQuery = `
       SELECT COUNT(*)::int AS total FROM (${unionSql}) c
@@ -175,7 +168,7 @@ export class WizardRequestsService {
   }
 
   async getClientRequests(
-    clientId: number,
+    clientId: string,
     options?: {
       status?: string;
       limit?: number;
@@ -215,7 +208,6 @@ export class WizardRequestsService {
     // + Appointments (accepted / paid / completed / cancelled)
     const unionSql = `
       SELECT
-        mr.id::text                     AS "id",
         mr.uid::text                    AS "uid",
         NULL                            AS "appointmentUid",
         'request'                       AS "kind",
@@ -225,24 +217,22 @@ export class WizardRequestsService {
         mr.message                      AS "message",
         w.username                      AS "wrozkaUsername",
         ad.title                        AS "advertisementTitle",
-        mr.advertisement_id             AS "advertisementId",
+        mr.advertisement_id::text       AS "advertisementId",
         mr.rejection_reason             AS "rejectionReason",
-        NULL::int                       AS "appointmentId",
         NULL                            AS "meetingToken",
         NULL::int                       AS "durationMinutes",
         NULL::int                       AS "priceGrosze",
         NULL::smallint                  AS "rating",
         NULL                            AS "ratingComment"
       FROM meeting_request mr
-      LEFT JOIN advertisement ad ON ad.id = mr.advertisement_id
-      LEFT JOIN "user" w ON w.id = COALESCE(mr.wizard_id, (SELECT user_id FROM advertisement WHERE id = mr.advertisement_id))
+      LEFT JOIN advertisement ad ON ad.uid = mr.advertisement_id
+      LEFT JOIN "user" w ON w.uid = COALESCE(mr.wizard_id, (SELECT user_id FROM advertisement WHERE uid = mr.advertisement_id))
       WHERE mr.user_id = $1
-        AND NOT EXISTS (SELECT 1 FROM appointment a WHERE a.meeting_request_id = mr.id)
+        AND NOT EXISTS (SELECT 1 FROM appointment a WHERE a.meeting_request_id = mr.uid)
 
       UNION ALL
 
       SELECT
-        apt.id::text                    AS "id",
         apt.uid::text                   AS "uid",
         apt.uid::text                   AS "appointmentUid",
         'appointment'                   AS "kind",
@@ -257,22 +247,21 @@ export class WizardRequestsService {
         NULL                            AS "message",
         w.username                      AS "wrozkaUsername",
         ad.title                        AS "advertisementTitle",
-        apt.advertisement_id            AS "advertisementId",
+        apt.advertisement_id::text      AS "advertisementId",
         NULL                            AS "rejectionReason",
-        apt.id                          AS "appointmentId",
         room.token                      AS "meetingToken",
         apt.duration_minutes            AS "durationMinutes",
         apt.price_grosze                AS "priceGrosze",
         apt.rating                      AS "rating",
         apt.comment                     AS "ratingComment"
       FROM appointment apt
-      LEFT JOIN "user" w ON w.id = apt.wrozka_id
-      LEFT JOIN advertisement ad ON ad.id = apt.advertisement_id
-      LEFT JOIN meeting_room room ON room.appointment_id = apt.id
+      LEFT JOIN "user" w ON w.uid = apt.wrozka_id
+      LEFT JOIN advertisement ad ON ad.uid = apt.advertisement_id
+      LEFT JOIN meeting_room room ON room.appointment_id = apt.uid
       WHERE apt.client_id = $1
     `;
 
-    const params: (string | number)[] = [clientId];
+    const params: string[] = [clientId];
     let whereClause = '';
     if (statusFilter) {
       params.push(statusFilter);
@@ -285,7 +274,7 @@ export class WizardRequestsService {
       ORDER BY ${sortExpr} ${sortDir}
       LIMIT $${params.length + 1} OFFSET $${params.length + 2}
     `;
-    const dataParams = [...params, limit, offset];
+    const dataParams: (string | number)[] = [...params, limit, offset];
 
     const countQuery = `
       SELECT COUNT(*)::int AS total FROM (${unionSql}) c
@@ -305,11 +294,9 @@ export class WizardRequestsService {
 }
 
 export interface ClientRequestItem {
-  id: string;
   /**
    * Stable external identifier for the row. For kind='request' it's the
    * meeting_request uid; for kind='appointment' it's the appointment uid.
-   * Prefer this over `id` for external consumers.
    */
   uid: string;
   /** uid of the linked appointment. Equals `uid` for kind='appointment', null for kind='request'. */
@@ -321,9 +308,8 @@ export interface ClientRequestItem {
   message: string | null;
   wrozkaUsername: string | null;
   advertisementTitle: string | null;
-  advertisementId: number | null;
+  advertisementId: string | null;
   rejectionReason: string | null;
-  appointmentId: number | null;
   meetingToken: string | null;
   durationMinutes: number | null;
   priceGrosze: number | null;

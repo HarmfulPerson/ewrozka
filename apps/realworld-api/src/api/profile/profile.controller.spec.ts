@@ -29,7 +29,7 @@ describe('ProfileController', () => {
 
   describe('getProfile', () => {
     it('should return a profile', async () => {
-      const userId = 1;
+      const userId = 'user-1-uuid';
       const username = 'testuser';
       const mockProfile: ProfileResDto = {
         profile: {
@@ -49,7 +49,7 @@ describe('ProfileController', () => {
     });
 
     it('should throw an error if getProfile fails', async () => {
-      const userId = 1;
+      const userId = 'user-1-uuid';
       const username = 'testuser';
 
       profileService.getProfile.mockRejectedValue(new Error('Service error'));
@@ -63,7 +63,7 @@ describe('ProfileController', () => {
 
   describe('follow', () => {
     it('should follow a user and return the profile', async () => {
-      const userId = 1;
+      const userId = 'user-1-uuid';
       const username = 'testuser';
       const mockProfile: ProfileResDto = {
         profile: {
@@ -83,7 +83,7 @@ describe('ProfileController', () => {
     });
 
     it('should throw an error if follow fails', async () => {
-      const userId = 1;
+      const userId = 'user-1-uuid';
       const username = 'testuser';
 
       profileService.follow.mockRejectedValue(new Error('Follow failed'));
@@ -97,7 +97,7 @@ describe('ProfileController', () => {
 
   describe('unfollow', () => {
     it('should unfollow a user and return the profile', async () => {
-      const userId = 1;
+      const userId = 'user-1-uuid';
       const username = 'testuser';
       const mockProfile: ProfileResDto = {
         profile: {
@@ -117,7 +117,7 @@ describe('ProfileController', () => {
     });
 
     it('should throw an error if unfollow fails', async () => {
-      const userId = 1;
+      const userId = 'user-1-uuid';
       const username = 'testuser';
 
       profileService.unfollow.mockRejectedValue(new Error('Unfollow failed'));

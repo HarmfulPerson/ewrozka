@@ -95,12 +95,12 @@ export function MeetingsTable({
             const isPaid = item.unifiedStatus === 'paid';
             const isAccepted = item.unifiedStatus === 'accepted';
             const isCompleted = item.unifiedStatus === 'completed';
-            const currentHover = hoverRating[item.id] ?? 0;
+            const currentHover = hoverRating[item.uid] ?? 0;
             const displayRating = currentHover || item.rating || 0;
-            const isSubmitting = submittingRating === item.id;
+            const isSubmitting = submittingRating === item.uid;
 
             return (
-              <tr key={`${item.kind}-${item.id}`}>
+              <tr key={`${item.kind}-${item.uid}`}>
                 <td>
                   <span className="wnioski-cell-client">{item.wrozkaUsername || 'Wróżka'}</span>
                 </td>
@@ -125,7 +125,7 @@ export function MeetingsTable({
                 </td>
                 <td>
                   <div className="wnioski-actions">
-                    {isAccepted && item.appointmentId && (
+                    {isAccepted && item.appointmentUid && (
                       <button className="wnioski-btn wnioski-btn--join" onClick={() => handlePay(item)}>
                         Zapłać
                       </button>
@@ -150,15 +150,15 @@ export function MeetingsTable({
                             key={star}
                             type="button"
                             disabled={isSubmitting}
-                            className={`wnioski-star${star <= (pendingRating[item.id]?.stars ?? displayRating) ? ' wnioski-star--filled' : ''}`}
-                            onMouseEnter={() => setHoverRating(prev => ({ ...prev, [item.id]: star }))}
-                            onMouseLeave={() => setHoverRating(prev => { const n = { ...prev }; delete n[item.id]; return n; })}
-                            onClick={() => handleSelectStar(item.id, star)}
+                            className={`wnioski-star${star <= (pendingRating[item.uid]?.stars ?? displayRating) ? ' wnioski-star--filled' : ''}`}
+                            onMouseEnter={() => setHoverRating(prev => ({ ...prev, [item.uid]: star }))}
+                            onMouseLeave={() => setHoverRating(prev => { const n = { ...prev }; delete n[item.uid]; return n; })}
+                            onClick={() => handleSelectStar(item.uid, star)}
                           >
                             ★
                           </button>
                         ))}
-                        {pendingRating[item.id] && (
+                        {pendingRating[item.uid] && (
                           <button
                             className="wnioski-btn wnioski-btn--accept"
                             disabled={isSubmitting}

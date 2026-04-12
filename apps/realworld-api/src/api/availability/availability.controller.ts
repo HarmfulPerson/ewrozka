@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '@repo/api';
 import { ApiAuth, ApiPublic } from '@repo/api/decorators/http.decorators';
@@ -28,7 +28,7 @@ export class AvailabilityController {
     },
   })
   async create(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Body('availability') dto: CreateAvailabilityReqDto,
   ) {
     const startsAt = new Date(dto.startsAt);
@@ -41,7 +41,7 @@ export class AvailabilityController {
     summary: 'Moje bloki dostępności',
   })
   async getMine(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query('filter') filter?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -57,13 +57,13 @@ export class AvailabilityController {
   }
 
   @Get('slots/uid/:advertisementUid')
-  @ApiPublic({ summary: 'Pobierz sloty dla ogłoszenia po UID (preferowane)' })
+  @ApiPublic({ summary: 'Pobierz sloty dla ogłoszenia po UID' })
   async getSlotsByUid(
     @Param('advertisementUid', ParseUUIDPipe) advertisementUid: string,
     @Query('fromDate') fromDate: string,
     @Query('toDate') toDate: string,
   ) {
-    const slots = await this.availabilityService.getSlotsForAdvertisementUid(
+    const slots = await this.availabilityService.getSlotsForAdvertisement(
       advertisementUid,
       fromDate,
       toDate,
@@ -71,33 +71,16 @@ export class AvailabilityController {
     return { slots, count: slots.length };
   }
 
-  @Get('slots/:advertisementId')
-  @ApiPublic({
-    summary: 'Pobierz dostępne sloty dla ogłoszenia (deprecated — użyj /slots/uid/:uid)',
-  })
-  async getSlots(
-    @Param('advertisementId', ParseIntPipe) advertisementId: number,
-    @Query('fromDate') fromDate: string,
-    @Query('toDate') toDate: string,
-  ) {
-    const slots = await this.availabilityService.getSlotsForAdvertisement(
-      advertisementId,
-      fromDate,
-      toDate,
-    );
-    return { slots, count: slots.length };
-  }
-
-  @Delete(':id')
+  @Delete(':uid')
   @ApiAuth({
     summary: 'Usuń blok dostępności',
     statusCode: 200,
   })
   async delete(
-    @CurrentUser('id') userId: number,
-    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser('id') userId: string,
+    @Param('uid', ParseUUIDPipe) uid: string,
   ) {
-    await this.availabilityService.deleteBlock(userId, id);
+    await this.availabilityService.deleteBlock(userId, uid);
     return { ok: true };
   }
 }

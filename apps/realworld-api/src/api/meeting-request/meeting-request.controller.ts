@@ -40,11 +40,10 @@ export class MeetingRequestController {
     },
   })
   async create(
-    @CurrentUser() user: { id: number; roles?: string[] },
+    @CurrentUser() user: { id: string; roles?: string[] },
     @Body('meetingRequest') dto: CreateMeetingRequestReqDto,
   ) {
-    const userId = typeof user.id === 'string' ? parseInt(user.id, 10) : user.id;
-    return this.meetingRequestService.create(userId, dto, {
+    return this.meetingRequestService.create(user.id, dto, {
       roles: user.roles ?? [],
     });
   }
@@ -52,7 +51,7 @@ export class MeetingRequestController {
   @Get('for-my-ads')
   @ApiAuth({ summary: 'Prośby o spotkanie do moich ogłoszeń (specjalista)' })
   async listForMyAds(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query('status') status?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -71,7 +70,7 @@ export class MeetingRequestController {
   @Get('my-requests')
   @ApiAuth({ summary: 'Moje wnioski o spotkanie (klient)' })
   async listMyRequests(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query('status') status?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -90,10 +89,10 @@ export class MeetingRequestController {
   @Patch('uid/:uid/accept')
   @ApiAuth({ summary: 'Zaakceptuj prośbę – tworzy wizytę' })
   async acceptByUid(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('uid', ParseUUIDPipe) uid: string,
   ) {
-    return this.meetingRequestService.acceptByUid(userId, uid);
+    return this.meetingRequestService.accept(userId, uid);
   }
 
   @Patch('uid/:uid/reject')
@@ -105,10 +104,10 @@ export class MeetingRequestController {
     },
   })
   async rejectByUid(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('uid', ParseUUIDPipe) uid: string,
     @Body('reason') reason?: string,
   ) {
-    return this.meetingRequestService.rejectByUid(userId, uid, reason);
+    return this.meetingRequestService.reject(userId, uid, reason);
   }
 }

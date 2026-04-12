@@ -6,9 +6,9 @@ import { In, Repository } from 'typeorm';
 
 @Injectable({ scope: Scope.REQUEST })
 export class ArticleDataLoader {
-  private authorLoader: DataLoader<number, UserEntity>;
+  private authorLoader: DataLoader<string, UserEntity>;
   private favoritesLoader: DataLoader<
-    number,
+    string,
     { favorited: boolean; count: number }
   >;
 
@@ -21,14 +21,14 @@ export class ArticleDataLoader {
 
   getAuthorLoader() {
     if (!this.authorLoader) {
-      this.authorLoader = new DataLoader<number, UserEntity>(
-        async (authorIds: readonly number[]) => {
+      this.authorLoader = new DataLoader<string, UserEntity>(
+        async (authorIds: readonly string[]) => {
           const authors = await this.userRepository.find({
-            where: { id: In([...authorIds]) },
+            where: { uid: In([...authorIds]) },
             relations: ['followers'],
           });
-          return authorIds.map((id) =>
-            authors.find((author) => author.id === id),
+          return authorIds.map((uid) =>
+            authors.find((author) => author.uid === uid),
           );
         },
       );
@@ -36,26 +36,26 @@ export class ArticleDataLoader {
     return this.authorLoader;
   }
 
-  getFavoritesLoader(userId: number) {
+  getFavoritesLoader(userId: string) {
     if (!this.favoritesLoader) {
       this.favoritesLoader = new DataLoader<
-        number,
+        string,
         { favorited: boolean; count: number }
-      >(async (articleIds: readonly number[]) => {
+      >(async (articleIds: readonly string[]) => {
         const articles = await this.articleRepository
           .createQueryBuilder('article')
-          .select('article.id', 'id')
+          .select('article.uid', 'uid')
           .leftJoinAndSelect('article.favoritedBy', 'favoritedBy')
-          .where('article.id IN (:...articleIds)', {
+          .where('article.uid IN (:...articleIds)', {
             articleIds: [...articleIds],
           })
           .getMany();
 
-        return articleIds.map((id) => {
-          const article = articles.find((a) => a.id === id);
+        return articleIds.map((uid) => {
+          const article = articles.find((a) => a.uid === uid);
           return {
             favorited:
-              article?.favoritedBy?.some((u) => u.id === userId) || false,
+              article?.favoritedBy?.some((u) => u.uid === userId) || false,
             count: article?.favoritedBy?.length || 0,
           };
         });

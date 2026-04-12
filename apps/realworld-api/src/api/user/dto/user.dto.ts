@@ -1,14 +1,9 @@
-import { ClassField, EmailField, NumberField, StringField } from '@repo/api';
+import { ClassField, EmailField, StringField } from '@repo/api';
 import { Expose } from 'class-transformer';
 
 export class UserDto {
-  @NumberField({ expose: true })
-  id: number;
-
   /**
-   * Stable, non-sequential external identifier. Prefer this over `id` in
-   * public URLs and cross-service references. `id` will be dropped in a
-   * future phase of the uid migration.
+   * Stable, non-sequential identifier (uuid). Primary key and public id.
    */
   @StringField({ expose: true })
   uid: string;
@@ -42,7 +37,7 @@ export class UserDto {
   roles: string[];
 
   @Expose()
-  topicIds?: number[];
+  topicIds?: string[];
 
   @Expose()
   topicNames?: string[];

@@ -4,7 +4,7 @@ import { NotificationType, CreateNotificationPayload } from '../notification-typ
  * Spotkanie zaraz się zaczyna (5 min) — powiadomienie dla obu stron.
  */
 export function buildMeetingStartingNotification(opts: {
-  userId: number;
+  userId: string;
   otherPartyName: string;
   advertisementTitle: string;
   meetingLink: string;

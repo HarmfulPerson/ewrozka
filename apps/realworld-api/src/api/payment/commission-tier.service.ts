@@ -48,7 +48,7 @@ export class CommissionTierService {
 
   /** Liczy zakończone spotkania wróżki w ostatnich N dniach (okno od momentu zakończenia). */
   async countCompletedMeetingsInWindow(
-    wizardId: number,
+    wizardId: string,
     windowDays: number,
   ): Promise<number> {
     const result = await this.dataSource.query<[{ count: string }]>(
@@ -65,12 +65,12 @@ export class CommissionTierService {
   }
 
   /** Zwraca efektywny procent prowizji na podstawie progów (bez override z usera). */
-  async getEffectiveFeePercent(wizardId: number): Promise<number> {
-    const config = await this.configRepository.findOne({ where: { id: 1 } });
+  async getEffectiveFeePercent(wizardId: string): Promise<number> {
+    const config = await this.configRepository.findOne({ where: {} });
     if (!config) return this.getDefaultFee();
 
     const tiers = await this.tierRepository.find({
-      where: { configId: config.id },
+      where: { configId: config.uid },
       order: { sortOrder: 'ASC' },
     });
     if (!tiers.length) return this.getDefaultFee();
@@ -92,13 +92,13 @@ export class CommissionTierService {
   }
 
   /** Zwraca pełny status progu dla wróżki (meetingsInWindow, currentTier, nextTier). */
-  async getTierStatus(wizardId: number): Promise<CommissionTierStatus> {
-    const config = await this.configRepository.findOne({ where: { id: 1 } });
+  async getTierStatus(wizardId: string): Promise<CommissionTierStatus> {
+    const config = await this.configRepository.findOne({ where: {} });
     const defaultFee = this.getDefaultFee();
 
     const tiers = config
       ? await this.tierRepository.find({
-          where: { configId: config.id },
+          where: { configId: config.uid },
           order: { sortOrder: 'ASC' },
         })
       : [];

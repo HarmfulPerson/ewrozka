@@ -1,15 +1,9 @@
 import { AllConfigType } from '@/config/config.type';
-
 import { Injectable, Logger } from '@nestjs/common';
-
 import { ConfigService } from '@nestjs/config';
-
 import { InjectRepository } from '@nestjs/typeorm';
-
 import { PlatformRevenueEntity, TransactionEntity, UserEntity } from '@repo/postgresql-typeorm';
-
 import { DataSource, Repository } from 'typeorm';
-
 import { CommissionTierService, type CommissionTierStatus } from './commission-tier.service';
 
 @Injectable()
@@ -19,31 +13,23 @@ export class PaymentService {
   constructor(
     @InjectRepository(TransactionEntity)
     private readonly transactionRepository: Repository<TransactionEntity>,
-
     @InjectRepository(PlatformRevenueEntity)
     private readonly platformRevenueRepository: Repository<PlatformRevenueEntity>,
-
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-
     private readonly dataSource: DataSource,
-
     private readonly configService: ConfigService<AllConfigType>,
-
     private readonly commissionTierService: CommissionTierService,
   ) {}
 
   async processPayment(
-    wrozkaId: number,
-
-    appointmentId: number,
-
+    wrozkaId: string,
+    appointmentId: string | null,
     totalAmountGrosze: number,
-
     platformFeePercentOverride?: number,
   ): Promise<{ transaction: TransactionEntity }> {
     this.logger.log(
-      `Przetwarzanie płatności dla specjalisty ${wrozkaId}, wizyta ${appointmentId}, kwota ${totalAmountGrosze}gr`,
+      `Przetwarzanie płatności dla specjalisty ${wrozkaId}, wizyta ${appointmentId ?? '(brak)'}, kwota ${totalAmountGrosze}gr`,
     );
 
     const platformFeePercentage =
@@ -56,7 +42,6 @@ export class PaymentService {
     this.logger.log(`Procent prowizji platformy: ${platformFeePercentage}%`);
 
     const platformFeeGrosze = Math.floor((totalAmountGrosze * platformFeePercentage) / 100);
-
     const wizardAmountGrosze = totalAmountGrosze - platformFeeGrosze;
 
     this.logger.log(`Obliczono: Prowizja platformy: ${platformFeeGrosze}gr, Kwota specjalisty: ${wizardAmountGrosze}gr`);
@@ -64,26 +49,19 @@ export class PaymentService {
     return await this.dataSource.transaction(async (manager) => {
       const transaction = manager.create(TransactionEntity, {
         userId: wrozkaId,
-
-        appointmentId,
-
+        appointmentId: appointmentId ?? null,
         totalAmount: totalAmountGrosze,
-
         platformFee: platformFeeGrosze,
-
         wizardAmount: wizardAmountGrosze,
-
         type: 'payment',
-
         status: 'completed',
       });
 
       await manager.save(TransactionEntity, transaction);
 
-      this.logger.log(`Transakcja utworzona, ID: ${transaction.id}`);
+      this.logger.log(`Transakcja utworzona, uid: ${transaction.uid}`);
 
       // Update platform revenue for today
-
       const today = new Date().toISOString().split('T')[0];
 
       let revenue = await manager.findOne(PlatformRevenueEntity, {
@@ -93,23 +71,16 @@ export class PaymentService {
       if (!revenue) {
         revenue = manager.create(PlatformRevenueEntity, {
           date: today,
-
           totalFees: 0,
-
           totalWizardPayouts: 0,
-
           totalVolume: 0,
-
           transactionCount: 0,
         });
       }
 
       revenue.totalFees = Number(revenue.totalFees) + platformFeeGrosze;
-
       revenue.totalWizardPayouts = Number(revenue.totalWizardPayouts) + wizardAmountGrosze;
-
       revenue.totalVolume = Number(revenue.totalVolume) + totalAmountGrosze;
-
       revenue.transactionCount = Number(revenue.transactionCount) + 1;
 
       await manager.save(PlatformRevenueEntity, revenue);
@@ -123,12 +94,9 @@ export class PaymentService {
   }
 
   async recordDestinationCharge(
-    wrozkaId: number,
-
-    appointmentId: number,
-
+    wrozkaId: string,
+    appointmentId: string | null,
     totalAmountGrosze: number,
-
     platformFeePercentOverride?: number,
   ): Promise<void> {
     const platformFeePercentage =
@@ -139,32 +107,23 @@ export class PaymentService {
       20;
 
     const platformFeeGrosze = Math.floor((totalAmountGrosze * platformFeePercentage) / 100);
-
     const wizardAmountGrosze = totalAmountGrosze - platformFeeGrosze;
 
     // Rejestruj transakcję dla historii — pieniądze trafiają do wróżki przez Stripe
-
     await this.dataSource.transaction(async (manager) => {
       const transaction = manager.create(TransactionEntity, {
         userId: wrozkaId,
-
-        appointmentId,
-
+        appointmentId: appointmentId ?? null,
         totalAmount: totalAmountGrosze,
-
         platformFee: platformFeeGrosze,
-
         wizardAmount: wizardAmountGrosze,
-
         type: 'destination_charge',
-
         status: 'completed',
       });
 
       await manager.save(TransactionEntity, transaction);
 
       // Zaktualizuj przychody platformy
-
       const today = new Date().toISOString().split('T')[0];
 
       let revenue = await manager.findOne(PlatformRevenueEntity, {
@@ -174,23 +133,16 @@ export class PaymentService {
       if (!revenue) {
         revenue = manager.create(PlatformRevenueEntity, {
           date: today,
-
           totalFees: 0,
-
           totalWizardPayouts: 0,
-
           totalVolume: 0,
-
           transactionCount: 0,
         });
       }
 
       revenue.totalFees = Number(revenue.totalFees) + platformFeeGrosze;
-
       revenue.totalWizardPayouts = Number(revenue.totalWizardPayouts) + wizardAmountGrosze;
-
       revenue.totalVolume = Number(revenue.totalVolume) + totalAmountGrosze;
-
       revenue.transactionCount = Number(revenue.transactionCount) + 1;
 
       await manager.save(PlatformRevenueEntity, revenue);
@@ -201,11 +153,10 @@ export class PaymentService {
     );
   }
 
-  async getPlatformFeePercentForUser(userId: number): Promise<number> {
+  async getPlatformFeePercentForUser(userId: string): Promise<number> {
     const user = await this.userRepository.findOne({
-      where: { id: userId },
-
-      select: ['id', 'platformFeePercent'],
+      where: { uid: userId },
+      select: ['uid', 'platformFeePercent'],
     });
 
     if (user?.platformFeePercent !== null && user?.platformFeePercent !== undefined) {
@@ -215,14 +166,12 @@ export class PaymentService {
     return this.commissionTierService.getEffectiveFeePercent(userId);
   }
 
-  async getCommissionTierStatus(userId: number): Promise<CommissionTierStatus> {
+  async getCommissionTierStatus(userId: string): Promise<CommissionTierStatus> {
     const [user, tierStatus] = await Promise.all([
       this.userRepository.findOne({
-        where: { id: userId },
-
-        select: ['id', 'platformFeePercent'],
+        where: { uid: userId },
+        select: ['uid', 'platformFeePercent'],
       }),
-
       this.commissionTierService.getTierStatus(userId),
     ]);
 
@@ -232,35 +181,25 @@ export class PaymentService {
 
     return {
       ...tierStatus,
-
       platformFeePercent: isSetByAdmin ? adminOverride : tierStatus.platformFeePercent,
-
       isSetByAdmin,
     };
   }
 
   async getTransactionHistory(
-    userId: number,
-
+    userId: string,
     limit: number = 50,
-
     offset: number = 0,
-
     sortBy: 'date' | 'amount' = 'date',
-
     sortOrder: 'ASC' | 'DESC' = 'DESC',
   ): Promise<{ transactions: TransactionEntity[]; total: number }> {
     const orderField = sortBy === 'amount' ? 'wizardAmount' : 'createdAt';
 
     const [transactions, total] = await this.transactionRepository.findAndCount({
       where: { userId },
-
       relations: ['appointment', 'appointment.advertisement'],
-
       order: { [orderField]: sortOrder },
-
       take: limit,
-
       skip: offset,
     });
 
@@ -269,7 +208,6 @@ export class PaymentService {
 
   async getPlatformRevenue(
     fromDate?: string,
-
     toDate?: string,
   ): Promise<PlatformRevenueEntity[]> {
     const query = this.platformRevenueRepository.createQueryBuilder('revenue');

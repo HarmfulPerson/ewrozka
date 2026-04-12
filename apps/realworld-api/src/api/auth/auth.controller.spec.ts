@@ -37,11 +37,13 @@ describe('AuthController', () => {
 
       const userResDto: UserResDto = {
         user: {
+          uid: 'user-1-uuid',
           email: 'test@example.com',
           token: 'token',
           username: 'testuser',
           bio: 'test bio',
           image: 'test image',
+          roles: ['client'],
         },
       };
 

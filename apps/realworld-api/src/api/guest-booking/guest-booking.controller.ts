@@ -66,7 +66,7 @@ export class GuestBookingController {
   @Get('wizard/guest-bookings')
   @ApiAuth({ summary: 'Wizard: list guest bookings' })
   async listForWizard(
-    @CurrentUser('id') wizardId: number,
+    @CurrentUser('id') wizardId: string,
     @Query('status') status?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -90,7 +90,7 @@ export class GuestBookingController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiAuth({ summary: 'Wizard: accept guest booking' })
   async accept(
-    @CurrentUser('id') wizardId: number,
+    @CurrentUser('id') wizardId: string,
     @Param('id') bookingId: string,
   ): Promise<void> {
     await this.service.accept(wizardId, bookingId);
@@ -100,7 +100,7 @@ export class GuestBookingController {
   @Get('wizard/guest-bookings/:id/meeting-room')
   @ApiAuth({ summary: 'Wizard: get meeting room for paid guest booking' })
   async getWizardMeetingRoom(
-    @CurrentUser('id') wizardId: number,
+    @CurrentUser('id') wizardId: string,
     @Param('id') bookingId: string,
   ) {
     return this.service.getWizardMeetingRoom(wizardId, bookingId);
@@ -111,7 +111,7 @@ export class GuestBookingController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiAuth({ summary: 'Wizard: reject guest booking' })
   async reject(
-    @CurrentUser('id') wizardId: number,
+    @CurrentUser('id') wizardId: string,
     @Param('id') bookingId: string,
     @Body('reason') reason?: string,
   ): Promise<void> {

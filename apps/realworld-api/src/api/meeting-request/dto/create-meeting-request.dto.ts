@@ -1,17 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { NumberFieldOptional, StringFieldOptional } from '@repo/api';
+import { StringFieldOptional } from '@repo/api';
 import { IsOptional, Matches, ValidateIf } from 'class-validator';
 
 export class CreateMeetingRequestReqDto {
-  /**
-   * Legacy numeric advertisement id. Kept for backward compatibility during
-   * the uid migration — prefer `advertisementUid`. At least one of the two
-   * must be provided (enforced in the controller).
-   */
-  @ApiPropertyOptional({ example: 1, description: 'ID ogłoszenia (deprecated — użyj advertisementUid)' })
-  @NumberFieldOptional({ int: true, isPositive: true })
-  advertisementId?: number;
-
   @ApiPropertyOptional({ example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', description: 'UID ogłoszenia' })
   @StringFieldOptional()
   advertisementUid?: string;

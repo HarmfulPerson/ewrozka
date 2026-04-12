@@ -12,6 +12,7 @@ import {
 import { In, LessThan, MoreThan, Repository } from 'typeorm';
 import { EmailService } from '../email/email.service';
 import { EmailType } from '../email/email-type.enum';
+
 export interface SlotDto {
   startsAt: string;
   endsAt: string;
@@ -39,10 +40,10 @@ export class AvailabilityService {
   ) {}
 
   async addBlock(
-    userId: number,
+    userId: string,
     startsAt: Date,
     endsAt: Date,
-  ): Promise<{ id: number; startsAt: Date; endsAt: Date }> {
+  ): Promise<{ uid: string; startsAt: Date; endsAt: Date }> {
     const now = new Date();
     if (startsAt < now) {
       throw new BadRequestException('Nie można dodać bloku dostępności w przeszłości.');
@@ -68,13 +69,13 @@ export class AvailabilityService {
       endsAt,
     });
     const saved = await this.availabilityRepository.save(entity);
-    return { id: saved.id, startsAt: saved.startsAt, endsAt: saved.endsAt };
+    return { uid: saved.uid, startsAt: saved.startsAt, endsAt: saved.endsAt };
   }
 
   async getMyBlocks(
-    userId: number,
+    userId: string,
     options?: { filter?: string; limit?: number; offset?: number; sortOrder?: 'ASC' | 'DESC' },
-  ): Promise<{ availabilities: { id: number; startsAt: string; endsAt: string }[]; total: number }> {
+  ): Promise<{ availabilities: { uid: string; startsAt: string; endsAt: string }[]; total: number }> {
     const queryBuilder = this.availabilityRepository
       .createQueryBuilder('availability')
       .where('availability.userId = :userId', { userId });
@@ -95,7 +96,7 @@ export class AvailabilityService {
 
     return {
       availabilities: blocks.map((b) => ({
-        id: b.id,
+        uid: b.uid,
         startsAt: b.startsAt.toISOString(),
         endsAt: b.endsAt.toISOString(),
       })),
@@ -103,9 +104,9 @@ export class AvailabilityService {
     };
   }
 
-  async deleteBlock(userId: number, blockId: number): Promise<void> {
+  async deleteBlock(userId: string, blockUid: string): Promise<void> {
     const block = await this.availabilityRepository.findOne({
-      where: { id: blockId, userId },
+      where: { uid: blockUid, userId },
     });
     if (!block) {
       throw new NotFoundException('Blok nie istnieje lub nie należy do Ciebie.');
@@ -116,7 +117,7 @@ export class AvailabilityService {
       where: { userId },
       relations: ['user'],
     });
-    const adIds = ads.map((a) => a.id);
+    const adIds = ads.map((a) => a.uid);
     const wizard = ads[0]?.user;
 
     // Rezerwacje gości – anuluj tylko przyszłe (przeszłe spotkania zostają w kalendarzu)
@@ -180,10 +181,10 @@ export class AvailabilityService {
       for (const req of toRejectRequests) {
         // Sprawdź, czy powiązany appointment nie jest opłacony – jeśli tak, nie anuluj
         const apt = await this.appointmentRepository.findOne({
-          where: { meetingRequestId: req.id },
+          where: { meetingRequestId: req.uid },
         });
         if (apt && ['paid', 'completed'].includes(apt.status)) {
-          this.logger.log(`Skipping meeting request ${req.id} – appointment ${apt.id} is ${apt.status}`);
+          this.logger.log(`Skipping meeting request ${req.uid} – appointment ${apt.uid} is ${apt.status}`);
           continue;
         }
 
@@ -215,7 +216,7 @@ export class AvailabilityService {
               this.logger.error(`Failed to send meeting request cancellation email to ${userEmail}: ${err instanceof Error ? err.message : String(err)}`),
             );
         }
-        this.logger.log(`Meeting request ${req.id} rejected due to block removal`);
+        this.logger.log(`Meeting request ${req.uid} rejected due to block removal`);
       }
     }
 
@@ -233,7 +234,7 @@ export class AvailabilityService {
       if (start < blockEnd && end > blockStart) {
         apt.status = 'cancelled';
         await this.appointmentRepository.save(apt);
-        this.logger.log(`Appointment ${apt.id} cancelled due to block removal`);
+        this.logger.log(`Appointment ${apt.uid} cancelled due to block removal`);
       }
     }
 
@@ -245,10 +246,10 @@ export class AvailabilityService {
    * Używane przed akceptacją wniosku/rezerwacji, żeby uniknąć podwójnej rezerwacji.
    */
   async isSlotOccupied(
-    wizardId: number,
+    wizardId: string,
     startsAt: Date,
     durationMinutes: number,
-    excludeAppointmentId?: number,
+    excludeAppointmentUid?: string,
     excludeGuestBookingId?: string,
   ): Promise<boolean> {
     const slotStart = startsAt.getTime();
@@ -258,7 +259,7 @@ export class AvailabilityService {
       where: { wrozkaId: wizardId },
     });
     for (const a of appointments) {
-      if (excludeAppointmentId && a.id === excludeAppointmentId) continue;
+      if (excludeAppointmentUid && a.uid === excludeAppointmentUid) continue;
       if (!['accepted', 'paid', 'completed'].includes(a.status)) continue;
       const start = a.startsAt.getTime();
       const end = start + a.durationMinutes * 60 * 1000;
@@ -279,27 +280,13 @@ export class AvailabilityService {
     return false;
   }
 
-  /** Phase 5: public slot lookup by advertisement uid. Resolves → id → delegates. */
-  async getSlotsForAdvertisementUid(
+  async getSlotsForAdvertisement(
     advertisementUid: string,
     fromDate: string,
     toDate: string,
   ): Promise<SlotDto[]> {
     const ad = await this.advertisementRepository.findOne({
       where: { uid: advertisementUid },
-      select: ['id'],
-    });
-    if (!ad) throw new NotFoundException('Ogłoszenie nie istnieje');
-    return this.getSlotsForAdvertisement(ad.id, fromDate, toDate);
-  }
-
-  async getSlotsForAdvertisement(
-    advertisementId: number,
-    fromDate: string,
-    toDate: string,
-  ): Promise<SlotDto[]> {
-    const ad = await this.advertisementRepository.findOne({
-      where: { id: advertisementId },
       relations: ['user'],
     });
     if (!ad) {

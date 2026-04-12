@@ -12,7 +12,7 @@ export class NotificationsController {
   /** Liczba oczekujących wniosków (backward compat) */
   @Get('pending-count')
   @ApiAuth({ summary: 'Liczba oczekujących wniosków (wróżka)' })
-  async getPendingCount(@CurrentUser('id') wizardId: number) {
+  async getPendingCount(@CurrentUser('id') wizardId: string) {
     return this.service.getPendingCount(wizardId);
   }
 
@@ -20,7 +20,7 @@ export class NotificationsController {
   @Get()
   @ApiAuth({ summary: 'Lista powiadomień' })
   async getNotifications(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('unreadOnly') unreadOnly?: string,
@@ -35,25 +35,25 @@ export class NotificationsController {
   /** Liczba nieprzeczytanych */
   @Get('unread-count')
   @ApiAuth({ summary: 'Liczba nieprzeczytanych powiadomień' })
-  async getUnreadCount(@CurrentUser('id') userId: number) {
+  async getUnreadCount(@CurrentUser('id') userId: string) {
     return { count: await this.service.getUnreadCount(userId) };
   }
 
   /** Oznacz jedno jako przeczytane */
-  @Patch(':id/read')
+  @Patch(':uid/read')
   @ApiAuth({ summary: 'Oznacz powiadomienie jako przeczytane' })
   async markAsRead(
-    @CurrentUser('id') userId: number,
-    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+    @Param('uid') uid: string,
   ) {
-    await this.service.markAsRead(userId, Number(id));
+    await this.service.markAsRead(userId, uid);
     return { success: true };
   }
 
   /** Oznacz wszystkie jako przeczytane */
   @Patch('read-all')
   @ApiAuth({ summary: 'Oznacz wszystkie jako przeczytane' })
-  async markAllAsRead(@CurrentUser('id') userId: number) {
+  async markAllAsRead(@CurrentUser('id') userId: string) {
     await this.service.markAllAsRead(userId);
     return { success: true };
   }

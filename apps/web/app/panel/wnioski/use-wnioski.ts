@@ -66,13 +66,12 @@ export function useWnioski() {
 
   const handleAccept = async (item: UnifiedRequestDto) => {
     if (!user) return;
-    setProcessingId(item.id);
+    setProcessingId(item.uid);
     try {
       if (item.kind === 'regular') {
-        // Phase 3: pass the meeting_request uid.
         await apiAcceptMeetingRequest(user.token, item.uid);
       } else {
-        await apiAcceptGuestBooking(user.token, item.id);
+        await apiAcceptGuestBooking(user.token, item.uid);
       }
       toast.success('Wniosek zaakceptowany!');
       notifyChanged();

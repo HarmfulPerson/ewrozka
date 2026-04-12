@@ -47,14 +47,14 @@ export function WnioskiTable({
       </thead>
       <tbody>
         {items.map(item => {
-          const isProc = processingId === item.id;
+          const isProc = processingId === item.uid;
           const isPending = item.unifiedStatus === 'pending';
           const isAccepted = item.unifiedStatus === 'accepted';
           const isPaid = item.unifiedStatus === 'paid';
           const dateStr = item.scheduledAt;
 
           return (
-            <tr key={`${item.kind}-${item.id}`}>
+            <tr key={`${item.kind}-${item.uid}`}>
               <td>
                 <span className={`wnioski-type-badge wnioski-type-badge--${item.kind === 'regular' ? 'regular' : 'guest'}`}>
                   {item.kind === 'regular' ? 'Klient' : 'Gość'}
@@ -118,7 +118,7 @@ export function WnioskiTable({
                   {isPaid && item.kind === 'guest' && item.scheduledAt && (() => {
                     const { canJoin, tooltip } = getJoinStatus(item.scheduledAt);
                     return canJoin ? (
-                      <Link href={`/panel/spotkanie-gosc/${item.id}`} className="wnioski-btn wnioski-btn--join">
+                      <Link href={`/panel/spotkanie-gosc/${item.uid}`} className="wnioski-btn wnioski-btn--join">
                         Dołącz
                       </Link>
                     ) : (

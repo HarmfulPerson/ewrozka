@@ -18,7 +18,7 @@ export enum NotificationType {
 }
 
 export interface CreateNotificationPayload {
-  userId: number;
+  userId: string;
   type: NotificationType;
   title: string;
   body?: string;

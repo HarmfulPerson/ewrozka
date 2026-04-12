@@ -40,7 +40,7 @@ export function AvailabilityTable({ availabilities, sortOrder, toggleSort, onDel
           const isPast = end < new Date();
 
           return (
-            <tr key={avail.id} style={isPast ? { opacity: 0.5 } : undefined}>
+            <tr key={avail.uid} style={isPast ? { opacity: 0.5 } : undefined}>
               <td>
                 <span className="wnioski-cell-client">{fmtDate(start)}</span>
               </td>

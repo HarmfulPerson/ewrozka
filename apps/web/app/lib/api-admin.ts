@@ -122,8 +122,6 @@ export type AdminWizardsSortBy =
   | 'pendingVideo';
 
 export interface AdminWizardRow {
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
   uid: string;
   username: string;
   email: string;
@@ -174,8 +172,6 @@ export async function apiGetAdminWizards(
 }
 
 export interface AdminWizardDetail {
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
   uid: string;
   username: string;
   email: string;
@@ -196,41 +192,33 @@ export interface AdminWizardDetail {
   videoPending: string | null;
 }
 
-/**
- * Build the admin wizard path. Accepts either a UUID (preferred) or legacy
- * numeric id, routes to /wizards/uid/:uid or /wizards/:id accordingly.
- * Suffix is appended after the identifier (e.g. '/platform-fee', '/featured').
- */
-function adminWizardPath(uidOrId: string | number, suffix = ''): string {
-  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
-  return isUid
-    ? `admin/wizards/uid/${uidOrId}${suffix}`
-    : `admin/wizards/${uidOrId}${suffix}`;
+function adminWizardPath(uid: string, suffix = ''): string {
+  return `admin/wizards/uid/${uid}${suffix}`;
 }
 
 export async function apiGetAdminWizard(
   token: string,
-  wizardUidOrId: string | number,
+  wizardUid: string,
 ): Promise<AdminWizardDetail> {
-  return fetchAdmin<AdminWizardDetail>(adminWizardPath(wizardUidOrId), token);
+  return fetchAdmin<AdminWizardDetail>(adminWizardPath(wizardUid), token);
 }
 
 export async function apiSetAdminWizardFeatured(
   token: string,
-  wizardUidOrId: string | number,
+  wizardUid: string,
 ): Promise<void> {
-  await fetchAdmin<unknown>(adminWizardPath(wizardUidOrId, '/featured'), token, {
+  await fetchAdmin<unknown>(adminWizardPath(wizardUid, '/featured'), token, {
     method: 'POST',
   });
 }
 
 export async function apiUpdateAdminWizardPlatformFee(
   token: string,
-  wizardUidOrId: string | number,
+  wizardUid: string,
   platformFeePercent: number,
 ): Promise<void> {
   await fetchAdmin<unknown>(
-    adminWizardPath(wizardUidOrId, '/platform-fee'),
+    adminWizardPath(wizardUid, '/platform-fee'),
     token,
     {
       method: 'PATCH',
@@ -241,10 +229,10 @@ export async function apiUpdateAdminWizardPlatformFee(
 
 export async function apiResetWizardPlatformFeeToTier(
   token: string,
-  wizardUidOrId: string | number,
+  wizardUid: string,
 ): Promise<void> {
   await fetchAdmin<unknown>(
-    adminWizardPath(wizardUidOrId, '/platform-fee/reset-to-tier'),
+    adminWizardPath(wizardUid, '/platform-fee/reset-to-tier'),
     token,
     { method: 'POST' },
   );
@@ -252,10 +240,10 @@ export async function apiResetWizardPlatformFeeToTier(
 
 export async function apiApproveWizardVideo(
   token: string,
-  wizardUidOrId: string | number,
+  wizardUid: string,
 ): Promise<void> {
   await fetchAdmin<unknown>(
-    adminWizardPath(wizardUidOrId, '/video/approve'),
+    adminWizardPath(wizardUid, '/video/approve'),
     token,
     { method: 'POST' },
   );
@@ -263,10 +251,10 @@ export async function apiApproveWizardVideo(
 
 export async function apiRejectWizardVideo(
   token: string,
-  wizardUidOrId: string | number,
+  wizardUid: string,
 ): Promise<void> {
   await fetchAdmin<unknown>(
-    adminWizardPath(wizardUidOrId, '/video/reject'),
+    adminWizardPath(wizardUid, '/video/reject'),
     token,
     { method: 'POST' },
   );
@@ -364,7 +352,7 @@ export interface RegistrationAnalytics {
 }
 
 export interface WizardRevenueRow {
-  wizardId: number;
+  wizardId: string;
   username: string;
   image: string;
   wizardEarned: number;
@@ -450,17 +438,13 @@ export interface WizardAnalytics {
 
 export async function apiGetWizardAnalytics(
   token: string,
-  wizardUidOrId: string | number,
+  wizardUid: string,
   from: string,
   to: string,
   groupBy: 'day' | 'week' | 'month' = 'day',
 ): Promise<WizardAnalytics> {
-  const isUid = typeof wizardUidOrId === 'string' && /^[0-9a-f]{8}-/i.test(wizardUidOrId);
-  const base = isUid
-    ? `admin/analytics/wizard/uid/${wizardUidOrId}`
-    : `admin/analytics/wizard/${wizardUidOrId}`;
   return fetchAdmin<WizardAnalytics>(
-    `${base}?from=${from}&to=${to}&groupBy=${groupBy}`,
+    `admin/analytics/wizard/uid/${wizardUid}?from=${from}&to=${to}&groupBy=${groupBy}`,
     token,
   );
 }

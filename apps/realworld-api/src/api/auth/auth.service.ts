@@ -70,11 +70,10 @@ export class AuthService {
     }
 
     const roleNames = user.roles?.map((r) => r.name) ?? [];
-    const token = await this.createToken({ id: user.id, roles: roleNames });
+    const token = await this.createToken({ id: user.uid, roles: roleNames });
 
     return {
       user: {
-        id: user.id,
         uid: user.uid,
         email: user.email,
         username: user.username,
@@ -93,7 +92,7 @@ export class AuthService {
   /**
    * Tworzy JWT do weryfikacji e-mail (payload: { id, purpose: 'email-verification' }, ważny 24h).
    */
-  async createEmailVerificationToken(userId: number): Promise<string> {
+  async createEmailVerificationToken(userId: string): Promise<string> {
     return this.jwtService.signAsync(
       { id: userId, purpose: 'email-verification' },
       {
@@ -107,7 +106,7 @@ export class AuthService {
    * Weryfikuje token e-mail: dekoduje JWT → pobiera userId → oznacza konto jako aktywne.
    */
   async verifyEmail(token: string): Promise<void> {
-    let payload: { id: number; purpose: string };
+    let payload: { id: string; purpose: string };
 
     try {
       payload = this.jwtService.verify(token, {
@@ -121,7 +120,7 @@ export class AuthService {
       throw new UnauthorizedException('Nieprawidłowy token weryfikacyjny.');
     }
 
-    const user = await this.userRepository.findOne({ where: { id: payload.id } });
+    const user = await this.userRepository.findOne({ where: { uid: payload.id } });
 
     if (!user) {
       throw new UnauthorizedException('Użytkownik nie istnieje.');
@@ -144,7 +143,7 @@ export class AuthService {
   /**
    * Tworzy JWT do resetu hasła (payload: { id, purpose: 'password-reset' }, ważny 15 min).
    */
-  async createPasswordResetToken(userId: number): Promise<string> {
+  async createPasswordResetToken(userId: string): Promise<string> {
     return this.jwtService.signAsync(
       { id: userId, purpose: 'password-reset' },
       {
@@ -166,7 +165,7 @@ export class AuthService {
       return;
     }
 
-    const token = await this.createPasswordResetToken(user.id);
+    const token = await this.createPasswordResetToken(user.uid);
 
     this.emailService
       .sendPasswordResetEmail(user.email, user.username, token)
@@ -177,7 +176,7 @@ export class AuthService {
    * Weryfikuje token resetu hasła i ustawia nowe hasło.
    */
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    let payload: { id: number; purpose: string };
+    let payload: { id: string; purpose: string };
 
     try {
       payload = this.jwtService.verify(token, {
@@ -191,7 +190,7 @@ export class AuthService {
       throw new UnauthorizedException('Nieprawidłowy token resetu hasła.');
     }
 
-    const user = await this.userRepository.findOne({ where: { id: payload.id } });
+    const user = await this.userRepository.findOne({ where: { uid: payload.id } });
 
     if (!user) {
       throw new UnauthorizedException('Użytkownik nie istnieje.');
@@ -217,7 +216,7 @@ export class AuthService {
   }
 
   async createToken(data: {
-    id: number;
+    id: string;
     roles?: string[];
   }): Promise<string> {
     const tokenExpiresIn = this.configService.getOrThrow('auth.expires', {
@@ -245,7 +244,7 @@ export class AuthService {
   async refreshToken(currentToken: string): Promise<string> {
     const payload = await this.verifyAccessToken(currentToken);
     return this.createToken({
-      id: parseInt(String(payload.id), 10),
+      id: String(payload.id),
       roles: payload.roles ?? [],
     });
   }
@@ -309,7 +308,7 @@ export class AuthService {
     username?: string;
     bio?: string;
     phone?: string;
-    topicIds?: number[];
+    topicIds?: string[];
     gender?: 'female' | 'male';
     referralCode?: string;
   }): Promise<UserResDto | { id: string }> {
@@ -323,13 +322,13 @@ export class AuthService {
     }
 
     // Resolve referral code
-    let referredBy: number | null = null;
+    let referredBy: string | null = null;
     if (dto.referralCode) {
       const referrer = await this.userRepository.findOne({
         where: { referralCode: dto.referralCode },
-        select: ['id'],
+        select: ['uid'],
       });
-      if (referrer) referredBy = referrer.id;
+      if (referrer) referredBy = referrer.uid;
     }
 
     if (dto.role === 'client') {
@@ -362,14 +361,13 @@ export class AuthService {
         .catch((err) => this.logger.error('Failed to send welcome email', err));
 
       const savedWithRoles = await this.userRepository.findOneOrFail({
-        where: { id: saved.id },
+        where: { uid: saved.uid },
         relations: ['roles'],
       });
       const roleNames = savedWithRoles.roles?.map((r) => r.name) ?? [];
-      const token = await this.createToken({ id: saved.id, roles: roleNames });
+      const token = await this.createToken({ id: saved.uid, roles: roleNames });
       return {
         user: {
-          id: saved.id,
           uid: saved.uid,
           email: saved.email,
           username: saved.username,

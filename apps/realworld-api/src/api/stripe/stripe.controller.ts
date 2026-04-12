@@ -10,13 +10,10 @@ import {
   Req,
 } from '@nestjs/common';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
-import { InjectRepository } from '@nestjs/typeorm';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from '@repo/nest-common';
 import { CurrentUser } from '@repo/api';
 import { ApiAuth } from '@repo/api/decorators/http.decorators';
-import { AppointmentEntity } from '@repo/postgresql-typeorm';
-import { Repository } from 'typeorm';
 import { StripeService } from './stripe.service';
 
 @ApiTags('Stripe')
@@ -24,8 +21,6 @@ import { StripeService } from './stripe.service';
 export class StripeController {
   constructor(
     private readonly stripeService: StripeService,
-    @InjectRepository(AppointmentEntity)
-    private readonly appointmentRepository: Repository<AppointmentEntity>,
   ) {}
 
   @Post('webhook')
@@ -49,25 +44,13 @@ export class StripeController {
   @ApiAuth({ summary: 'Utwórz Stripe PaymentIntent do płatności wbudowanej' })
   @HttpCode(HttpStatus.OK)
   async createPaymentIntent(
-    @CurrentUser('id') userId: number,
-    @Body() body: { appointmentId?: number; appointmentUid?: string },
+    @CurrentUser('id') userId: string,
+    @Body() body: { appointmentUid?: string },
   ) {
-    // Accept either numeric id (legacy) or uid (Phase 3+). Prefer uid when
-    // provided, resolve to the numeric id and delegate to the existing
-    // service method — business logic is untouched.
-    let appointmentId = body.appointmentId;
-    if (body.appointmentUid) {
-      const apt = await this.appointmentRepository.findOne({
-        where: { uid: body.appointmentUid },
-        select: ['id'],
-      });
-      if (!apt) throw new BadRequestException('Wizyta nie istnieje');
-      appointmentId = apt.id;
+    if (!body.appointmentUid) {
+      throw new BadRequestException('Brak appointmentUid');
     }
-    if (!appointmentId) {
-      throw new BadRequestException('Brak appointmentId lub appointmentUid');
-    }
-    return this.stripeService.createPaymentIntent(appointmentId, userId);
+    return this.stripeService.createPaymentIntent(body.appointmentUid, userId);
   }
 
   @Post('verify-payment-intent')
@@ -82,7 +65,7 @@ export class StripeController {
 
   @Get('connect/quick-check')
   @ApiAuth({ summary: 'Szybkie sprawdzenie czy specjalista ma aktywne Stripe Connect' })
-  async connectQuickCheck(@CurrentUser('id') userId: number) {
+  async connectQuickCheck(@CurrentUser('id') userId: string) {
     return this.stripeService.quickCheckConnect(userId);
   }
 
@@ -90,7 +73,7 @@ export class StripeController {
   @ApiAuth({ summary: 'Utwórz AccountSession do wbudowanego onboardingu Connect' })
   @HttpCode(HttpStatus.OK)
   async createAccountSession(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @CurrentUser('email') email: string,
   ) {
     return this.stripeService.createAccountSession(userId, email);
@@ -99,7 +82,7 @@ export class StripeController {
   @Post('connect/refresh-status')
   @ApiAuth({ summary: 'Odśwież status konta Stripe Connect z API Stripe' })
   @HttpCode(HttpStatus.OK)
-  async refreshStatus(@CurrentUser('id') userId: number) {
+  async refreshStatus(@CurrentUser('id') userId: string) {
     await this.stripeService.refreshConnectStatus(userId);
     const status = await this.stripeService.getConnectAccountStatus(userId);
     const stripeAvail = status.stripeAvailableGrosze ?? 0;
@@ -110,7 +93,7 @@ export class StripeController {
   @Post('connect/onboard')
   @ApiAuth({ summary: 'Rozpocznij onboarding Stripe Connect dla specjalisty' })
   async connectOnboard(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @CurrentUser('email') email: string,
   ) {
     return this.stripeService.getOrCreateConnectAccount(userId, email);
@@ -118,7 +101,7 @@ export class StripeController {
 
   @Get('connect/status')
   @ApiAuth({ summary: 'Status konta Stripe Connect' })
-  async connectStatus(@CurrentUser('id') userId: number) {
+  async connectStatus(@CurrentUser('id') userId: string) {
     const status = await this.stripeService.getConnectAccountStatus(userId);
     const stripeAvail = status.stripeAvailableGrosze ?? 0;
     const stripePending = status.stripePendingGrosze ?? 0;
@@ -131,7 +114,7 @@ export class StripeController {
   @Throttle({ short: { ttl: 60_000, limit: 3 } })
   @HttpCode(HttpStatus.OK)
   async withdraw(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Body() body: { amountGrosze: number },
   ) {
     const withdrawal = await this.stripeService.createWithdrawal(
@@ -139,7 +122,7 @@ export class StripeController {
       body.amountGrosze,
     );
     return {
-      id: withdrawal.id,
+      uid: withdrawal.uid,
       amountGrosze: Number(withdrawal.amountGrosze),
       amountFormatted: `${(Number(withdrawal.amountGrosze) / 100).toFixed(2)} zł`,
       status: withdrawal.status,
@@ -151,7 +134,7 @@ export class StripeController {
   @Get('connect/withdrawals')
   @ApiAuth({ summary: 'Lista moich wypłat' })
   async getWithdrawals(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
@@ -162,7 +145,7 @@ export class StripeController {
     );
     return {
       withdrawals: result.withdrawals.map((w) => ({
-        id: w.id,
+        uid: w.uid,
         amountGrosze: Number(w.amountGrosze),
         amountFormatted: `${(Number(w.amountGrosze) / 100).toFixed(2)} zł`,
         status: w.status,

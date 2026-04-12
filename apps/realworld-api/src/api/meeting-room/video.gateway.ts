@@ -12,7 +12,7 @@ import { Logger } from '@nestjs/common';
 
 interface RoomParticipant {
   socketId: string;
-  userId: number;
+  userId: string;
   username: string;
 }
 
@@ -56,7 +56,7 @@ export class VideoGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('join-room')
   handleJoinRoom(
-    @MessageBody() data: { roomToken: string; userId: number; username: string },
+    @MessageBody() data: { roomToken: string; userId: string; username: string },
     @ConnectedSocket() client: Socket,
   ) {
     const { roomToken, userId, username } = data;

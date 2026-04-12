@@ -32,22 +32,20 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
 }
 
 export interface AvailabilityDto {
-  id: number;
+  uid: string;
   startsAt: string;
   endsAt: string;
 }
 
 export interface AppointmentDto {
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this over `id` for API calls. */
   uid: string;
-  wrozkaId: number;
-  clientId: number;
+  wrozkaId: string;
+  clientId: string;
   startsAt: string;
   durationMinutes: number;
   status: string;
   priceGrosze: number;
-  advertisementId: number;
+  advertisementId: string;
   advertisementTitle?: string;
   clientUsername?: string;
   wrozkaUsername?: string;
@@ -55,21 +53,13 @@ export interface AppointmentDto {
   rating?: number | null;
 }
 
-/**
- * Rate a completed appointment. Accepts either the new uid (preferred) or
- * the legacy numeric id — routes to the corresponding backend endpoint.
- */
 export async function apiRateAppointment(
   token: string,
-  uidOrId: string | number,
+  uid: string,
   rating: number,
   comment?: string,
 ): Promise<void> {
-  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
-  const path = isUid
-    ? `appointments/uid/${uidOrId}/rate`
-    : `appointments/${uidOrId}/rate`;
-  const res = await fetch(`${getApiBaseUrl()}/${path}`, {
+  const res = await fetch(`${getApiBaseUrl()}/appointments/uid/${uid}/rate`, {
     method: 'POST',
     headers: { Authorization: `Token ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ rating, comment: comment?.trim() || undefined }),
@@ -81,28 +71,19 @@ export async function apiRateAppointment(
 }
 
 export interface ReviewDto {
-  id: number;
+  uid: string;
   rating: number;
   comment: string | null;
   clientUsername: string;
   createdAt: string;
 }
 
-/**
- * Fetch reviews for a wizard. Accepts either the new uid (preferred) or the
- * legacy numeric id — auto-routes to the corresponding backend endpoint.
- */
 export async function apiGetWizardReviews(
-  wizardUidOrId: string | number,
+  wizardUid: string,
   page = 1,
   limit = 5,
 ): Promise<{ reviews: ReviewDto[]; total: number; pages: number }> {
-  const isUid =
-    typeof wizardUidOrId === 'string' && /^[0-9a-f]{8}-/i.test(wizardUidOrId);
-  const path = isUid
-    ? `appointments/reviews/uid/${wizardUidOrId}`
-    : `appointments/reviews/${wizardUidOrId}`;
-  return fetchApi(`${path}?page=${page}&limit=${limit}`);
+  return fetchApi(`appointments/reviews/uid/${wizardUid}?page=${page}&limit=${limit}`);
 }
 
 export async function apiGetMyAvailability(
@@ -125,7 +106,7 @@ export async function apiGetMyAvailability(
 export async function apiCreateAvailability(
   token: string,
   data: { startsAt: string; endsAt: string },
-): Promise<{ id: number; startsAt: string; endsAt: string }> {
+): Promise<{ uid: string; startsAt: string; endsAt: string }> {
   return fetchApi('availability', {
     method: 'POST',
     headers: {
@@ -135,8 +116,8 @@ export async function apiCreateAvailability(
   });
 }
 
-export async function apiDeleteAvailability(token: string, id: number): Promise<void> {
-  await fetchApi(`availability/${id}`, {
+export async function apiDeleteAvailability(token: string, uid: string): Promise<void> {
+  await fetchApi(`availability/${uid}`, {
     method: 'DELETE',
     headers: {
       Authorization: `Token ${token}`,

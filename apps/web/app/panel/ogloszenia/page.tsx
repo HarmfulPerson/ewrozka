@@ -98,7 +98,7 @@ export default function MojeOgloszeniaPage() {
         ) : (
           <div className="ogloszenia-list">
             {advertisements.map((ad) => (
-              <AdvertisementCard key={ad.id} ad={ad} onDelete={openDeleteModal} />
+              <AdvertisementCard key={ad.uid} ad={ad} onDelete={openDeleteModal} />
             ))}
           </div>
         )}

@@ -24,7 +24,7 @@ export class WizardApplicationService {
     password: string;
     bio: string;
     phone?: string;
-    topicIds?: number[];
+    topicIds?: string[];
     gender?: 'female' | 'male';
     referralCode?: string;
   }): Promise<{ id: string }> {

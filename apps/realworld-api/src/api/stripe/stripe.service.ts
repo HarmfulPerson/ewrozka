@@ -54,12 +54,12 @@ export class StripeService {
   }
 
   async createCheckoutSession(
-    appointmentId: number,
-    clientUserId: number,
+    appointmentId: string,
+    clientUserId: string,
     clientEmail: string,
   ): Promise<{ url: string }> {
     const appointment = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentId },
       relations: ['advertisement', 'client', 'wrozka'],
     });
 
@@ -103,12 +103,9 @@ export class StripeService {
         },
       ],
       metadata: {
-        appointmentId: String(appointmentId),
-        // Phase 3 of the uid migration: carry both so future consumers can
-        // correlate without touching the PK.
         appointmentUid: appointment.uid,
-        clientUserId: String(clientUserId),
-        wrozkaId: String(appointment.wrozkaId),
+        clientUserId,
+        wrozkaId: appointment.wrozkaId,
         priceGrosze: String(priceGrosze),
         platformFeePercent: String(platformFeePercentage),
         isDestinationCharge: hasActiveConnect ? 'true' : 'false',
@@ -138,9 +135,9 @@ export class StripeService {
     return { url: session.url! };
   }
 
-  async createPaymentIntent(appointmentId: number, clientUserId: number): Promise<{ clientSecret: string }> {
+  async createPaymentIntent(appointmentId: string, clientUserId: string): Promise<{ clientSecret: string }> {
     const appointment = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentId },
       relations: ['advertisement', 'wrozka'],
     });
 
@@ -163,12 +160,9 @@ export class StripeService {
       currency: this.currency,
       payment_method_types: this.paymentMethods,
       metadata: {
-        appointmentId: String(appointmentId),
-        // Phase 3 of the uid migration: carry the uid alongside the numeric
-        // id so future consumers can correlate without touching the PK.
         appointmentUid: appointment.uid,
-        clientUserId: String(clientUserId),
-        wrozkaId: String(appointment.wrozkaId),
+        clientUserId,
+        wrozkaId: appointment.wrozkaId,
         priceGrosze: String(priceGrosze),
         platformFeePercent: String(platformFeePercentage),
         isDestinationCharge: hasActiveConnect ? 'true' : 'false',
@@ -191,7 +185,7 @@ export class StripeService {
     return { clientSecret: intent.client_secret! };
   }
 
-  async verifyPaymentIntent(paymentIntentId: string): Promise<{ success: boolean; appointmentId?: number }> {
+  async verifyPaymentIntent(paymentIntentId: string): Promise<{ success: boolean; appointmentUid?: string }> {
     const intent = await this.stripe.paymentIntents.retrieve(paymentIntentId);
 
     this.logger.log(`verifyPaymentIntent: ${paymentIntentId} → status=${intent?.status}`);
@@ -206,54 +200,54 @@ export class StripeService {
       return this.featuredService.verifyFeaturedPaymentIntent(paymentIntentId);
     }
 
-    const appointmentId = parseInt(intent.metadata?.appointmentId || '0', 10);
-    if (!appointmentId) {
-      this.logger.error(`verifyPaymentIntent: brak appointmentId w metadanych dla ${paymentIntentId}`);
+    const appointmentUid = intent.metadata?.appointmentUid || '';
+    if (!appointmentUid) {
+      this.logger.error(`verifyPaymentIntent: brak appointmentUid w metadanych dla ${paymentIntentId}`);
       return { success: false };
     }
 
     const appointment = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentUid },
     });
     if (!appointment) {
-      this.logger.error(`verifyPaymentIntent: wizyta ${appointmentId} nie znaleziona`);
+      this.logger.error(`verifyPaymentIntent: wizyta ${appointmentUid} nie znaleziona`);
       return { success: false };
     }
 
     if (appointment.status === 'paid') {
-      this.logger.log(`verifyPaymentIntent: wizyta ${appointmentId} już opłacona`);
-      return { success: true, appointmentId };
+      this.logger.log(`verifyPaymentIntent: wizyta ${appointmentUid} już opłacona`);
+      return { success: true, appointmentUid };
     }
 
-    this.logger.log(`verifyPaymentIntent: oznaczanie wizyty ${appointmentId} jako opłaconej`);
+    this.logger.log(`verifyPaymentIntent: oznaczanie wizyty ${appointmentUid} jako opłaconej`);
 
     try {
       await this.handlePaymentIntentSucceeded(intent);
     } catch (err) {
-      this.logger.error(`verifyPaymentIntent: handlePaymentIntentSucceeded nie powiodło się dla ${appointmentId}`, err);
+      this.logger.error(`verifyPaymentIntent: handlePaymentIntentSucceeded nie powiodło się dla ${appointmentUid}`, err);
       // Fallback — zaktualizuj status bezpośrednio nawet jeśli processPayment zawiedzie
       appointment.status = 'paid';
       await this.appointmentRepository.save(appointment);
-      await this.meetingRoomService.createForAppointment(appointmentId).catch(() => {});
+      await this.meetingRoomService.createForAppointment(appointmentUid).catch(() => {});
     }
 
-    return { success: true, appointmentId };
+    return { success: true, appointmentUid };
   }
 
-  async verifySession(sessionId: string): Promise<{ success: boolean; appointmentId?: number }> {
+  async verifySession(sessionId: string): Promise<{ success: boolean; appointmentUid?: string }> {
     const session = await this.stripe.checkout.sessions.retrieve(sessionId);
 
     if (!session || session.payment_status !== 'paid') {
       return { success: false };
     }
 
-    const appointmentId = parseInt(session.metadata?.appointmentId || '0', 10);
-    if (!appointmentId) {
+    const appointmentUid = session.metadata?.appointmentUid || '';
+    if (!appointmentUid) {
       return { success: false };
     }
 
     const appointment = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentUid },
     });
 
     if (!appointment) {
@@ -261,11 +255,11 @@ export class StripeService {
     }
 
     if (appointment.status === 'paid') {
-      this.logger.log(`Wizyta ${appointmentId} już oznaczona jako opłacona (verify-session)`);
-      return { success: true, appointmentId };
+      this.logger.log(`Wizyta ${appointmentUid} już oznaczona jako opłacona (verify-session)`);
+      return { success: true, appointmentUid };
     }
 
-    const wrozkaId = parseInt(session.metadata?.wrozkaId || '0', 10);
+    const wrozkaId = session.metadata?.wrozkaId || '';
     const priceGrosze = parseInt(session.metadata?.priceGrosze || '0', 10);
     const isDestinationCharge = session.metadata?.isDestinationCharge === 'true';
     const feePercent = session.metadata?.platformFeePercent
@@ -273,20 +267,20 @@ export class StripeService {
       : undefined;
 
     if (isDestinationCharge) {
-      await this.paymentService.recordDestinationCharge(wrozkaId, appointmentId, priceGrosze, feePercent);
-      this.logger.log(`Destination charge zarejestrowane dla wizyty ${appointmentId} (verify-session)`);
+      await this.paymentService.recordDestinationCharge(wrozkaId, appointmentUid, priceGrosze, feePercent);
+      this.logger.log(`Destination charge zarejestrowane dla wizyty ${appointmentUid} (verify-session)`);
     } else {
-      await this.paymentService.processPayment(wrozkaId, appointmentId, priceGrosze, feePercent);
+      await this.paymentService.processPayment(wrozkaId, appointmentUid, priceGrosze, feePercent);
     }
 
     appointment.status = 'paid';
     await this.appointmentRepository.save(appointment);
 
-    await this.meetingRoomService.createForAppointment(appointmentId);
+    await this.meetingRoomService.createForAppointment(appointmentUid);
 
     // Powiadom wróżkę o opłaceniu spotkania
     const paidAppVerify = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentUid },
       relations: ['advertisement', 'client'],
     });
     if (paidAppVerify) {
@@ -295,14 +289,14 @@ export class StripeService {
           wizardId: wrozkaId,
           clientName: paidAppVerify.client?.username ?? 'Klient',
           advertisementTitle: paidAppVerify.advertisement?.title ?? 'Konsultacja',
-          appointmentId,
+          appointmentId: appointmentUid,
           startsAt: paidAppVerify.startsAt?.toISOString?.() ?? '',
         }),
       );
     }
 
-    this.logger.log(`Wizyta ${appointmentId} opłacona pomyślnie przez verify-session`);
-    return { success: true, appointmentId };
+    this.logger.log(`Wizyta ${appointmentUid} opłacona pomyślnie przez verify-session`);
+    return { success: true, appointmentUid };
   }
 
   async handleWebhook(req: any): Promise<void> {
@@ -366,7 +360,7 @@ export class StripeService {
 
   // ── Stripe Connect ──────────────────────────────────────────────────
 
-  async createAccountSession(userId: number, email: string): Promise<{ clientSecret: string; accountId: string }> {
+  async createAccountSession(userId: string, email: string): Promise<{ clientSecret: string; accountId: string }> {
     // Upewnij się że konto Connect istnieje
     let connectAccount = await this.connectAccountRepository.findOne({
       where: { userId },
@@ -413,7 +407,7 @@ export class StripeService {
     };
   }
 
-  async refreshConnectStatus(userId: number): Promise<void> {
+  async refreshConnectStatus(userId: string): Promise<void> {
     const connectAccount = await this.connectAccountRepository.findOne({
       where: { userId },
     });
@@ -439,7 +433,7 @@ export class StripeService {
   }
 
   async getOrCreateConnectAccount(
-    userId: number,
+    userId: string,
     email: string,
   ): Promise<{ onboardingUrl: string; alreadyOnboarded: boolean }> {
     let connectAccount = await this.connectAccountRepository.findOne({
@@ -494,7 +488,7 @@ export class StripeService {
     return { onboardingUrl: accountLink.url, alreadyOnboarded: false };
   }
 
-  async quickCheckConnect(userId: number): Promise<{
+  async quickCheckConnect(userId: string): Promise<{
     connected: boolean;
     onboardingCompleted: boolean;
     payoutsEnabled: boolean;
@@ -519,7 +513,7 @@ export class StripeService {
     };
   }
 
-  async getConnectAccountStatus(userId: number): Promise<{
+  async getConnectAccountStatus(userId: string): Promise<{
     connected: boolean;
     onboardingCompleted: boolean;
     payoutsEnabled: boolean;
@@ -577,7 +571,7 @@ export class StripeService {
     };
   }
 
-  async createWithdrawal(userId: number, amountGrosze: number): Promise<WithdrawalEntity> {
+  async createWithdrawal(userId: string, amountGrosze: number): Promise<WithdrawalEntity> {
     if (amountGrosze < 500) {
       throw new BadRequestException('Minimalna kwota wypłaty to 5 zł');
     }
@@ -649,7 +643,7 @@ export class StripeService {
   }
 
   async getWithdrawals(
-    userId: number,
+    userId: string,
     limit = 20,
     offset = 0,
   ): Promise<{ withdrawals: WithdrawalEntity[]; total: number }> {
@@ -666,7 +660,7 @@ export class StripeService {
 
   /** Nie-prod: Top-up + transfer – środki od razu available u platformy i wróżki */
   private async ensureFundsAvailableNonProd(
-    wrozkaId: number,
+    wrozkaId: string,
     totalAmountGrosze: number,
     platformFeePercent?: number,
   ): Promise<void> {
@@ -718,7 +712,7 @@ export class StripeService {
       const guestBookingId = intent.metadata.guestBookingId;
       if (guestBookingId) {
         await this.guestBookingService.handlePaymentSuccessById(guestBookingId);
-        const wizardId = parseInt(intent.metadata?.wizardId || '0', 10);
+        const wizardId = intent.metadata?.wizardId || '';
         const priceGrosze = parseInt(intent.metadata?.priceGrosze || '0', 10);
         const isDestCharge = intent.metadata?.isDestinationCharge === 'true';
         const feePercent = intent.metadata?.platformFeePercent
@@ -727,9 +721,9 @@ export class StripeService {
 
         if (wizardId && priceGrosze) {
           if (isDestCharge) {
-            await this.paymentService.recordDestinationCharge(wizardId, 0, priceGrosze, feePercent);
+            await this.paymentService.recordDestinationCharge(wizardId, null, priceGrosze, feePercent);
           } else {
-            await this.paymentService.processPayment(wizardId, 0, priceGrosze, feePercent);
+            await this.paymentService.processPayment(wizardId, null, priceGrosze, feePercent);
           }
           await this.ensureFundsAvailableNonProd(wizardId, priceGrosze, feePercent);
         }
@@ -738,44 +732,44 @@ export class StripeService {
       return;
     }
 
-    const appointmentId = parseInt(intent.metadata?.appointmentId || '0', 10);
-    const wrozkaId = parseInt(intent.metadata?.wrozkaId || '0', 10);
+    const appointmentUid = intent.metadata?.appointmentUid || '';
+    const wrozkaId = intent.metadata?.wrozkaId || '';
     const priceGrosze = parseInt(intent.metadata?.priceGrosze || '0', 10);
     const isDestinationCharge = intent.metadata?.isDestinationCharge === 'true';
     const feePercent = intent.metadata?.platformFeePercent
       ? parseInt(intent.metadata.platformFeePercent, 10)
       : undefined;
 
-    if (!appointmentId) {
-      this.logger.warn('payment_intent.succeeded: brak appointmentId w metadanych — pomijam');
+    if (!appointmentUid) {
+      this.logger.warn('payment_intent.succeeded: brak appointmentUid w metadanych — pomijam');
       return;
     }
 
     const appointment = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentUid },
     });
     if (!appointment) {
-      this.logger.error(`payment_intent.succeeded: wizyta ${appointmentId} nie znaleziona`);
+      this.logger.error(`payment_intent.succeeded: wizyta ${appointmentUid} nie znaleziona`);
       return;
     }
     if (appointment.status === 'paid') {
-      this.logger.warn(`payment_intent.succeeded: wizyta ${appointmentId} już opłacona`);
+      this.logger.warn(`payment_intent.succeeded: wizyta ${appointmentUid} już opłacona`);
       return;
     }
 
     if (isDestinationCharge) {
-      await this.paymentService.recordDestinationCharge(wrozkaId, appointmentId, priceGrosze, feePercent);
+      await this.paymentService.recordDestinationCharge(wrozkaId, appointmentUid, priceGrosze, feePercent);
     } else {
-      await this.paymentService.processPayment(wrozkaId, appointmentId, priceGrosze, feePercent);
+      await this.paymentService.processPayment(wrozkaId, appointmentUid, priceGrosze, feePercent);
     }
 
     appointment.status = 'paid';
     await this.appointmentRepository.save(appointment);
-    await this.meetingRoomService.createForAppointment(appointmentId);
+    await this.meetingRoomService.createForAppointment(appointmentUid);
 
     // Powiadom wróżkę o opłaceniu spotkania
     const paidAppointment = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentUid },
       relations: ['advertisement', 'client'],
     });
     if (paidAppointment) {
@@ -784,7 +778,7 @@ export class StripeService {
           wizardId: wrozkaId,
           clientName: paidAppointment.client?.username ?? 'Klient',
           advertisementTitle: paidAppointment.advertisement?.title ?? 'Konsultacja',
-          appointmentId,
+          appointmentId: appointmentUid,
           startsAt: paidAppointment.startsAt?.toISOString?.() ?? '',
         }),
       );
@@ -792,14 +786,14 @@ export class StripeService {
 
     await this.ensureFundsAvailableNonProd(wrozkaId, priceGrosze, feePercent);
 
-    this.logger.log(`Wizyta ${appointmentId} opłacona przez payment_intent.succeeded`);
+    this.logger.log(`Wizyta ${appointmentUid} opłacona przez payment_intent.succeeded`);
   }
 
   private async handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // ── Rezerwacja gościa ───────────────────────────────────────────────────
     if (session.metadata?.bookingType === 'guest') {
       await this.guestBookingService.handlePaymentSuccess(session.id);
-      const wizardId = parseInt(session.metadata?.wizardId || '0', 10);
+      const wizardId = session.metadata?.wizardId || '';
       const priceGrosze = parseInt(session.metadata?.priceGrosze || '0', 10);
       const isDestCharge = session.metadata?.isDestinationCharge === 'true';
       const feePercent = session.metadata?.platformFeePercent
@@ -808,9 +802,9 @@ export class StripeService {
 
       if (wizardId && priceGrosze) {
         if (isDestCharge) {
-          await this.paymentService.recordDestinationCharge(wizardId, 0, priceGrosze, feePercent);
+          await this.paymentService.recordDestinationCharge(wizardId, null, priceGrosze, feePercent);
         } else {
-          await this.paymentService.processPayment(wizardId, 0, priceGrosze, feePercent);
+          await this.paymentService.processPayment(wizardId, null, priceGrosze, feePercent);
         }
         await this.ensureFundsAvailableNonProd(wizardId, priceGrosze, feePercent);
       }
@@ -819,7 +813,7 @@ export class StripeService {
 
     // ── Wyróżnienie wróżki ──────────────────────────────────────────────────
     if (session.metadata?.type === 'featured') {
-      const wizardId = parseInt(session.metadata.wizardId || '0', 10);
+      const wizardId = session.metadata.wizardId || '';
       const durationHours = parseInt(session.metadata.durationHours || '6', 10);
       const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null;
 
@@ -834,38 +828,38 @@ export class StripeService {
     }
 
     // ── Płatność za wizytę ──────────────────────────────────────────────────
-    const appointmentId = parseInt(session.metadata?.appointmentId || '0', 10);
-    const wrozkaId = parseInt(session.metadata?.wrozkaId || '0', 10);
+    const appointmentUid = session.metadata?.appointmentUid || '';
+    const wrozkaId = session.metadata?.wrozkaId || '';
     const priceGrosze = parseInt(session.metadata?.priceGrosze || '0', 10);
     const isDestinationCharge = session.metadata?.isDestinationCharge === 'true';
     const feePercent = session.metadata?.platformFeePercent
       ? parseInt(session.metadata.platformFeePercent, 10)
       : undefined;
 
-    if (!appointmentId) {
-      this.logger.error('Brak appointmentId w metadanych webhooka');
+    if (!appointmentUid) {
+      this.logger.error('Brak appointmentUid w metadanych webhooka');
       return;
     }
 
     const appointment = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentUid },
     });
 
     if (!appointment) {
-      this.logger.error(`Wizyta ${appointmentId} nie znaleziona`);
+      this.logger.error(`Wizyta ${appointmentUid} nie znaleziona`);
       return;
     }
 
     if (appointment.status === 'paid') {
-      this.logger.warn(`Wizyta ${appointmentId} już opłacona`);
+      this.logger.warn(`Wizyta ${appointmentUid} już opłacona`);
       return;
     }
 
     if (isDestinationCharge) {
-      await this.paymentService.recordDestinationCharge(wrozkaId, appointmentId, priceGrosze, feePercent);
-      this.logger.log(`Destination charge zarejestrowane dla wizyty ${appointmentId}`);
+      await this.paymentService.recordDestinationCharge(wrozkaId, appointmentUid, priceGrosze, feePercent);
+      this.logger.log(`Destination charge zarejestrowane dla wizyty ${appointmentUid}`);
     } else {
-      await this.paymentService.processPayment(wrozkaId, appointmentId, priceGrosze, feePercent);
+      await this.paymentService.processPayment(wrozkaId, appointmentUid, priceGrosze, feePercent);
     }
 
     // Update appointment status
@@ -873,11 +867,11 @@ export class StripeService {
     await this.appointmentRepository.save(appointment);
 
     // Create meeting room
-    await this.meetingRoomService.createForAppointment(appointmentId);
+    await this.meetingRoomService.createForAppointment(appointmentUid);
 
     // Powiadom wróżkę o opłaceniu spotkania
     const paidAppCheckout = await this.appointmentRepository.findOne({
-      where: { id: appointmentId },
+      where: { uid: appointmentUid },
       relations: ['advertisement', 'client'],
     });
     if (paidAppCheckout) {
@@ -886,7 +880,7 @@ export class StripeService {
           wizardId: wrozkaId,
           clientName: paidAppCheckout.client?.username ?? 'Klient',
           advertisementTitle: paidAppCheckout.advertisement?.title ?? 'Konsultacja',
-          appointmentId,
+          appointmentId: appointmentUid,
           startsAt: paidAppCheckout.startsAt?.toISOString?.() ?? '',
         }),
       );
@@ -894,6 +888,6 @@ export class StripeService {
 
     await this.ensureFundsAvailableNonProd(wrozkaId, priceGrosze, feePercent);
 
-    this.logger.log(`Wizyta ${appointmentId} opłacona pomyślnie przez Stripe`);
+    this.logger.log(`Wizyta ${appointmentUid} opłacona pomyślnie przez Stripe`);
   }
 }

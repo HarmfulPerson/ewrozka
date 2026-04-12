@@ -33,7 +33,7 @@ export class ArticleResolver {
     description: 'Get an article by slug',
   })
   async get(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Args() { slug }: SlugArgs,
     @Info() info: GraphQLResolveInfo,
   ): Promise<Article> {
@@ -53,7 +53,7 @@ export class ArticleResolver {
 
   @Mutation(() => Article, { name: 'createArticle' })
   async create(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Args('input') input: CreateArticleInput,
     @Info() info: GraphQLResolveInfo,
   ): Promise<Article> {
@@ -68,7 +68,7 @@ export class ArticleResolver {
 
   @Mutation(() => Article, { name: 'updateArticle' })
   async update(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Args('slug') slug: string,
     @Args('input') input: UpdateArticleInput,
     @Info() info: GraphQLResolveInfo,
@@ -94,11 +94,11 @@ export class ArticleResolver {
 
   @ResolveField(() => Profile)
   async author(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Parent() article: Article,
   ): Promise<Profile> {
     if (article.author) return article.author;
-    this.logger.log('Getting author for article', article.id);
+    this.logger.log('Getting author for article', article.uid);
     const author = await this.dataLoader
       .getAuthorLoader()
       .load(article.authorId);
@@ -112,26 +112,26 @@ export class ArticleResolver {
   @ResolveField(() => Boolean)
   async favorited(
     @Parent() article: Article,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
   ) {
     if (article.favorited !== undefined) return article.favorited;
-    this.logger.log('Getting favorited for article', article.id);
+    this.logger.log('Getting favorited for article', article.uid);
     const { favorited } = await this.dataLoader
       .getFavoritesLoader(userId)
-      .load(article.id);
+      .load(article.uid);
     return favorited;
   }
 
   @ResolveField(() => Number)
   async favoritesCount(
     @Parent() article: Article,
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
   ) {
     if (article.favoritesCount !== undefined) return article.favoritesCount;
-    this.logger.log('Getting favorites count for article', article.id);
+    this.logger.log('Getting favorites count for article', article.uid);
     const { count } = await this.dataLoader
       .getFavoritesLoader(userId)
-      .load(article.id);
+      .load(article.uid);
     return count;
   }
 }

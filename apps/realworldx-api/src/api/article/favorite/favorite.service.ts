@@ -16,7 +16,7 @@ export class FavoriteService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  async create(slug: string, userId: number): Promise<ArticleResDto> {
+  async create(slug: string, userId: string): Promise<ArticleResDto> {
     const { user, article } = await this.validateAndGetUserArticle(
       slug,
       userId,
@@ -24,7 +24,7 @@ export class FavoriteService {
 
     // Check if the user has already favorited the article
     const hasFavorited = article.favoritedBy.some(
-      (favoritedBy) => favoritedBy.id === user.id,
+      (favoritedBy) => favoritedBy.uid === user.uid,
     );
 
     if (!hasFavorited) {
@@ -42,7 +42,7 @@ export class FavoriteService {
     };
   }
 
-  async delete(slug: string, userId: number): Promise<ArticleResDto> {
+  async delete(slug: string, userId: string): Promise<ArticleResDto> {
     const { user, article } = await this.validateAndGetUserArticle(
       slug,
       userId,
@@ -50,7 +50,7 @@ export class FavoriteService {
 
     // Remove the user from the list of favorited users
     article.favoritedBy = article.favoritedBy.filter(
-      (favoritedBy) => favoritedBy.id !== user.id,
+      (favoritedBy) => favoritedBy.uid !== user.uid,
     );
 
     await this.articleRepository.save(article);
@@ -67,10 +67,10 @@ export class FavoriteService {
 
   private async validateAndGetUserArticle(
     slug: string,
-    userId: number,
+    userId: string,
   ): Promise<{ user: UserEntity; article: ArticleEntity }> {
     const user = await this.userRepository.findOneOrFail({
-      where: { id: userId },
+      where: { uid: userId },
       relations: ['following'],
     });
     const article = await this.articleRepository.findOne({

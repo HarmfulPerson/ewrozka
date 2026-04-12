@@ -49,7 +49,7 @@ export class FeaturedService {
    * Jeśli wyróżnionych jest <= slots, zwraca wszystkie.
    * Jeśli więcej – dzieli na grupy i co `rotationSeconds` pokazuje kolejną.
    */
-  async getActiveFeaturedWizardIds(): Promise<number[]> {
+  async getActiveFeaturedWizardIds(): Promise<string[]> {
     const { slots, rotationSeconds } = this.getFeaturedConfig();
     const now = new Date();
 
@@ -74,7 +74,7 @@ export class FeaturedService {
   /**
    * Sprawdza czy wróżka jest aktualnie wyróżniona (ma aktywny, niewygasły rekord).
    */
-  async getWizardFeaturedStatus(userId: number): Promise<{
+  async getWizardFeaturedStatus(userId: string): Promise<{
     isFeatured: boolean;
     expiresAt: Date | null;
   }> {
@@ -98,11 +98,11 @@ export class FeaturedService {
    * Używany przez inline Payment Element (ten sam modal co płatności za wizyty).
    */
   async createFeaturedPaymentIntent(
-    wizardId: number,
+    wizardId: string,
     wizardEmail: string,
   ): Promise<{ clientSecret: string }> {
     const user = await this.userRepo.findOne({
-      where: { id: wizardId },
+      where: { uid: wizardId },
       relations: ['roles'],
     });
 
@@ -154,7 +154,7 @@ export class FeaturedService {
       return { success: false };
     }
 
-    const wizardId = parseInt(intent.metadata.wizardId || '0', 10);
+    const wizardId = intent.metadata.wizardId || '';
     const durationHours = parseInt(intent.metadata.durationHours || '6', 10);
 
     if (!wizardId) return { success: false };
@@ -167,7 +167,7 @@ export class FeaturedService {
    * Wywoływane przez webhook Stripe po pomyślnym opłaceniu wyróżnienia.
    */
   async activateFeatured(
-    wizardId: number,
+    wizardId: string,
     stripePaymentIntentId: string | null,
     durationHours: number,
   ): Promise<void> {

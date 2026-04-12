@@ -153,7 +153,7 @@ export function WizardsTable({
         <tbody>
           {data.map((row) => (
             <tr
-              key={row.id}
+              key={row.uid}
               className="aw-table__row"
               onClick={() => onRowClick(row.uid)}
             >

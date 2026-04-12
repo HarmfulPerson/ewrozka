@@ -23,7 +23,7 @@ import {
 export type UpcomingMeetingItem =
   | (AppointmentDto & { isGuest?: false })
   | {
-      id: string;
+      uid: string;
       startsAt: string;
       durationMinutes: number;
       clientUsername?: string;
@@ -66,11 +66,11 @@ export function useWizardDashboard() {
         apiGetWizardUnifiedRequests(user.token, { status: 'pending', limit: 3, sortBy: 'createdAt', order: 'DESC' }),
         apiGetWizardUnifiedRequests(user.token, { status: 'accepted', limit: 3, sortBy: 'createdAt', order: 'DESC' }),
       ]);
-      const guestAsAppointments: Array<{ id: string; startsAt: string; durationMinutes: number; clientUsername?: string; meetingToken?: null; isGuest: true; guestBookingId: string }> =
+      const guestAsAppointments: Array<{ uid: string; startsAt: string; durationMinutes: number; clientUsername?: string; meetingToken?: null; isGuest: true; guestBookingId: string }> =
         (guestRes.bookings || [])
           .filter((b) => ['paid', 'completed'].includes(b.status))
           .map((b) => ({
-            id: `guest-${b.id}`,
+            uid: `guest-${b.id}`,
             startsAt: b.scheduledAt,
             durationMinutes: b.durationMinutes,
             clientUsername: b.guestName,
@@ -120,14 +120,13 @@ export function useWizardDashboard() {
 
   const handleAccept = async (item: UnifiedRequestDto) => {
     if (!user) return;
-    setProcessingId(item.id);
+    setProcessingId(item.uid);
     try {
       if (item.kind === 'regular') {
-        // Phase 3: pass the meeting_request uid so the backend routes to the
-        // /meeting-requests/uid/:uid/accept endpoint.
         await apiAcceptMeetingRequest(user.token, item.uid);
       } else {
-        await apiAcceptGuestBooking(user.token, item.id);
+        // For guests, item.uid is already guest_booking.id (uuid).
+        await apiAcceptGuestBooking(user.token, item.uid);
       }
       toast.success('Wniosek zaakceptowany!');
       notifyChanged();

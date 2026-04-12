@@ -1,7 +1,7 @@
 import { EmailFieldOptional, StringFieldOptional } from '@repo/api';
 import { lowerCaseTransformer } from '@repo/nest-common';
 import { Transform } from 'class-transformer';
-import { IsArray, IsInt, IsOptional } from 'class-validator';
+import { IsArray, IsOptional, IsUUID } from 'class-validator';
 
 export class UpdateUserReqDto {
   @StringFieldOptional()
@@ -27,9 +27,9 @@ export class UpdateUserReqDto {
   @IsOptional()
   readonly gender?: 'female' | 'male';
 
-  /** ID specjalizacji (topics) dla wróżek */
+  /** UUID specjalizacji (topics) dla wróżek */
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  readonly topicIds?: number[];
+  @IsUUID('4', { each: true })
+  readonly topicIds?: string[];
 }

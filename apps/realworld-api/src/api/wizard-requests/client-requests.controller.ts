@@ -12,7 +12,7 @@ export class ClientRequestsController {
   @Get('requests')
   @ApiAuth({ summary: 'Unified list of all requests/appointments for client' })
   async list(
-    @CurrentUser('id') clientId: number,
+    @CurrentUser('id') clientId: string,
     @Query('status') status?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,

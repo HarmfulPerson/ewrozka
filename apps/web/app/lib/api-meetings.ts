@@ -30,14 +30,12 @@ async function fetchApi(endpoint: string, options?: RequestInit) {
 }
 
 export interface MeetingRequestDto {
-  id: number;
-  /** Stable non-sequential external identifier. Prefer this over `id` in URLs. */
   uid: string;
-  advertisementId: number;
+  advertisementId: string;
   advertisementTitle?: string;
-  clientId?: number;
+  clientId?: string;
   clientUsername?: string;
-  wrozkaId?: number;
+  wrozkaId?: string;
   wrozkaUsername?: string;
   requestedStartsAt: string | null;
   preferredDate?: string | null;
@@ -45,7 +43,7 @@ export interface MeetingRequestDto {
   status: string;
   createdAt?: string;
   appointment?: {
-    appointmentId: number;
+    appointmentUid: string;
     status: string;
     startsAt: string;
     meetingToken: string | null;
@@ -55,13 +53,11 @@ export interface MeetingRequestDto {
 export async function apiCreateMeetingRequest(
   token: string,
   data: {
-    /** Prefer advertisementUid. Kept for legacy callers during the migration. */
-    advertisementId?: number;
-    advertisementUid?: string;
+    advertisementUid: string;
     requestedStartsAt: string;
     message?: string;
   }
-): Promise<{ id: number; requestedStartsAt: string | null; message: string }> {
+): Promise<{ uid: string; requestedStartsAt: string | null; message: string }> {
   return fetchApi('meeting-requests', {
     method: 'POST',
     headers: {
@@ -107,20 +103,11 @@ export async function apiGetMyClientRequests(
   });
 }
 
-/**
- * Accept a meeting request. Accepts either the new uid (preferred) or the
- * legacy numeric id — routes to the corresponding backend endpoint. Once
- * every caller migrates to uid the legacy branch can be deleted.
- */
 export async function apiAcceptMeetingRequest(
   token: string,
-  uidOrId: string | number,
-): Promise<{ appointmentId: number; startsAt: string; status: string }> {
-  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
-  const path = isUid
-    ? `meeting-requests/uid/${uidOrId}/accept`
-    : `meeting-requests/${uidOrId}/accept`;
-  return fetchApi(path, {
+  uid: string,
+): Promise<{ appointmentUid: string; startsAt: string; status: string }> {
+  return fetchApi(`meeting-requests/uid/${uid}/accept`, {
     method: 'PATCH',
     headers: {
       Authorization: `Token ${token}`,
@@ -130,14 +117,10 @@ export async function apiAcceptMeetingRequest(
 
 export async function apiRejectMeetingRequest(
   token: string,
-  uidOrId: string | number,
+  uid: string,
   reason?: string,
 ): Promise<{ status: string }> {
-  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
-  const path = isUid
-    ? `meeting-requests/uid/${uidOrId}/reject`
-    : `meeting-requests/${uidOrId}/reject`;
-  return fetchApi(path, {
+  return fetchApi(`meeting-requests/uid/${uid}/reject`, {
     method: 'PATCH',
     headers: {
       Authorization: `Token ${token}`,
@@ -149,11 +132,9 @@ export async function apiRejectMeetingRequest(
 
 export async function apiPayForAppointment(
   token: string,
-  uidOrId: string | number,
+  uid: string,
 ): Promise<{ url: string }> {
-  const isUid = typeof uidOrId === 'string' && /^[0-9a-f]{8}-/i.test(uidOrId);
-  const path = isUid ? `appointments/uid/${uidOrId}/pay` : `appointments/${uidOrId}/pay`;
-  return fetchApi(path, {
+  return fetchApi(`appointments/uid/${uid}/pay`, {
     method: 'POST',
     headers: {
       Authorization: `Token ${token}`,
@@ -179,9 +160,7 @@ export interface GuestBookingDto {
 }
 
 export async function apiCreateGuestBooking(data: {
-  /** Prefer advertisementUid. Kept for legacy callers during the migration. */
-  advertisementId?: number;
-  advertisementUid?: string;
+  advertisementUid: string;
   guestName: string;
   guestEmail: string;
   guestPhone?: string;
@@ -280,7 +259,6 @@ export async function apiGetWizardGuestBookingMeetingRoom(
 // ── Unified wizard requests ────────────────────────────────────────────────
 
 export interface UnifiedRequestDto {
-  id: string;
   /** Stable external identifier. For kind='regular' → meeting_request uid; for kind='guest' → guest_booking id (already uuid). */
   uid: string;
   /** uid of the linked appointment, if one exists. */
@@ -294,9 +272,8 @@ export interface UnifiedRequestDto {
   clientEmail: string | null;
   clientPhone: string | null;
   advertisementTitle: string | null;
-  advertisementId: number | null;
+  advertisementId: string | null;
   rejectionReason: string | null;
-  appointmentId: number | null;
   appointmentStatus: string | null;
   appointmentStartsAt: string | null;
   meetingToken: string | null;
@@ -323,7 +300,6 @@ export async function apiGetWizardUnifiedRequests(
 // ── Client unified requests ────────────────────────────────────────────────
 
 export interface ClientRequestDto {
-  id: string;
   /** Stable external identifier. For kind='request' → meeting_request uid; for kind='appointment' → appointment uid. */
   uid: string;
   /** uid of the linked appointment. Equals `uid` for kind='appointment', null for kind='request'. */
@@ -335,9 +311,8 @@ export interface ClientRequestDto {
   message: string | null;
   wrozkaUsername: string | null;
   advertisementTitle: string | null;
-  advertisementId: number | null;
+  advertisementId: string | null;
   rejectionReason: string | null;
-  appointmentId: number | null;
   meetingToken: string | null;
   durationMinutes: number | null;
   priceGrosze: number | null;

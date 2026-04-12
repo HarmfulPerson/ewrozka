@@ -5,7 +5,7 @@ import { NotificationType, CreateNotificationPayload } from '../notification-typ
  * Wywoływane przez CRON np. 1h lub 15min przed spotkaniem.
  */
 export function buildMeetingReminderNotification(opts: {
-  userId: number;
+  userId: string;
   otherPartyName: string;
   advertisementTitle: string;
   startsAt: string;

@@ -28,9 +28,9 @@ interface ClientPastMeetingsProps {
 export function ClientPastMeetings({ token }: ClientPastMeetingsProps) {
   const [appointments, setAppointments] = useState<AppointmentDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hoverRating, setHoverRating] = useState<Record<number, number>>({});
-  const [submittingRating, setSubmittingRating] = useState<number | null>(null);
-  const [pendingRating, setPendingRating] = useState<Record<number, { stars: number; comment: string }>>({});
+  const [hoverRating, setHoverRating] = useState<Record<string, number>>({});
+  const [submittingRating, setSubmittingRating] = useState<string | null>(null);
+  const [pendingRating, setPendingRating] = useState<Record<string, { stars: number; comment: string }>>({});
 
   const fetchData = useCallback(() => {
     setLoading(true);
@@ -45,20 +45,20 @@ export function ClientPastMeetings({ token }: ClientPastMeetingsProps) {
   const handleSelectStar = (apt: AppointmentDto, stars: number) => {
     setPendingRating(prev => ({
       ...prev,
-      [apt.id]: { stars, comment: prev[apt.id]?.comment ?? '' },
+      [apt.uid]: { stars, comment: prev[apt.uid]?.comment ?? '' },
     }));
   };
 
   const handleSubmitRating = async (apt: AppointmentDto) => {
-    const pending = pendingRating[apt.id];
+    const pending = pendingRating[apt.uid];
     if (!pending) return;
-    setSubmittingRating(apt.id);
+    setSubmittingRating(apt.uid);
     try {
       // Phase 3: rate by uid.
       await apiRateAppointment(token, apt.uid, pending.stars, pending.comment || undefined);
       toast.success(`Oceniono na ${pending.stars} ${pending.stars === 1 ? 'gwiazdkę' : pending.stars < 5 ? 'gwiazdki' : 'gwiazdek'}!`);
-      setAppointments(prev => prev.map(a => a.id === apt.id ? { ...a, rating: pending.stars } : a));
-      setPendingRating(prev => { const n = { ...prev }; delete n[apt.id]; return n; });
+      setAppointments(prev => prev.map(a => a.uid === apt.uid ? { ...a, rating: pending.stars } : a));
+      setPendingRating(prev => { const n = { ...prev }; delete n[apt.uid]; return n; });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Nie udało się zapisać oceny');
     } finally {
@@ -87,11 +87,11 @@ export function ClientPastMeetings({ token }: ClientPastMeetingsProps) {
       ) : (
         <div className="dashboard__card-list">
           {appointments.map((apt) => {
-            const displayRating = hoverRating[apt.id] ?? apt.rating ?? 0;
-            const isSubmitting = submittingRating === apt.id;
+            const displayRating = hoverRating[apt.uid] ?? apt.rating ?? 0;
+            const isSubmitting = submittingRating === apt.uid;
 
             return (
-              <div key={apt.id} className="dashboard__card">
+              <div key={apt.uid} className="dashboard__card">
                 <div className="dashboard__card-date">
                   <span className="dashboard__card-date-day">{formatDate(apt.startsAt)}</span>
                   <span className="dashboard__card-date-time">{formatTime(apt.startsAt)}</span>
@@ -118,13 +118,13 @@ export function ClientPastMeetings({ token }: ClientPastMeetingsProps) {
                           key={s}
                           type="button"
                           disabled={isSubmitting}
-                          className={`dashboard__card-star dashboard__card-star--btn${s <= (pendingRating[apt.id]?.stars ?? displayRating) ? ' dashboard__card-star--filled' : ''}`}
-                          onMouseEnter={() => setHoverRating(prev => ({ ...prev, [apt.id]: s }))}
-                          onMouseLeave={() => setHoverRating(prev => { const n = { ...prev }; delete n[apt.id]; return n; })}
+                          className={`dashboard__card-star dashboard__card-star--btn${s <= (pendingRating[apt.uid]?.stars ?? displayRating) ? ' dashboard__card-star--filled' : ''}`}
+                          onMouseEnter={() => setHoverRating(prev => ({ ...prev, [apt.uid]: s }))}
+                          onMouseLeave={() => setHoverRating(prev => { const n = { ...prev }; delete n[apt.uid]; return n; })}
                           onClick={() => handleSelectStar(apt, s)}
                         >★</button>
                       ))}
-                      {pendingRating[apt.id] && (
+                      {pendingRating[apt.uid] && (
                         <button
                           type="button"
                           className="dashboard__card-btn-join"

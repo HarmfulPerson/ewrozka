@@ -1,15 +1,13 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AppointmentEntity, UserEntity } from '@repo/postgresql-typeorm';
-import { I18nService } from 'nestjs-i18n';
+import { AppointmentEntity } from '@repo/postgresql-typeorm';
 import { Repository } from 'typeorm';
-import { ErrorCode } from '@/constants/error-code.constant';
 import { MeetingRoomService } from '../meeting-room/meeting-room.service';
 import { PaymentService } from '../payment/payment.service';
 import { StripeService } from '../stripe/stripe.service';
 
 export interface ReviewDto {
-  id: number;
+  uid: string;
   rating: number;
   comment: string | null;
   clientUsername: string;
@@ -21,24 +19,15 @@ export class AppointmentService {
   constructor(
     @InjectRepository(AppointmentEntity)
     private readonly appointmentRepository: Repository<AppointmentEntity>,
-    private readonly i18n: I18nService,
     private readonly meetingRoomService: MeetingRoomService,
     private readonly paymentService: PaymentService,
     private readonly stripeService: StripeService,
   ) {}
 
   async listMine(
-    userId: number,
+    userId: string,
     options?: { status?: string; filter?: string; limit?: number; offset?: number },
   ) {
-    const where: any[] = [{ clientId: userId }, { wrozkaId: userId }];
-
-    // Apply status filter if provided
-    if (options?.status) {
-      where[0] = { ...where[0], status: options.status };
-      where[1] = { ...where[1], status: options.status };
-    }
-
     const queryBuilder = this.appointmentRepository
       .createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.advertisement', 'advertisement')
@@ -68,7 +57,7 @@ export class AppointmentService {
 
     const [appointments, total] = await queryBuilder.getManyAndCount();
 
-    const paidIds = appointments.filter((a) => a.status === 'paid').map((a) => a.id);
+    const paidIds = appointments.filter((a) => a.status === 'paid').map((a) => a.uid);
     const tokenByAppointmentId =
       paidIds.length > 0
         ? await this.meetingRoomService.getTokensByAppointmentIds(paidIds)
@@ -76,7 +65,6 @@ export class AppointmentService {
 
     return {
       appointments: appointments.map((a) => ({
-        id: a.id,
         uid: a.uid,
         startsAt: a.startsAt.toISOString(),
         durationMinutes: a.durationMinutes,
@@ -88,14 +76,14 @@ export class AppointmentService {
         clientUsername: a.client?.username,
         wrozkaId: a.wrozkaId,
         wrozkaUsername: a.wrozka?.username,
-        meetingToken: a.status === 'paid' ? tokenByAppointmentId[a.id] ?? null : null,
+        meetingToken: a.status === 'paid' ? tokenByAppointmentId[a.uid] ?? null : null,
         rating: a.rating ?? null,
       })),
       total,
     };
   }
 
-  async listMyUpcoming(userId: number, options?: { limit?: number }) {
+  async listMyUpcoming(userId: string, options?: { limit?: number }) {
     const now = new Date();
     const queryBuilder = this.appointmentRepository
       .createQueryBuilder('appointment')
@@ -110,7 +98,7 @@ export class AppointmentService {
 
     const appointments = await queryBuilder.getMany();
 
-    const paidIds = appointments.map((a) => a.id);
+    const paidIds = appointments.map((a) => a.uid);
     const tokenByAppointmentId =
       paidIds.length > 0
         ? await this.meetingRoomService.getTokensByAppointmentIds(paidIds)
@@ -118,19 +106,18 @@ export class AppointmentService {
 
     return {
       appointments: appointments.map((a) => ({
-        id: a.id,
         uid: a.uid,
         startsAt: a.startsAt.toISOString(),
         durationMinutes: a.durationMinutes,
         advertisementTitle: a.advertisement?.title,
         wrozkaUsername: a.wrozka?.username,
-        meetingToken: tokenByAppointmentId[a.id] ?? null,
+        meetingToken: tokenByAppointmentId[a.uid] ?? null,
       })),
     };
   }
 
   async listMyCompleted(
-    userId: number,
+    userId: string,
     options?: { limit?: number; offset?: number; unratedOnly?: boolean },
   ) {
     const queryBuilder = this.appointmentRepository
@@ -152,7 +139,6 @@ export class AppointmentService {
 
     return {
       appointments: appointments.map((a) => ({
-        id: a.id,
         uid: a.uid,
         startsAt: a.startsAt.toISOString(),
         durationMinutes: a.durationMinutes,
@@ -165,15 +151,15 @@ export class AppointmentService {
   }
 
   async rateAppointment(
-    clientId: number,
-    appointmentId: number,
+    clientId: string,
+    appointmentUid: string,
     rating: number,
     comment?: string,
   ): Promise<void> {
     if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
       throw new BadRequestException('Ocena musi być liczbą całkowitą od 0 do 5');
     }
-    const appointment = await this.appointmentRepository.findOne({ where: { id: appointmentId } });
+    const appointment = await this.appointmentRepository.findOne({ where: { uid: appointmentUid } });
     if (!appointment) throw new NotFoundException('Spotkanie nie istnieje');
     if (appointment.clientId !== clientId) throw new ForbiddenException('Nie możesz ocenić tego spotkania');
     if (appointment.status !== 'completed') throw new BadRequestException('Można oceniać tylko zakończone spotkania');
@@ -186,7 +172,7 @@ export class AppointmentService {
   }
 
   async getWizardReviews(
-    wizardId: number,
+    wizardId: string,
     page: number,
     limit: number,
   ): Promise<{ reviews: ReviewDto[]; total: number; pages: number }> {
@@ -203,7 +189,7 @@ export class AppointmentService {
 
     return {
       reviews: items.map((a) => ({
-        id: a.id,
+        uid: a.uid,
         rating: a.rating!,
         comment: a.comment ?? null,
         clientUsername: a.client?.username ?? 'Anonim',
@@ -214,48 +200,7 @@ export class AppointmentService {
     };
   }
 
-  async pay(clientUserId: number, appointmentId: number, clientEmail: string) {
-    return this.stripeService.createCheckoutSession(appointmentId, clientUserId, clientEmail);
-  }
-
-  /**
-   * Phase 3 of the int-id → uid migration. Resolves uid → numeric id and
-   * delegates to the legacy method. Keeps a single source of truth for the
-   * Stripe checkout flow.
-   */
-  async payByUid(clientUserId: number, uid: string, clientEmail: string) {
-    const apt = await this.appointmentRepository.findOne({ where: { uid }, select: ['id'] });
-    if (!apt) throw new NotFoundException('Spotkanie nie istnieje');
-    return this.pay(clientUserId, apt.id, clientEmail);
-  }
-
-  /** Phase 3: rate by uid. Same delegation pattern as payByUid. */
-  async rateAppointmentByUid(
-    clientId: number,
-    uid: string,
-    rating: number,
-    comment?: string,
-  ): Promise<void> {
-    const apt = await this.appointmentRepository.findOne({ where: { uid }, select: ['id'] });
-    if (!apt) throw new NotFoundException('Spotkanie nie istnieje');
-    return this.rateAppointment(clientId, apt.id, rating, comment);
-  }
-
-  /**
-   * Phase 5: public wizard reviews lookup by UID. Resolves the wizard uid
-   * via the shared entity manager (no new DI dependency needed) and
-   * delegates to the existing by-id method.
-   */
-  async getWizardReviewsByUid(
-    wizardUid: string,
-    page: number,
-    limit: number,
-  ): Promise<{ reviews: ReviewDto[]; total: number; pages: number }> {
-    const user = await this.appointmentRepository.manager.findOne(UserEntity, {
-      where: { uid: wizardUid },
-      select: ['id'],
-    });
-    if (!user) throw new NotFoundException('Specjalista nie istnieje');
-    return this.getWizardReviews(user.id, page, limit);
+  async pay(clientUserId: string, appointmentUid: string, clientEmail: string) {
+    return this.stripeService.createCheckoutSession(appointmentUid, clientUserId, clientEmail);
   }
 }

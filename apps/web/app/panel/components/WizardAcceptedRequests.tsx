@@ -38,9 +38,9 @@ export function WizardAcceptedRequests({ items, loading, processingId, onReject 
       </div>
       <div className="dashboard__card-list">
         {items.map((item) => {
-          const isProc = processingId === item.id;
+          const isProc = processingId === item.uid;
           return (
-            <div key={`${item.kind}-${item.id}`} className="dashboard__card">
+            <div key={`${item.kind}-${item.uid}`} className="dashboard__card">
               <div className="dashboard__card-date">
                 {item.scheduledAt ? (
                   <>

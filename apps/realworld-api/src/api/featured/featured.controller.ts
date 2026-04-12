@@ -19,7 +19,7 @@ export class FeaturedController {
   /** Sprawdza status wyróżnienia zalogowanej wróżki */
   @Get('my-status')
   @ApiAuth({ summary: 'Status wyróżnienia zalogowanego specjalisty' })
-  async getMyStatus(@CurrentUser('id') userId: number) {
+  async getMyStatus(@CurrentUser('id') userId: string) {
     return this.featuredService.getWizardFeaturedStatus(userId);
   }
 
@@ -28,7 +28,7 @@ export class FeaturedController {
   @ApiAuth({ summary: 'Utwórz Stripe PaymentIntent dla wyróżnienia specjalisty' })
   @HttpCode(HttpStatus.OK)
   async paymentIntent(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @CurrentUser('email') email: string,
   ) {
     return this.featuredService.createFeaturedPaymentIntent(userId, email);

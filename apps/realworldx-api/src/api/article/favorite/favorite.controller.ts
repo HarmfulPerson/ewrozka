@@ -23,7 +23,7 @@ export class FavoriteController {
     type: ArticleResDto,
   })
   async create(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('slug') slug: string,
   ): Promise<ArticleResDto> {
     return await this.favoriteService.create(slug, userId);
@@ -36,7 +36,7 @@ export class FavoriteController {
     type: ArticleResDto,
   })
   async delete(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('slug') slug: string,
   ): Promise<ArticleResDto> {
     return await this.favoriteService.delete(slug, userId);

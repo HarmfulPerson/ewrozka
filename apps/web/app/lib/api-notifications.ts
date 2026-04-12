@@ -2,7 +2,7 @@ const getBaseUrl = () =>
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8001/api';
 
 export interface NotificationDto {
-  id: number;
+  uid: string;
   type: string;
   title: string;
   body: string | null;
@@ -37,8 +37,8 @@ export async function apiGetUnreadCount(token: string): Promise<number> {
   return data.count ?? 0;
 }
 
-export async function apiMarkNotificationRead(token: string, id: number): Promise<void> {
-  await fetch(`${getBaseUrl()}/notifications/${id}/read`, {
+export async function apiMarkNotificationRead(token: string, uid: string): Promise<void> {
+  await fetch(`${getBaseUrl()}/notifications/${uid}/read`, {
     method: 'PATCH',
     headers: { Authorization: `Token ${token}` },
   });

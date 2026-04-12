@@ -4,7 +4,7 @@ import { NotificationType, CreateNotificationPayload } from '../notification-typ
  * Nowa ocena spotkania — powiadomienie dla wróżki.
  */
 export function buildNewRatingNotification(opts: {
-  wizardId: number;
+  wizardId: string;
   clientName: string;
   rating: number;
   advertisementTitle: string;

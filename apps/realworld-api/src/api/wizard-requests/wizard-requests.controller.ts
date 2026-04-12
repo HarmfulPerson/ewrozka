@@ -12,7 +12,7 @@ export class WizardRequestsController {
   @Get('requests')
   @ApiAuth({ summary: 'Unified list of all requests for wizard' })
   async list(
-    @CurrentUser('id') wizardId: number,
+    @CurrentUser('id') wizardId: string,
     @Query('status') status?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,

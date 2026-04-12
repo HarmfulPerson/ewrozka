@@ -33,7 +33,7 @@ describe('UserController', () => {
 
   describe('getCurrent', () => {
     it('should return the current user', async () => {
-      const currentUser = { id: 1, token: 'token' };
+      const currentUser = { id: 'user-1-uuid', token: 'token' };
       const userResDto = new UserResDto();
       userService.get.mockResolvedValue(userResDto);
 
@@ -44,7 +44,7 @@ describe('UserController', () => {
     });
 
     it('should throw an error if userService.get fails', async () => {
-      const currentUser = { id: 1, token: 'token' };
+      const currentUser = { id: 'user-1-uuid', token: 'token' };
       userService.get.mockRejectedValue(new Error('Service error'));
 
       await expect(controller.getCurrent(currentUser)).rejects.toThrow(
@@ -152,20 +152,24 @@ describe('UserController', () => {
 
   describe('update', () => {
     it('should update user and return updated user data', async () => {
-      const userId = 1;
+      const userId = 'user-1-uuid';
       const userData: UpdateUserReqDto = {
         username: 'newUsername',
         email: 'newEmail@example.com',
         bio: 'newBio',
         image: 'newImage',
+        image2: '',
+        image3: '',
       };
       const updatedUser: UserResDto = {
         user: {
+          uid: 'user-1-uuid',
           username: 'newUsername',
           token: 'token',
           email: 'newEmail@example.com',
           bio: 'newBio',
           image: 'newImage',
+          roles: ['client'],
         },
       };
 
@@ -178,12 +182,14 @@ describe('UserController', () => {
     });
 
     it('should throw an error if update fails', async () => {
-      const userId = 1;
+      const userId = 'user-1-uuid';
       const userData: UpdateUserReqDto = {
         username: 'newUsername',
         email: 'newEmail@example.com',
         bio: 'newBio',
         image: 'newImage',
+        image2: '',
+        image3: '',
       };
 
       userService.update.mockRejectedValue(new Error('Update failed'));

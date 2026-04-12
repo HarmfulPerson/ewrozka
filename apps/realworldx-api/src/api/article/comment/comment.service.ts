@@ -27,7 +27,7 @@ export class CommentService {
   async create(
     slug: string,
     commentData: CreateCommentReqDto,
-    userId: number,
+    userId: string,
   ): Promise<CommentResDto> {
     const article = await this.articleRepository.findOneBy({ slug: slug });
 
@@ -35,10 +35,10 @@ export class CommentService {
       throw new ValidationException(ErrorCode.E201);
     }
 
-    const user = await this.userRepository.findOneByOrFail({ id: userId });
+    const user = await this.userRepository.findOneByOrFail({ uid: userId });
     const comment = new CommentEntity({
       body: commentData.body,
-      articleId: article.id,
+      articleId: article.uid,
       authorId: userId,
     });
 
@@ -60,7 +60,7 @@ export class CommentService {
     }
 
     const comments = await this.commentRepository.find({
-      where: { articleId: article.id },
+      where: { articleId: article.uid },
       relations: ['author'],
     });
 
@@ -74,9 +74,9 @@ export class CommentService {
     };
   }
 
-  async delete(commentId: number, userId: number) {
+  async delete(commentUid: string, userId: string) {
     const comment = await this.commentRepository.findOneBy({
-      id: commentId,
+      uid: commentUid,
     });
 
     if (!comment) {

@@ -13,7 +13,7 @@ export class AppointmentController {
   @Get()
   @ApiAuth({ summary: 'Moje wizyty (jako klient lub specjalista)' })
   async listMine(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query('status') status?: string,
     @Query('filter') filter?: string,
     @Query('limit') limit?: string,
@@ -30,7 +30,7 @@ export class AppointmentController {
   @Get('upcoming')
   @ApiAuth({ summary: 'Nadchodzące spotkania klienta – opłacone, w przyszłości' })
   async listMyUpcoming(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query('limit') limit?: string,
   ) {
     return this.appointmentService.listMyUpcoming(userId, {
@@ -41,7 +41,7 @@ export class AppointmentController {
   @Get('completed')
   @ApiAuth({ summary: 'Odbyte spotkania klienta – paginacja i filtr nieocenionych' })
   async listMyCompleted(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('unratedOnly') unratedOnly?: string,
@@ -57,12 +57,12 @@ export class AppointmentController {
   @HttpCode(HttpStatus.OK)
   @ApiAuth({ summary: 'Oceń zakończone spotkanie' })
   async rateByUid(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('uid', ParseUUIDPipe) uid: string,
     @Body('rating') rating: number,
     @Body('comment') comment?: string,
   ) {
-    await this.appointmentService.rateAppointmentByUid(userId, uid, Number(rating), comment);
+    await this.appointmentService.rateAppointment(userId, uid, Number(rating), comment);
     return { message: 'Ocena zapisana' };
   }
 
@@ -78,7 +78,7 @@ export class AppointmentController {
     if (parsedLimit > 50) {
       throw new BadRequestException('limit must be ≤ 50');
     }
-    return this.appointmentService.getWizardReviewsByUid(
+    return this.appointmentService.getWizardReviews(
       wizardUid,
       parsedPage,
       parsedLimit,
@@ -88,11 +88,11 @@ export class AppointmentController {
   @Post('uid/:uid/pay')
   @ApiAuth({ summary: 'Opłać wizytę — tworzy Stripe Checkout session' })
   async payByUid(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @CurrentUser('email') email: string,
     @Param('uid', ParseUUIDPipe) uid: string,
   ) {
-    return this.appointmentService.payByUid(userId, uid, email);
+    return this.appointmentService.pay(userId, uid, email);
   }
 }
 

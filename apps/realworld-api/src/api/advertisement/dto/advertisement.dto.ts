@@ -7,16 +7,16 @@ import {
 } from '@repo/api';
 
 export class AdvertisementAuthorDto {
-  @NumberField({ expose: true })
-  id: number;
+  @StringField({ expose: true })
+  uid: string;
 
   @StringField({ expose: true })
   username: string;
 }
 
 export class AdvertisementDto {
-  @NumberField({ expose: true })
-  id: number;
+  @StringField({ expose: true })
+  uid: string;
 
   @StringField({ expose: true })
   title: string;
@@ -41,8 +41,8 @@ export class AdvertisementDto {
   @DateFieldOptional({ expose: true })
   updatedAt?: Date;
 
-  @NumberField({ expose: true })
-  userId: number;
+  @StringField({ expose: true })
+  userId: string;
 
   author?: AdvertisementAuthorDto;
 }

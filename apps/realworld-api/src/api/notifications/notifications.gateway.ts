@@ -54,7 +54,7 @@ export class NotificationsGateway implements OnGatewayInit {
   ) {
     try {
       const payload = await this.authService.verifyAccessToken(data.token);
-      const userId = parseInt(String(payload.id), 10);
+      const userId = String(payload.id);
       if (!userId) throw new Error('brak userId');
 
       const roles = (payload as { roles?: string[] }).roles ?? [];

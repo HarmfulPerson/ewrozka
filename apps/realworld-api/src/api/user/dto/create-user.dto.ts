@@ -1,7 +1,7 @@
 import { EmailField, PasswordField, StringField } from '@repo/api';
 import { lowerCaseTransformer } from '@repo/nest-common';
 import { Transform } from 'class-transformer';
-import { IsArray, IsInt, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsArray, IsOptional, IsString, IsUUID, Matches, MaxLength } from 'class-validator';
 
 export class CreateUserReqDto {
   @StringField()
@@ -25,11 +25,11 @@ export class CreateUserReqDto {
   @IsString({ each: true })
   readonly roleNames?: string[];
 
-  /** ID specjalizacji (topics) dla wróżek */
+  /** UUID specjalizacji (topics) dla wróżek */
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  readonly topicIds?: number[];
+  @IsUUID('4', { each: true })
+  readonly topicIds?: string[];
 
   /** Opis/bio wróżki – wymagany przy rejestracji jako wróżka */
   @IsOptional()

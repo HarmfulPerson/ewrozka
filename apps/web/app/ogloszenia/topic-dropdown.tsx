@@ -5,8 +5,8 @@ import { TopicDto } from '../lib/api';
 
 interface TopicDropdownProps {
   topics: TopicDto[];
-  selected: number[];
-  onChange: (ids: number[]) => void;
+  selected: string[];
+  onChange: (ids: string[]) => void;
 }
 
 export function TopicDropdown({ topics, selected, onChange }: TopicDropdownProps) {
@@ -21,15 +21,15 @@ export function TopicDropdown({ topics, selected, onChange }: TopicDropdownProps
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const toggle = (id: number) => {
-    onChange(selected.includes(id) ? selected.filter(x => x !== id) : [...selected, id]);
+  const toggle = (uid: string) => {
+    onChange(selected.includes(uid) ? selected.filter(x => x !== uid) : [...selected, uid]);
   };
 
   const label =
     selected.length === 0
       ? 'Specjalizacje'
       : selected.length === 1
-        ? topics.find(t => t.id === selected[0])?.name ?? 'Specjalizacje'
+        ? topics.find(t => t.uid === selected[0])?.name ?? 'Specjalizacje'
         : `Specjalizacje (${selected.length})`;
 
   return (
@@ -54,15 +54,15 @@ export function TopicDropdown({ topics, selected, onChange }: TopicDropdownProps
       {open && (
         <div className="ogl-dropdown__menu">
           {topics.map(t => (
-            <label key={t.id} className="ogl-dropdown__item">
+            <label key={t.uid} className="ogl-dropdown__item">
               <input
                 type="checkbox"
-                checked={selected.includes(t.id)}
-                onChange={() => toggle(t.id)}
+                checked={selected.includes(t.uid)}
+                onChange={() => toggle(t.uid)}
                 className="ogl-dropdown__checkbox"
               />
-              <span className={`ogl-dropdown__checkmark${selected.includes(t.id) ? ' ogl-dropdown__checkmark--checked' : ''}`}>
-                {selected.includes(t.id) && (
+              <span className={`ogl-dropdown__checkmark${selected.includes(t.uid) ? ' ogl-dropdown__checkmark--checked' : ''}`}>
+                {selected.includes(t.uid) && (
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>

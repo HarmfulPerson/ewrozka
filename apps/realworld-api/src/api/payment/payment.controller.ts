@@ -15,7 +15,7 @@ export class PaymentController {
 
   @Get('wallet')
   @ApiAuth({ summary: 'Prowizja i próg komisji (saldo z Stripe Connect)' })
-  async getWalletInfo(@CurrentUser('id') userId: number) {
+  async getWalletInfo(@CurrentUser('id') userId: string) {
     const [platformFeePercent, commissionTierStatus] = await Promise.all([
       this.paymentService.getPlatformFeePercentForUser(userId),
 
@@ -34,7 +34,7 @@ export class PaymentController {
   @Get('transactions')
   @ApiAuth({ summary: 'Historia moich transakcji' })
   async getTransactions(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
 
     @Query('limit') limit?: string,
 
@@ -62,7 +62,7 @@ export class PaymentController {
 
     return {
       transactions: result.transactions.map((t) => ({
-        id: t.id,
+        uid: t.uid,
 
         appointmentId: t.appointmentId ?? null,
 

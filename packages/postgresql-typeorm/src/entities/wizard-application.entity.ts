@@ -29,7 +29,7 @@ export class WizardApplicationEntity {
   image!: string;
 
   @Column({ name: 'topic_ids', type: 'jsonb', default: '[]' })
-  topicIds!: number[];
+  topicIds!: string[];
 
   @Column({ length: 10, nullable: true, default: null })
   gender!: 'female' | 'male' | null;

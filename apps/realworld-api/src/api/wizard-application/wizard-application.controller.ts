@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ApiPublic } from '@repo/api/decorators/http.decorators';
-import { IsArray, IsInt, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsArray, IsOptional, IsString, IsUUID, Matches, MaxLength, MinLength } from 'class-validator';
 import { FileFastifyInterceptor, diskStorage } from 'fastify-file-interceptor';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -41,8 +41,8 @@ class SubmitWizardApplicationDto {
 
   @IsOptional()
   @IsArray()
-  @IsInt({ each: true })
-  topicIds?: number[];
+  @IsUUID('4', { each: true })
+  topicIds?: string[];
 
   @IsOptional()
   @IsString()

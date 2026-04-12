@@ -15,7 +15,7 @@ export class ProfileService {
     private readonly userFollowRepository: Repository<UserFollowsEntity>,
   ) {}
 
-  async getProfile(userId: number, username: string): Promise<Profile> {
+  async getProfile(userId: string, username: string): Promise<Profile> {
     // Get the profile of the target user
     const targetProfile = await this.userRepository.findOneBy({ username });
 
@@ -31,18 +31,18 @@ export class ProfileService {
     };
 
     // Check if the user is following the target user
-    if (userId && userId !== targetProfile.id) {
+    if (userId && userId !== targetProfile.uid) {
       const follows = await this.userRepository.find({
         select: {
-          id: true,
+          uid: true,
           following: {
-            id: true,
+            uid: true,
             followeeId: true,
           },
         },
         where: {
-          id: userId,
-          following: { followeeId: targetProfile.id },
+          uid: userId,
+          following: { followeeId: targetProfile.uid },
         },
         relations: ['following'],
       });
@@ -53,21 +53,21 @@ export class ProfileService {
     return profile;
   }
 
-  async follow(userId: number, username: string): Promise<Profile> {
+  async follow(userId: string, username: string): Promise<Profile> {
     // Find the user who wants to follow
     // And check if the user is already following the target user
     const [user] = await this.userRepository.find({
       select: {
-        id: true,
+        uid: true,
         username: true,
         following: {
-          id: true,
+          uid: true,
           followee: {
             username: true,
           },
         },
       },
-      where: { id: userId, following: { followee: { username: username } } },
+      where: { uid: userId, following: { followee: { username: username } } },
       relations: {
         following: {
           followee: true,
@@ -91,7 +91,7 @@ export class ProfileService {
     // Add the user to follow to the following list
     const userFollows = new UserFollowsEntity({
       followerId: userId,
-      followeeId: followingUser.id,
+      followeeId: followingUser.uid,
     });
 
     await this.userFollowRepository.save(userFollows);
@@ -104,10 +104,10 @@ export class ProfileService {
     };
   }
 
-  async unfollow(userId: number, username: string): Promise<Profile> {
+  async unfollow(userId: string, username: string): Promise<Profile> {
     // Find the user who wants to unfollow
     const user = await this.userRepository.findOne({
-      where: { id: userId },
+      where: { uid: userId },
     });
 
     if (!user) {
@@ -125,14 +125,14 @@ export class ProfileService {
 
     // Find relationship between the user and the user to unfollow
     const userFollow = await this.userFollowRepository.findOne({
-      where: { followerId: userId, followeeId: followUser.id },
+      where: { followerId: userId, followeeId: followUser.uid },
     });
 
     if (!userFollow) {
       throw new ValidationException(ErrorCode.E104);
     }
 
-    await this.userFollowRepository.delete(userFollow.id);
+    await this.userFollowRepository.delete(userFollow.uid);
 
     return {
       username: followUser.username,

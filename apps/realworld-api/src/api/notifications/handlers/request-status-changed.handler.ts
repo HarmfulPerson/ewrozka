@@ -10,11 +10,11 @@ const STATUS_LABELS: Record<string, string> = {
  * Zmiana statusu wniosku — powiadomienie dla klienta.
  */
 export function buildRequestStatusChangedNotification(opts: {
-  clientId: number;
+  clientId: string;
   wizardName: string;
   advertisementTitle: string;
   newStatus: string;
-  requestId: number | string;
+  requestId: string;
   rejectionReason?: string;
 }): CreateNotificationPayload {
   const statusLabel = STATUS_LABELS[opts.newStatus] ?? opts.newStatus;

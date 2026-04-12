@@ -80,16 +80,16 @@ export function useMojeSpotkania() {
 
   const handleSubmitRating = async (item: ClientRequestDto) => {
     if (!user || !item.appointmentUid) return;
-    const pending = pendingRating[item.id];
+    const pending = pendingRating[item.uid];
     if (!pending) return;
-    setSubmittingRating(item.id);
+    setSubmittingRating(item.uid);
     try {
       await apiRateAppointment(user.token, item.appointmentUid, pending.stars, pending.comment || undefined);
       toast.success(`Oceniłeś spotkanie na ${pending.stars} ${pending.stars === 1 ? 'gwiazdkę' : pending.stars < 5 ? 'gwiazdki' : 'gwiazdek'}!`);
-      setItems(prev => prev.map(i => i.id === item.id ? { ...i, rating: pending.stars } : i));
+      setItems(prev => prev.map(i => i.uid === item.uid ? { ...i, rating: pending.stars } : i));
       setPendingRating(prev => {
         const next = { ...prev };
-        delete next[item.id];
+        delete next[item.uid];
         return next;
       });
     } catch (err) {

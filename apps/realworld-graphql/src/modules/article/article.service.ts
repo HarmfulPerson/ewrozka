@@ -37,9 +37,9 @@ export class ArticleService {
     };
   }
 
-  async getWithRelations(slug: string, userId: number): Promise<Article> {
+  async getWithRelations(slug: string, userId: string): Promise<Article> {
     const user = await this.userRepository.findOneOrFail({
-      where: { id: userId },
+      where: { uid: userId },
       relations: ['following'],
     });
 
@@ -55,7 +55,7 @@ export class ArticleService {
     const author = article?.author?.toDto(Profile) || new Profile();
     author.following =
       user?.following?.some(
-        (followee) => followee.followeeId === article?.author?.id,
+        (followee) => followee.followeeId === article?.author?.uid,
       ) || false;
 
     return {
@@ -63,13 +63,13 @@ export class ArticleService {
       author,
       tagList: article?.tags?.map((tag) => tag.name).reverse() || [],
       favorited:
-        article?.favoritedBy?.some((fUser) => fUser.id === userId) || false,
+        article?.favoritedBy?.some((fUser) => fUser.uid === userId) || false,
       favoritesCount: article?.favoritedBy?.length || 0,
     };
   }
 
   async create(
-    userId: number,
+    userId: string,
     input: CreateArticleInput,
     shouldEagerLoad: boolean,
   ): Promise<Article> {
@@ -98,12 +98,12 @@ export class ArticleService {
     let article: ArticleEntity;
     if (shouldEagerLoad) {
       article = await this.articleRepository.findOne({
-        where: { id: savedArticle.id },
+        where: { uid: savedArticle.uid },
         relations: ['author', 'author.followers', 'tags', 'favoritedBy'],
       });
     } else {
       article = await this.articleRepository.findOne({
-        where: { id: savedArticle.id },
+        where: { uid: savedArticle.uid },
         relations: ['tags'],
       });
     }
@@ -120,14 +120,14 @@ export class ArticleService {
             (follower) => follower.followerId === userId,
           ),
         },
-        favorited: article.favoritedBy.some((user) => user.id === userId),
+        favorited: article.favoritedBy.some((user) => user.uid === userId),
         favoritesCount: article.favoritedBy.length,
       }),
     };
   }
 
   async update(
-    userId: number,
+    userId: string,
     reqSlug: string,
     input: UpdateArticleInput,
     shouldEagerLoad: boolean,
@@ -168,12 +168,12 @@ export class ArticleService {
     let newArticle: ArticleEntity;
     if (shouldEagerLoad) {
       newArticle = await this.articleRepository.findOne({
-        where: { id: savedArticle.id },
+        where: { uid: savedArticle.uid },
         relations: ['author', 'author.followers', 'tags', 'favoritedBy'],
       });
     } else {
       newArticle = await this.articleRepository.findOne({
-        where: { id: savedArticle.id },
+        where: { uid: savedArticle.uid },
         relations: ['tags'],
       });
     }
@@ -190,7 +190,7 @@ export class ArticleService {
             (follower) => follower.followerId === userId,
           ),
         },
-        favorited: newArticle.favoritedBy.some((user) => user.id === userId),
+        favorited: newArticle.favoritedBy.some((user) => user.uid === userId),
         favoritesCount: newArticle.favoritedBy.length,
       }),
     };

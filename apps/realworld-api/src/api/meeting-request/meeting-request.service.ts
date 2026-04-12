@@ -42,10 +42,10 @@ export class MeetingRequestService {
   ) {}
 
   async create(
-    userId: number,
+    userId: string,
     dto: CreateMeetingRequestReqDto,
     options?: { roles?: string[] },
-  ): Promise<{ id: number; requestedStartsAt: string | null; message: string }> {
+  ): Promise<{ uid: string; requestedStartsAt: string | null; message: string }> {
     if (!dto.requestedStartsAt && !dto.preferredDate) {
       throw new BadRequestException(
         'Podaj termin spotkania lub preferowaną datę',
@@ -59,23 +59,17 @@ export class MeetingRequestService {
       );
     }
 
-    // Phase 2+ of the uid migration: accept either advertisementId (legacy)
-    // or advertisementUid. Resolve uid → id once at the top and mutate the
-    // dto so the rest of the method can stay unchanged.
-    if (!dto.advertisementId && !dto.advertisementUid) {
-      throw new BadRequestException('Podaj advertisementId lub advertisementUid');
+    if (!dto.advertisementUid) {
+      throw new BadRequestException('Podaj advertisementUid');
     }
 
     const ad = await this.advertisementRepository.findOne({
-      where: dto.advertisementUid
-        ? { uid: dto.advertisementUid }
-        : { id: dto.advertisementId },
+      where: { uid: dto.advertisementUid },
       relations: ['user'],
     });
     if (!ad) {
       throw new NotFoundException('Ogłoszenie nie istnieje');
     }
-    dto.advertisementId = ad.id;
 
     if (ad.userId === userId) {
       throw new ForbiddenException('Nie możesz aplikować na własne ogłoszenie.');
@@ -90,7 +84,7 @@ export class MeetingRequestService {
       const to = new Date(requestedStartsAt);
       to.setDate(to.getDate() + 1);
       const slots = await this.availabilityService.getSlotsForAdvertisement(
-        dto.advertisementId,
+        ad.uid,
         from,
         to.toISOString().slice(0, 10),
       );
@@ -105,7 +99,7 @@ export class MeetingRequestService {
       const existing = await this.meetingRequestRepository.findOne({
         where: {
           userId,
-          advertisementId: dto.advertisementId,
+          advertisementId: ad.uid,
           requestedStartsAt,
           status: In(['pending', 'accepted']),
         },
@@ -121,7 +115,7 @@ export class MeetingRequestService {
 
     const entity = this.meetingRequestRepository.create({
       userId,
-      advertisementId: dto.advertisementId,
+      advertisementId: ad.uid,
       wizardId: ad.userId,
       requestedStartsAt,
       preferredDate,
@@ -134,26 +128,26 @@ export class MeetingRequestService {
     void this.notificationsService.notifyWizard(ad.userId);
 
     // Powiadomienie persystentne
-    const client = await this.userRepository.findOne({ where: { id: userId }, select: { username: true } });
+    const client = await this.userRepository.findOne({ where: { uid: userId }, select: { username: true } });
     void this.notificationsService.createAndEmit(
       buildNewRequestNotification({
         wizardId: ad.userId,
         clientName: client?.username ?? 'Klient',
         advertisementTitle: ad.title,
-        requestId: saved.id,
+        requestId: saved.uid,
         isGuest: false,
       }),
     );
 
     return {
-      id: saved.id,
+      uid: saved.uid,
       requestedStartsAt: saved.requestedStartsAt?.toISOString() ?? null,
       message: saved.message,
     };
   }
 
   async listForMyAds(
-    wrozkaUserId: number,
+    wrozkaUserId: string,
     options?: { status?: string; limit?: number; offset?: number; sortBy?: string; order?: string },
   ) {
     const allowedSortBy = ['createdAt', 'requestedStartsAt', 'status'] as const;
@@ -162,9 +156,9 @@ export class MeetingRequestService {
     const validatedOrder = allowedOrder.includes(options?.order?.toUpperCase() as any) ? (options!.order!.toUpperCase() as 'ASC' | 'DESC') : 'DESC';
     const myAds = await this.advertisementRepository.find({
       where: { userId: wrozkaUserId },
-      select: { id: true },
+      select: { uid: true },
     });
-    const adIds = myAds.map((a) => a.id);
+    const adIds = myAds.map((a) => a.uid);
 
     const statusFilter = options?.status ? { status: options.status } : {};
     const where =
@@ -194,20 +188,20 @@ export class MeetingRequestService {
     // For accepted requests, find corresponding appointments and meeting rooms
     const acceptedRequestIds = requests
       .filter((r) => r.status === 'accepted')
-      .map((r) => r.id);
+      .map((r) => r.uid);
 
-    let appointmentsMap: Record<number, any> = {};
+    const appointmentsMap: Record<string, any> = {};
     if (acceptedRequestIds.length > 0) {
       const appointments = await this.appointmentRepository.find({
         where: { meetingRequestId: In(acceptedRequestIds) },
       });
 
-      const appointmentIds = appointments.map((apt) => apt.id);
+      const appointmentIds = appointments.map((apt) => apt.uid);
       const meetingRooms = await this.meetingRoomRepository.find({
         where: { appointmentId: In(appointmentIds) },
       });
 
-      const roomsMap: Record<number, string> = {};
+      const roomsMap: Record<string, string> = {};
       meetingRooms.forEach((room) => {
         roomsMap[room.appointmentId] = room.token;
       });
@@ -215,10 +209,10 @@ export class MeetingRequestService {
       appointments.forEach((apt) => {
         if (apt.meetingRequestId) {
           appointmentsMap[apt.meetingRequestId] = {
-            appointmentId: apt.id,
+            appointmentUid: apt.uid,
             status: apt.status,
             startsAt: apt.startsAt?.toISOString(),
-            meetingToken: roomsMap[apt.id] ?? null,
+            meetingToken: roomsMap[apt.uid] ?? null,
           };
         }
       });
@@ -226,7 +220,6 @@ export class MeetingRequestService {
 
     return {
       requests: requests.map((r) => ({
-        id: r.id,
         uid: r.uid,
         advertisementId: r.advertisementId,
         advertisementTitle: r.advertisement?.title ?? '(Ogłoszenie usunięte)',
@@ -237,14 +230,14 @@ export class MeetingRequestService {
         message: r.message,
         status: r.status,
         createdAt: r.createdAt?.toISOString(),
-        appointment: appointmentsMap[r.id] || null,
+        appointment: appointmentsMap[r.uid] || null,
       })),
       total,
     };
   }
 
   async listMyRequests(
-    clientUserId: number,
+    clientUserId: string,
     options?: { status?: string; limit?: number; offset?: number; sortBy?: string; order?: string },
   ) {
     const allowedSortBy = ['createdAt', 'requestedStartsAt', 'status'] as const;
@@ -266,7 +259,6 @@ export class MeetingRequestService {
 
     return {
       requests: requests.map((r) => ({
-        id: r.id,
         uid: r.uid,
         advertisementId: r.advertisementId,
         advertisementTitle: r.advertisement?.title,
@@ -282,9 +274,9 @@ export class MeetingRequestService {
     };
   }
 
-  async accept(wrozkaUserId: number, requestId: number) {
+  async accept(wrozkaUserId: string, requestUid: string) {
     const request = await this.meetingRequestRepository.findOne({
-      where: { id: requestId },
+      where: { uid: requestUid },
       relations: ['advertisement', 'advertisement.user'],
     });
     if (!request) {
@@ -317,7 +309,7 @@ export class MeetingRequestService {
       clientId: request.userId,
       wrozkaId: request.advertisement.userId,
       advertisementId: request.advertisementId,
-      meetingRequestId: request.id,
+      meetingRequestId: request.uid,
       startsAt,
       durationMinutes,
       priceGrosze: request.advertisement.priceGrosze,
@@ -337,20 +329,20 @@ export class MeetingRequestService {
         wizardName: wizardUser?.username ?? 'Specjalista',
         advertisementTitle: request.advertisement?.title ?? 'Konsultacja',
         newStatus: 'accepted',
-        requestId: request.id,
+        requestId: request.uid,
       }),
     );
 
     return {
-      appointmentId: appointment.id,
+      appointmentUid: appointment.uid,
       startsAt: appointment.startsAt.toISOString(),
       status: 'accepted',
     };
   }
 
-  async reject(wrozkaUserId: number, requestId: number, reason?: string) {
+  async reject(wrozkaUserId: string, requestUid: string, reason?: string) {
     const request = await this.meetingRequestRepository.findOne({
-      where: { id: requestId },
+      where: { uid: requestUid },
       relations: ['advertisement', 'advertisement.user', 'user'],
     });
     if (!request) {
@@ -366,7 +358,7 @@ export class MeetingRequestService {
     // Zaakceptowany – tylko nieopłacony można odrzucić
     if (request.status === 'accepted') {
       const apt = await this.appointmentRepository.findOne({
-        where: { meetingRequestId: request.id },
+        where: { meetingRequestId: request.uid },
       });
       if (apt && apt.status === 'paid') {
         throw new BadRequestException('Nie można odrzucić opłaconego wniosku');
@@ -401,7 +393,7 @@ export class MeetingRequestService {
               appUrl,
             },
           })
-          .catch((err) => {
+          .catch(() => {
             // log but don't fail the reject
           });
       }
@@ -422,34 +414,11 @@ export class MeetingRequestService {
         wizardName: wizardUser?.username ?? 'Specjalista',
         advertisementTitle: request.advertisement?.title ?? 'Konsultacja',
         newStatus: 'rejected',
-        requestId: request.id,
+        requestId: request.uid,
         rejectionReason: reason,
       }),
     );
 
     return { status: 'rejected' };
-  }
-
-  /**
-   * Phase 3 of the int-id → uid migration. Resolves uid → numeric id and
-   * delegates to the existing accept/reject methods so business logic stays
-   * single-sourced.
-   */
-  async acceptByUid(wrozkaUserId: number, uid: string) {
-    const request = await this.meetingRequestRepository.findOne({
-      where: { uid },
-      select: ['id'],
-    });
-    if (!request) throw new NotFoundException('Prośba o spotkanie nie istnieje');
-    return this.accept(wrozkaUserId, request.id);
-  }
-
-  async rejectByUid(wrozkaUserId: number, uid: string, reason?: string) {
-    const request = await this.meetingRequestRepository.findOne({
-      where: { uid },
-      select: ['id'],
-    });
-    if (!request) throw new NotFoundException('Prośba o spotkanie nie istnieje');
-    return this.reject(wrozkaUserId, request.id, reason);
   }
 }

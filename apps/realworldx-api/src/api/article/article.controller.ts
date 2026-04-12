@@ -32,7 +32,7 @@ export class ArticleController {
     isAuthOptional: true,
   })
   async list(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query() reqDto: ArticleListReqDto,
   ): Promise<ArticleListResDto> {
     return await this.articleService.list(reqDto, userId);
@@ -45,7 +45,7 @@ export class ArticleController {
     type: ArticleListResDto,
   })
   async getFeed(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Query() reqDto: ArticleFeedReqDto,
   ): Promise<ArticleListResDto> {
     return await this.articleService.getFeed(userId, reqDto);
@@ -59,7 +59,7 @@ export class ArticleController {
     isAuthOptional: true,
   })
   async get(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Param('slug') slug: string,
   ): Promise<ArticleResDto> {
     return await this.articleService.get(userId, slug);
@@ -85,7 +85,7 @@ export class ArticleController {
     },
   })
   async create(
-    @CurrentUser('id') userId: number,
+    @CurrentUser('id') userId: string,
     @Body('article') articleData: CreateArticleReqDto,
   ): Promise<ArticleResDto> {
     return await this.articleService.create(userId, articleData);

@@ -9,7 +9,7 @@ describe('ArticleController', () => {
   beforeEach(async () => {
     articleServiceValue = {
       list: jest.fn(),
-      feed: jest.fn(),
+      getFeed: jest.fn(),
       get: jest.fn(),
       create: jest.fn(),
       delete: jest.fn(),

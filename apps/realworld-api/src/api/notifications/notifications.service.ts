@@ -10,13 +10,13 @@ import { Repository } from 'typeorm';
 import { CreateNotificationPayload } from './notification-types';
 
 export interface NotificationsGatewayApi {
-  emitPendingCount: (wizardId: number, count: number) => void;
+  emitPendingCount: (wizardId: string, count: number) => void;
   emitAdminPendingVideoCount: (count: number) => void;
-  emitNotification: (userId: number, notification: NotificationDto) => void;
+  emitNotification: (userId: string, notification: NotificationDto) => void;
 }
 
 export interface NotificationDto {
-  id: number;
+  uid: string;
   type: string;
   title: string;
   body: string | null;
@@ -73,7 +73,7 @@ export class NotificationsService {
   // ── Read / list ─────────────────────────────────────────────────────────
 
   async getForUser(
-    userId: number,
+    userId: string,
     options?: { limit?: number; offset?: number; unreadOnly?: boolean },
   ): Promise<{ notifications: NotificationDto[]; total: number; unreadCount: number }> {
     const limit = Math.min(options?.limit ?? 20, 100);
@@ -104,20 +104,20 @@ export class NotificationsService {
     };
   }
 
-  async getUnreadCount(userId: number): Promise<number> {
+  async getUnreadCount(userId: string): Promise<number> {
     return this.notificationRepo.count({
       where: { userId, isRead: false },
     });
   }
 
-  async markAsRead(userId: number, notificationId: number): Promise<void> {
+  async markAsRead(userId: string, notificationUid: string): Promise<void> {
     await this.notificationRepo.update(
-      { id: notificationId, userId },
+      { uid: notificationUid, userId },
       { isRead: true },
     );
   }
 
-  async markAllAsRead(userId: number): Promise<void> {
+  async markAllAsRead(userId: string): Promise<void> {
     await this.notificationRepo.update(
       { userId, isRead: false },
       { isRead: true },
@@ -126,7 +126,7 @@ export class NotificationsService {
 
   // ── Legacy: pending count (backward compat) ─────────────────────────────
 
-  async getPendingCount(wizardId: number): Promise<{
+  async getPendingCount(wizardId: string): Promise<{
     regularCount: number;
     guestCount: number;
     total: number;
@@ -145,7 +145,7 @@ export class NotificationsService {
     return { regularCount, guestCount, total: regularCount + guestCount };
   }
 
-  async notifyWizard(wizardId: number): Promise<void> {
+  async notifyWizard(wizardId: string): Promise<void> {
     if (!this.gateway) return;
     try {
       const { total } = await this.getPendingCount(wizardId);
@@ -177,7 +177,7 @@ export class NotificationsService {
 
   private toDto(entity: NotificationEntity): NotificationDto {
     return {
-      id: entity.id,
+      uid: entity.uid,
       type: entity.type,
       title: entity.title,
       body: entity.body,

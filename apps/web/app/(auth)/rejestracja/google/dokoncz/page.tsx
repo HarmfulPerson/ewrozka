@@ -31,7 +31,7 @@ function DokonczGoogleRejestracjaForm() {
     picture?: string;
   } | null>(null);
   const [topics, setTopics] = useState<TopicDto[]>([]);
-  const [selectedTopics, setSelectedTopics] = useState<number[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [phone, setPhone] = useState('');
@@ -106,9 +106,9 @@ function DokonczGoogleRejestracjaForm() {
     }
   };
 
-  const toggleTopic = (id: number) => {
+  const toggleTopic = (uid: string) => {
     setSelectedTopics((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
+      prev.includes(uid) ? prev.filter((t) => t !== uid) : [...prev, uid],
     );
   };
 
@@ -292,10 +292,10 @@ function DokonczGoogleRejestracjaForm() {
                 <div className="wrozka-reg__topics">
                   {topics.map((t) => (
                     <button
-                      key={t.id}
+                      key={t.uid}
                       type="button"
-                      className={`wrozka-reg__topic${selectedTopics.includes(t.id) ? ' wrozka-reg__topic--active' : ''}`}
-                      onClick={() => toggleTopic(t.id)}
+                      className={`wrozka-reg__topic${selectedTopics.includes(t.uid) ? ' wrozka-reg__topic--active' : ''}`}
+                      onClick={() => toggleTopic(t.uid)}
                     >
                       <TopicIcon name={t.name} size={15} />
                       {t.name}

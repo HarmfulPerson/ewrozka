@@ -18,7 +18,7 @@ export interface GuestFormErrors {
   email?: string;
 }
 
-export function useBooking(advertisementUidOrId: string | number | undefined) {
+export function useBooking(advertisementUid: string | undefined) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<BookingStep>('choice');
   const [dateStep, setDateStep] = useState<DateStep>('month');
@@ -40,14 +40,14 @@ export function useBooking(advertisementUidOrId: string | number | undefined) {
   const [guestSuccess, setGuestSuccess] = useState(false);
 
   const loadSlotDates = async () => {
-    if (!advertisementUidOrId) return;
+    if (!advertisementUid) return;
     setLoadingDates(true);
     try {
       const today = new Date();
       const end = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
       const fromDate = today.toISOString().split('T')[0] ?? '';
       const toDate = end.toISOString().split('T')[0] ?? '';
-      const response = await apiGetAvailableSlots(advertisementUidOrId, fromDate, toDate);
+      const response = await apiGetAvailableSlots(advertisementUid, fromDate, toDate);
 
       const toLocalDateStr = (iso: string) => {
         const d = new Date(iso);
@@ -71,7 +71,7 @@ export function useBooking(advertisementUidOrId: string | number | undefined) {
   };
 
   const loadSlotsForDate = async (dateStr: string) => {
-    if (!advertisementUidOrId) return;
+    if (!advertisementUid) return;
     setSelectedDate(dateStr);
     setSelectedSlot(null);
     setDateStep('time');
@@ -79,7 +79,7 @@ export function useBooking(advertisementUidOrId: string | number | undefined) {
     try {
       const nextDay = new Date(new Date(dateStr).getTime() + 24 * 60 * 60 * 1000);
       const toDate = nextDay.toISOString().split('T')[0] ?? '';
-      const response = await apiGetAvailableSlots(advertisementUidOrId, dateStr, toDate);
+      const response = await apiGetAvailableSlots(advertisementUid, dateStr, toDate);
       setAvailableSlots(response.slots);
     } catch {
       setAvailableSlots([]);

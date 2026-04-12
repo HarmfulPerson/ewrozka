@@ -23,11 +23,11 @@ export class GuestBookingEntity {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ name: 'wizard_id' })
-  wizardId!: number;
+  @Column({ name: 'wizard_id', type: 'uuid' })
+  wizardId!: string;
 
-  @Column({ name: 'advertisement_id', nullable: true, default: null })
-  advertisementId!: number | null;
+  @Column({ name: 'advertisement_id', type: 'uuid', nullable: true, default: null })
+  advertisementId!: string | null;
 
   @Column({ name: 'guest_name', type: 'varchar', length: 100 })
   guestName!: string;
@@ -71,10 +71,10 @@ export class GuestBookingEntity {
   createdAt!: Date;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'wizard_id', referencedColumnName: 'id' })
+  @JoinColumn({ name: 'wizard_id', referencedColumnName: 'uid' })
   wizard!: Relation<UserEntity>;
 
   @ManyToOne(() => AdvertisementEntity, { onDelete: 'SET NULL', nullable: true })
-  @JoinColumn({ name: 'advertisement_id', referencedColumnName: 'id' })
+  @JoinColumn({ name: 'advertisement_id', referencedColumnName: 'uid' })
   advertisement!: Relation<AdvertisementEntity>;
 }

@@ -17,7 +17,7 @@ export class FavoriteService {
 
   async create(
     slug: string,
-    userId: number,
+    userId: string,
     shouldEagerLoad: boolean,
   ): Promise<Article> {
     const { user, article } = await this.validateAndGetUserArticle(
@@ -28,7 +28,7 @@ export class FavoriteService {
 
     // Check if the user has already favorited the article
     const hasFavorited = article.favoritedBy.some(
-      (favoritedBy) => favoritedBy.id === user.id,
+      (favoritedBy) => favoritedBy.uid === user.uid,
     );
 
     if (!hasFavorited) {
@@ -67,7 +67,7 @@ export class FavoriteService {
 
   async delete(
     slug: string,
-    userId: number,
+    userId: string,
     shouldEagerLoad: boolean,
   ): Promise<Article> {
     this.logger.log('Deleting favorite for article', slug);
@@ -79,13 +79,13 @@ export class FavoriteService {
 
     // Check if the user has already favorited the article
     const hasFavorited = article.favoritedBy.some(
-      (favoritedBy) => favoritedBy.id === user.id,
+      (favoritedBy) => favoritedBy.uid === user.uid,
     );
 
     if (hasFavorited) {
       // Remove the user from the list of favorited users
       article.favoritedBy = article.favoritedBy.filter(
-        (favoritedBy) => favoritedBy.id !== user.id,
+        (favoritedBy) => favoritedBy.uid !== user.uid,
       );
 
       await this.articleRepository.save(article);
@@ -111,11 +111,11 @@ export class FavoriteService {
 
   private async validateAndGetUserArticle(
     slug: string,
-    userId: number,
+    userId: string,
     shouldEagerLoad: boolean,
   ): Promise<{ user: UserEntity; article: ArticleEntity }> {
     const user = await this.userRepository.findOneOrFail({
-      where: { id: userId },
+      where: { uid: userId },
     });
     let article: ArticleEntity;
     if (shouldEagerLoad) {

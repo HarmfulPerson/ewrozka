@@ -60,7 +60,7 @@ export function WizardUpcomingMeetings({ appointments, loading }: WizardUpcoming
             const isPast = now >= start + apt.durationMinutes * 60 * 1000;
 
             return (
-              <div key={apt.id} className="dashboard__card">
+              <div key={apt.uid} className="dashboard__card">
                 <div className="dashboard__card-date">
                   <span className="dashboard__card-date-day">{formatDate(apt.startsAt)}</span>
                   <span className="dashboard__card-date-time">{formatTime(apt.startsAt)}</span>
