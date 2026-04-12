@@ -91,7 +91,7 @@ export function Footer() {
                 <IconTikTok />
               </a>
               <a
-                href="https://www.instagram.com/ewrozka"
+                href="https://www.instagram.com/ewrozkaonline/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="footer__social-link"
