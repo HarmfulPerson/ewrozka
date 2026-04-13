@@ -43,7 +43,7 @@
     "@repo/api": "workspace:*",
     "@repo/nest-common": "workspace:*",
     "@repo/postgresql-typeorm": "workspace:*",
-    "@sentry/nestjs": "^10.45.0",
+    "@sentry/nestjs": "^10.48.0",
     "@sentry/profiling-node": "^10.45.0",
     "axios": "^1.13.6",
     "class-transformer": "^0.5.1",
