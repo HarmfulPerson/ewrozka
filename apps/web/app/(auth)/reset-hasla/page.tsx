@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { AuthFormShell } from '../../components/auth/auth-form-shell';
+import { PasswordInput } from '../../components/inputs/PasswordInput';
 import { apiResetPassword } from '../../lib/api';
 import './reset-hasla.css';
 
@@ -97,9 +98,8 @@ function ResetHaslaContent() {
         )}
         <div className="auth-form__field">
           <label htmlFor="password">Nowe hasło</label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             placeholder="••••••••"
             autoComplete="new-password"
             minLength={6}
@@ -107,9 +107,8 @@ function ResetHaslaContent() {
         </div>
         <div className="auth-form__field">
           <label htmlFor="confirm">Powtórz hasło</label>
-          <input
+          <PasswordInput
             id="confirm"
-            type="password"
             placeholder="••••••••"
             autoComplete="new-password"
             minLength={6}

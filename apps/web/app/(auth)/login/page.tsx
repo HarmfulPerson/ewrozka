@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { AuthFormShell } from '../../components/auth/auth-form-shell';
+import { PasswordInput } from '../../components/inputs/PasswordInput';
 import { apiLogin, getApiBaseUrl } from '../../lib/api';
 import { setStoredUser, userFromApi } from '../../lib/auth-mock';
 
@@ -86,9 +87,8 @@ function LoginForm() {
       </div>
       <div className="auth-form__field">
         <label htmlFor="password">Hasło</label>
-        <input
+        <PasswordInput
           id="password"
-          type="password"
           placeholder="••••••••"
           autoComplete="current-password"
         />

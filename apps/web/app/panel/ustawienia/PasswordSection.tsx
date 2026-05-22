@@ -1,5 +1,7 @@
 'use client';
 
+import { PasswordInput } from '../../components/inputs/PasswordInput';
+
 interface PasswordSectionProps {
   currentPassword: string;
   newPassword: string;
@@ -33,8 +35,8 @@ export function PasswordSection({
 
       <div className="ustawienia-field">
         <label htmlFor="currentPassword">Obecne hasło</label>
-        <input
-          id="currentPassword" type="password" value={currentPassword}
+        <PasswordInput
+          id="currentPassword" value={currentPassword}
           onChange={(e) => onCurrentPasswordChange(e.target.value)}
           autoComplete="current-password" placeholder="••••••••"
           className={pwErrors.currentPassword ? 'ustawienia-field__input--error' : ''}
@@ -43,8 +45,8 @@ export function PasswordSection({
 
       <div className="ustawienia-field">
         <label htmlFor="newPassword">Nowe hasło</label>
-        <input
-          id="newPassword" type="password" value={newPassword}
+        <PasswordInput
+          id="newPassword" value={newPassword}
           onChange={(e) => onNewPasswordChange(e.target.value)}
           autoComplete="new-password" placeholder="Min. 8 znaków"
           className={pwErrors.newPassword ? 'ustawienia-field__input--error' : ''}
@@ -53,8 +55,8 @@ export function PasswordSection({
 
       <div className="ustawienia-field">
         <label htmlFor="confirmPassword">Powtórz nowe hasło</label>
-        <input
-          id="confirmPassword" type="password" value={confirmPassword}
+        <PasswordInput
+          id="confirmPassword" value={confirmPassword}
           onChange={(e) => onConfirmPasswordChange(e.target.value)}
           autoComplete="new-password" placeholder="••••••••"
           className={pwErrors.confirmPassword ? 'ustawienia-field__input--error' : ''}

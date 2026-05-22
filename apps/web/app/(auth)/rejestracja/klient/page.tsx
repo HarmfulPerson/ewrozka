@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { AuthFormShell } from '../../../components/auth/auth-form-shell';
+import { PasswordInput } from '../../../components/inputs/PasswordInput';
 import { apiRegister } from '../../../lib/api';
 
 export default function RejestracjaKlientPage() {
@@ -100,9 +101,8 @@ function RejestracjaKlientContent() {
         </div>
         <div className="auth-form__field">
           <label htmlFor="password">Hasło</label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             placeholder="••••••••"
             autoComplete="new-password"
           />

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { AuthFormShell } from '../../../components/auth/auth-form-shell';
+import { PasswordInput } from '../../../components/inputs/PasswordInput';
 import {
   apiGetTopics,
   apiSubmitWizardApplication,
@@ -263,7 +264,7 @@ function RejestracjaWrozkaContent() {
 
         <div className="auth-form__field">
           <label htmlFor="password">Hasło <span className="wrozka-reg__required">*</span></label>
-          <input id="password" type="password" placeholder="Minimum 6 znaków" autoComplete="new-password" required />
+          <PasswordInput id="password" placeholder="Minimum 6 znaków" autoComplete="new-password" required />
         </div>
 
         <div className="auth-form__field">
