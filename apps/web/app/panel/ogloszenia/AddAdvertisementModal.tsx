@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock';
+
+/** Musi być zsynchronizowany z `MAX_IMAGE_SIZE_BYTES` w backendzie
+ *  (apps/realworld-api/src/api/advertisement/constants.ts). */
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE_MB = MAX_IMAGE_SIZE_BYTES / (1024 * 1024);
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 interface AddAdvertisementModalProps {
   onClose: () => void;
@@ -27,14 +34,29 @@ export function AddAdvertisementModal({ onClose, onSubmit, error }: AddAdvertise
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error('Dozwolone formaty zdjęć: JPG, PNG, GIF, WebP');
+      e.target.value = '';
+      return;
     }
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+      toast.error(
+        `Zdjęcie jest za duże (${sizeMb} MB). Maksymalny rozmiar to ${MAX_IMAGE_SIZE_MB} MB.`,
+      );
+      e.target.value = '';
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRemoveImage = () => {
@@ -124,15 +146,20 @@ export function AddAdvertisementModal({ onClose, onSubmit, error }: AddAdvertise
             <div className="ogloszenia-form__field">
               <label className="ogloszenia-form__label">Zdjęcie (opcjonalne)</label>
               {!imagePreview ? (
-                <label className="ogloszenia-upload-btn">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    style={{ display: 'none' }}
-                  />
-                  <span>+ Dodaj zdjęcie</span>
-                </label>
+                <>
+                  <label className="ogloszenia-upload-btn">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handleImageChange}
+                      style={{ display: 'none' }}
+                    />
+                    <span>+ Dodaj zdjęcie</span>
+                  </label>
+                  <small className="ogloszenia-form__hint">
+                    JPG, PNG, GIF lub WebP, maks. {MAX_IMAGE_SIZE_MB} MB
+                  </small>
+                </>
               ) : (
                 <div className="ogloszenia-preview">
                   <img src={imagePreview} alt="Preview" />

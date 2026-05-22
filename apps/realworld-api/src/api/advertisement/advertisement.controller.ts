@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  PayloadTooLargeException,
   Post,
   Req,
 } from '@nestjs/common';
@@ -18,6 +19,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { pipeline } from 'stream/promises';
 import { AdvertisementService } from './advertisement.service';
+import { MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB } from './constants';
 
 @ApiTags('Advertisement')
 @Controller('advertisements')
@@ -45,7 +47,7 @@ export class AdvertisementController {
   @Post()
   @ApiAuth({ summary: 'Create advertisement (wizard only)' })
   async create(@CurrentUser('id') userId: number, @Req() req: FastifyRequest) {
-    const parts = await (req as any).parts();
+    const parts = (req as any).parts();
 
     let title: string | undefined;
     let description: string | undefined;
@@ -53,34 +55,80 @@ export class AdvertisementController {
     let durationMinutes: number | undefined;
     let imageFile: { filename: string; filepath: string } | undefined;
 
-    for await (const part of parts) {
-      if (part.type === 'field') {
-        const fieldValue = (part as any).value;
-        if (part.fieldname === 'title') title = fieldValue;
-        if (part.fieldname === 'description') description = fieldValue;
-        if (part.fieldname === 'priceGrosze')
-          priceGrosze = parseInt(fieldValue);
-        if (part.fieldname === 'durationMinutes')
-          durationMinutes = parseInt(fieldValue);
-      } else if (part.type === 'file' && part.fieldname === 'image') {
-        const ALLOWED_IMG_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-        const ext = path.extname(part.filename).toLowerCase();
-        if (!ALLOWED_IMG_EXT.includes(ext)) {
-          throw new BadRequestException('Dozwolone formaty zdjęć: JPG, PNG, GIF, WebP');
-        }
-        const timestamp = Date.now();
-        const filename = `ad_${timestamp}${ext}`;
-        const uploadPath = path.join(
-          process.cwd(),
-          'uploads',
-          'advertisements',
-          'temp',
-        );
-        fs.mkdirSync(uploadPath, { recursive: true });
-        const filepath = path.join(uploadPath, filename);
+    try {
+      for await (const part of parts) {
+        if (part.type === 'field') {
+          const raw = (part as any).value;
+          // @fastify/multipart auto-parsuje pola z Content-Type: application/json do obiektu,
+          // a te obiekty zawierają cykliczną referencję `fields: body`. Wymuszamy stringa,
+          // bo inaczej pg-types crashuje z "Converting circular structure to JSON" przy INSERT.
+          if (typeof raw !== 'string') {
+            throw new BadRequestException(
+              `Pole '${part.fieldname}' musi być stringiem (otrzymano ${typeof raw}).`,
+            );
+          }
+          if (part.fieldname === 'title') title = raw;
+          if (part.fieldname === 'description') description = raw;
+          if (part.fieldname === 'priceGrosze') priceGrosze = parseInt(raw, 10);
+          if (part.fieldname === 'durationMinutes')
+            durationMinutes = parseInt(raw, 10);
+        } else if (part.type === 'file' && part.fieldname === 'image') {
+          const ALLOWED_IMG_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+          const ext = path.extname(part.filename).toLowerCase();
+          if (!ALLOWED_IMG_EXT.includes(ext)) {
+            throw new BadRequestException(
+              'Dozwolone formaty zdjęć: JPG, PNG, GIF, WebP',
+            );
+          }
+          const timestamp = Date.now();
+          const filename = `ad_${timestamp}${ext}`;
+          const uploadPath = path.join(
+            process.cwd(),
+            'uploads',
+            'advertisements',
+            'temp',
+          );
+          fs.mkdirSync(uploadPath, { recursive: true });
+          const filepath = path.join(uploadPath, filename);
 
-        await pipeline(part.file, fs.createWriteStream(filepath));
-        imageFile = { filename, filepath };
+          await pipeline(part.file, fs.createWriteStream(filepath));
+
+          // Busboy ustawia `truncated=true` jeśli plik przekroczył limit (`fileSize` w main.ts).
+          // Stream kończy się normalnie z obciętą zawartością — bez tego checka zapisalibyśmy
+          // do bazy uszkodzone zdjęcie.
+          if ((part.file as any).truncated) {
+            fs.rmSync(filepath, { force: true });
+            throw new PayloadTooLargeException(
+              `Zdjęcie przekracza maksymalny rozmiar ${MAX_IMAGE_SIZE_MB} MB.`,
+            );
+          }
+
+          imageFile = { filename, filepath };
+        }
+      }
+    } catch (err) {
+      // Cleanup pliku tymczasowego jeśli wstał błąd po jego utworzeniu
+      if (imageFile?.filepath) {
+        fs.rmSync(imageFile.filepath, { force: true });
+      }
+      // FastifyError z multiparta przy przekroczeniu limitu — zamapuj na 413
+      const code = (err as { code?: string }).code;
+      if (code === 'FST_REQ_FILE_TOO_LARGE') {
+        throw new PayloadTooLargeException(
+          `Zdjęcie przekracza maksymalny rozmiar ${MAX_IMAGE_SIZE_MB} MB.`,
+        );
+      }
+      throw err;
+    }
+
+    // Sanity check — gdyby ktoś próbował obejść limit
+    if (imageFile) {
+      const stat = fs.statSync(imageFile.filepath);
+      if (stat.size > MAX_IMAGE_SIZE_BYTES) {
+        fs.rmSync(imageFile.filepath, { force: true });
+        throw new PayloadTooLargeException(
+          `Zdjęcie przekracza maksymalny rozmiar ${MAX_IMAGE_SIZE_MB} MB.`,
+        );
       }
     }
 
