@@ -89,7 +89,7 @@ function LoginForm() {
         <label htmlFor="password">Hasło</label>
         <PasswordInput
           id="password"
-          placeholder="••••••••"
+          placeholder="Twoje hasło"
           autoComplete="current-password"
         />
       </div>

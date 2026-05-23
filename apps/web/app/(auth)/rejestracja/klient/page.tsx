@@ -103,7 +103,7 @@ function RejestracjaKlientContent() {
           <label htmlFor="password">Hasło</label>
           <PasswordInput
             id="password"
-            placeholder="••••••••"
+            placeholder="Minimum 8 znaków"
             autoComplete="new-password"
           />
         </div>

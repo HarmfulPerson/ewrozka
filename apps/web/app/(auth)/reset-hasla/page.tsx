@@ -100,7 +100,7 @@ function ResetHaslaContent() {
           <label htmlFor="password">Nowe hasło</label>
           <PasswordInput
             id="password"
-            placeholder="••••••••"
+            placeholder="Minimum 6 znaków"
             autoComplete="new-password"
             minLength={6}
           />
@@ -109,7 +109,7 @@ function ResetHaslaContent() {
           <label htmlFor="confirm">Powtórz hasło</label>
           <PasswordInput
             id="confirm"
-            placeholder="••••••••"
+            placeholder="Powtórz nowe hasło"
             autoComplete="new-password"
             minLength={6}
           />

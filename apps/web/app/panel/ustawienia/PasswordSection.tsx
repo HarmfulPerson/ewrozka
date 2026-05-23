@@ -38,7 +38,7 @@ export function PasswordSection({
         <PasswordInput
           id="currentPassword" value={currentPassword}
           onChange={(e) => onCurrentPasswordChange(e.target.value)}
-          autoComplete="current-password" placeholder="••••••••"
+          autoComplete="current-password" placeholder="Twoje obecne hasło"
           className={pwErrors.currentPassword ? 'ustawienia-field__input--error' : ''}
         />
       </div>
@@ -48,7 +48,7 @@ export function PasswordSection({
         <PasswordInput
           id="newPassword" value={newPassword}
           onChange={(e) => onNewPasswordChange(e.target.value)}
-          autoComplete="new-password" placeholder="Min. 8 znaków"
+          autoComplete="new-password" placeholder="Minimum 8 znaków"
           className={pwErrors.newPassword ? 'ustawienia-field__input--error' : ''}
         />
       </div>
@@ -58,7 +58,7 @@ export function PasswordSection({
         <PasswordInput
           id="confirmPassword" value={confirmPassword}
           onChange={(e) => onConfirmPasswordChange(e.target.value)}
-          autoComplete="new-password" placeholder="••••••••"
+          autoComplete="new-password" placeholder="Powtórz nowe hasło"
           className={pwErrors.confirmPassword ? 'ustawienia-field__input--error' : ''}
         />
       </div>
