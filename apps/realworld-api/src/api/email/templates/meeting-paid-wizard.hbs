@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spotkanie oplacone</title>
+  {{> styles}}
+</head>
+<body>
+  <div class="wrapper">
+    {{> header}}
+    <div class="body">
+      <p class="body__greeting">Czesc, {{wizardName}}! <span class="emoji">✨</span></p>
+      <p class="body__text">
+        Klient <strong>{{clientName}}</strong> oplacil spotkanie ({{adTitle}}). Termin jest potwierdzony i widoczny w Twoim kalendarzu.
+      </p>
+      <div class="info-box">
+        <div class="info-box__label">Termin</div>
+        <div class="info-box__value">{{scheduledAt}}</div>
+      </div>
+      <div class="info-box">
+        <div class="info-box__label">Czas trwania</div>
+        <div class="info-box__value">{{durationMinutes}} minut</div>
+      </div>
+      <div class="highlight">
+        Link do pokoju spotkania bedzie dostepny w panelu na 15 minut przed rozpoczeciem. <span class="emoji">🌟</span>
+      </div>
+      <div class="btn-wrapper">
+        <a href="{{panelUrl}}" class="btn">Otworz kalendarz</a>
+      </div>
+    </div>
+    {{> footer}}
+  </div>
+</body>
+</html>

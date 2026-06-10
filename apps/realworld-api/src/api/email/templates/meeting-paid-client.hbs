@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Platnosc potwierdzona</title>
+  {{> styles}}
+</head>
+<body>
+  <div class="wrapper">
+    {{> header}}
+    <div class="body">
+      <p class="body__greeting">Platnosc potwierdzona, {{username}}! <span class="emoji">✨</span></p>
+      <p class="body__text">
+        Twoja platnosc za spotkanie z <strong>{{wizardName}}</strong> ({{adTitle}}) zostala potwierdzona. Ponizej znajdziesz szczegoly:
+      </p>
+      <div class="info-box">
+        <div class="info-box__label">Termin</div>
+        <div class="info-box__value">{{scheduledAt}}</div>
+      </div>
+      <div class="info-box">
+        <div class="info-box__label">Czas trwania</div>
+        <div class="info-box__value">{{durationMinutes}} minut</div>
+      </div>
+      <div class="highlight">
+        <strong>Wazne:</strong> Ponizszy link jest przeznaczony tylko dla Ciebie. Nie udostepniaj go nikomu. Link bedzie aktywny 15 minut przed planowana godzina spotkania.
+      </div>
+      <div class="btn-wrapper">
+        <a href="{{meetingUrl}}" class="btn">Dolacz do spotkania</a>
+      </div>
+      <div class="divider"></div>
+      <p class="fallback">
+        Adres spotkania:<br />
+        <a href="{{meetingUrl}}">{{meetingUrl}}</a>
+      </p>
+    </div>
+    {{> footer}}
+  </div>
+</body>
+</html>

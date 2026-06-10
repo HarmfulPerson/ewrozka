@@ -273,7 +273,7 @@ export class MeetingRequestService {
   async accept(wrozkaUserId: number, requestId: number) {
     const request = await this.meetingRequestRepository.findOne({
       where: { id: requestId },
-      relations: ['advertisement', 'advertisement.user'],
+      relations: ['advertisement', 'advertisement.user', 'user'],
     });
     if (!request) {
       throw new NotFoundException('Prośba o spotkanie nie istnieje');
@@ -328,6 +328,29 @@ export class MeetingRequestService {
         requestId: request.id,
       }),
     );
+
+    // E-mail do zalogowanego klienta: zaakceptowano – zachęta do opłacenia
+    const clientEmail = (request.user as { email?: string })?.email;
+    if (clientEmail) {
+      const clientName = (request.user as { username?: string })?.username ?? 'Użytkownik';
+      const wizardName = wizardUser?.username ?? 'specjalista';
+      const adTitle = request.advertisement?.title ?? 'Konsultacja';
+      const scheduledPl = startsAt.toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' });
+      const priceZl = (request.advertisement.priceGrosze / 100).toFixed(2);
+      void this.emailService
+        .sendMeetingRequestAccepted(
+          clientEmail,
+          clientName,
+          wizardName,
+          adTitle,
+          scheduledPl,
+          durationMinutes,
+          priceZl,
+        )
+        .catch((err) =>
+          console.error('Failed to send meeting-request-accepted email', err),
+        );
+    }
 
     return {
       appointmentId: appointment.id,

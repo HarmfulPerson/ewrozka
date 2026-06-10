@@ -9,6 +9,12 @@ export enum EmailType {
   GUEST_BOOKING_ACCEPTED = 'guest-booking-accepted',
   GUEST_BOOKING_REJECTED = 'guest-booking-rejected',
   GUEST_BOOKING_PAID = 'guest-booking-paid',
+  /** Wróżka zaakceptowała wniosek zalogowanego klienta – zachęta do opłacenia */
+  MEETING_REQUEST_ACCEPTED = 'meeting-request-accepted',
+  /** Płatność potwierdzona – zalogowany klient: link do pokoju spotkania */
+  MEETING_PAID_CLIENT = 'meeting-paid-client',
+  /** Klient opłacił spotkanie – powiadomienie dla wróżki */
+  MEETING_PAID_WIZARD = 'meeting-paid-wizard',
   /** Po spotkaniu – zalogowany klient: zachęta do oceny */
   MEETING_COMPLETED_RATE = 'meeting-completed-rate',
   /** Po spotkaniu – gość: podziękowanie */

@@ -11,6 +11,7 @@ import {
 } from '@repo/postgresql-typeorm';
 import Stripe from 'stripe';
 import { Repository } from 'typeorm';
+import { EmailService } from '../email/email.service';
 import { FeaturedService } from '../featured/featured.service';
 import { GuestBookingService } from '../guest-booking/guest-booking.service';
 import { MeetingRoomService } from '../meeting-room/meeting-room.service';
@@ -40,6 +41,7 @@ export class StripeService {
     private readonly featuredService: FeaturedService,
     private readonly guestBookingService: GuestBookingService,
     private readonly notificationsService: NotificationsService,
+    private readonly emailService: EmailService,
   ) {
     this.stripe = new Stripe(this.configService.get('stripe.secretKey', { infer: true })!);
     this.currency = this.configService.get('stripe.currency', { infer: true }) ?? 'pln';
@@ -294,6 +296,8 @@ export class StripeService {
         }),
       );
     }
+
+    void this.sendAppointmentPaidEmails(appointmentId);
 
     this.logger.log(`Wizyta ${appointmentId} opłacona pomyślnie przez verify-session`);
     return { success: true, appointmentId };
@@ -706,6 +710,77 @@ export class StripeService {
     }
   }
 
+  /**
+   * Po opłaceniu wizyty przez zalogowanego klienta:
+   *  #2 — mail do klienta: potwierdzenie + link do pokoju spotkania,
+   *  #3 — mail do wróżki: informacja, że klient opłacił spotkanie.
+   * Fire-and-forget — błędy są logowane, nie przerywają obsługi webhooka.
+   */
+  private async sendAppointmentPaidEmails(appointmentId: number): Promise<void> {
+    try {
+      const appointment = await this.appointmentRepository.findOne({
+        where: { id: appointmentId },
+        relations: ['advertisement', 'client', 'wrozka'],
+      });
+      if (!appointment) return;
+
+      const wizardName = appointment.wrozka?.username ?? 'specjalista';
+      const adTitle = appointment.advertisement?.title ?? 'Konsultacja';
+      const scheduledPl = appointment.startsAt.toLocaleString('pl-PL', {
+        timeZone: 'Europe/Warsaw',
+      });
+      const durationMinutes = appointment.durationMinutes;
+
+      // #2 — klient: potwierdzenie płatności + link do pokoju
+      const clientEmail = appointment.client?.email;
+      if (clientEmail) {
+        const appUrl =
+          this.configService.get('stripe.frontendUrl', { infer: true }) ||
+          'http://localhost:4000';
+        const tokens = await this.meetingRoomService.getTokensByAppointmentIds([
+          appointmentId,
+        ]);
+        const token = tokens[appointmentId];
+        if (token) {
+          const clientName =
+            appointment.client?.username ?? clientEmail.split('@')[0];
+          const meetingUrl = `${appUrl}/spotkanie/${token}`;
+          await this.emailService.sendMeetingPaidClient(
+            clientEmail,
+            clientName,
+            wizardName,
+            adTitle,
+            scheduledPl,
+            durationMinutes,
+            meetingUrl,
+          );
+        } else {
+          this.logger.warn(
+            `Brak tokenu pokoju dla wizyty ${appointmentId} — pomijam mail do klienta`,
+          );
+        }
+      }
+
+      // #3 — wróżka: klient opłacił spotkanie
+      const wizardEmail = appointment.wrozka?.email;
+      if (wizardEmail) {
+        const clientName = appointment.client?.username ?? 'Klient';
+        await this.emailService.sendMeetingPaidWizard(
+          wizardEmail,
+          wizardName,
+          clientName,
+          adTitle,
+          scheduledPl,
+          durationMinutes,
+        );
+      }
+    } catch (err) {
+      this.logger.error(
+        `Failed to send appointment-paid emails for ${appointmentId}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
   private async handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
     // ── Gość ──────────────────────────────────────────────────────────────────
     if (intent.metadata?.bookingType === 'guest') {
@@ -785,6 +860,8 @@ export class StripeService {
     }
 
     await this.ensureFundsAvailableNonProd(wrozkaId, priceGrosze, feePercent);
+
+    void this.sendAppointmentPaidEmails(appointmentId);
 
     this.logger.log(`Wizyta ${appointmentId} opłacona przez payment_intent.succeeded`);
   }
@@ -887,6 +964,8 @@ export class StripeService {
     }
 
     await this.ensureFundsAvailableNonProd(wrozkaId, priceGrosze, feePercent);
+
+    void this.sendAppointmentPaidEmails(appointmentId);
 
     this.logger.log(`Wizyta ${appointmentId} opłacona pomyślnie przez Stripe`);
   }

@@ -236,6 +236,65 @@ export class EmailService implements OnModuleInit {
     });
   }
 
+  /** Wróżka zaakceptowała wniosek zalogowanego klienta – zachęta do opłacenia */
+  async sendMeetingRequestAccepted(
+    to: string,
+    username: string,
+    wizardName: string,
+    adTitle: string,
+    scheduledAt: string,
+    durationMinutes: number,
+    priceZl: string,
+  ): Promise<void> {
+    const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
+    const payUrl = `${frontendUrl}/panel/moje-spotkania`;
+
+    await this.send({
+      type: EmailType.MEETING_REQUEST_ACCEPTED,
+      to,
+      subject: 'Twój wniosek został zaakceptowany – opłać spotkanie – eWróżka',
+      context: { username, wizardName, adTitle, scheduledAt, durationMinutes, priceZl, payUrl },
+    });
+  }
+
+  /** Płatność potwierdzona – zalogowany klient: link do pokoju spotkania */
+  async sendMeetingPaidClient(
+    to: string,
+    username: string,
+    wizardName: string,
+    adTitle: string,
+    scheduledAt: string,
+    durationMinutes: number,
+    meetingUrl: string,
+  ): Promise<void> {
+    await this.send({
+      type: EmailType.MEETING_PAID_CLIENT,
+      to,
+      subject: 'Płatność potwierdzona – Twój link do spotkania – eWróżka',
+      context: { username, wizardName, adTitle, scheduledAt, durationMinutes, meetingUrl },
+    });
+  }
+
+  /** Klient opłacił spotkanie – powiadomienie dla wróżki */
+  async sendMeetingPaidWizard(
+    to: string,
+    wizardName: string,
+    clientName: string,
+    adTitle: string,
+    scheduledAt: string,
+    durationMinutes: number,
+  ): Promise<void> {
+    const frontendUrl = this.configService.getOrThrow('email', { infer: true }).frontendUrl;
+    const panelUrl = `${frontendUrl}/panel/kalendarz`;
+
+    await this.send({
+      type: EmailType.MEETING_PAID_WIZARD,
+      to,
+      subject: 'Klient opłacił spotkanie ✨ – eWróżka',
+      context: { wizardName, clientName, adTitle, scheduledAt, durationMinutes, panelUrl },
+    });
+  }
+
   // ─── Internal ─────────────────────────────────────────────────────────────
 
   private partialsRegistered = false;

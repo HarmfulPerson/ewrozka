@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wniosek zaakceptowany</title>
+  {{> styles}}
+</head>
+<body>
+  <div class="wrapper">
+    {{> header}}
+    <div class="body">
+      <p class="body__greeting">Swietna wiadomosc, {{username}}! <span class="emoji">✨</span></p>
+      <p class="body__text">
+        Wrozka <strong>{{wizardName}}</strong> zaakceptowala Twoj wniosek o spotkanie ({{adTitle}}).
+      </p>
+      <div class="info-box">
+        <div class="info-box__label">Termin</div>
+        <div class="info-box__value">{{scheduledAt}}</div>
+      </div>
+      <div class="info-box">
+        <div class="info-box__label">Czas trwania</div>
+        <div class="info-box__value">{{durationMinutes}} minut</div>
+      </div>
+      <div class="info-box">
+        <div class="info-box__label">Cena</div>
+        <div class="info-box__value">{{priceZl}} zl</div>
+      </div>
+      <p class="body__text">
+        Aby potwierdzic spotkanie, zaloguj sie i oplac je w panelu:
+      </p>
+      <div class="btn-wrapper">
+        <a href="{{payUrl}}" class="btn">Oplac spotkanie</a>
+      </div>
+      <div class="divider"></div>
+      <p class="fallback">
+        Oplac spotkanie odpowiednio wczesnie - nieopłacone terminy moga zostac zwolnione.<br />
+        <a href="{{payUrl}}">{{payUrl}}</a>
+      </p>
+    </div>
+    {{> footer}}
+  </div>
+</body>
+</html>
