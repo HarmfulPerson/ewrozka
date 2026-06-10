@@ -219,7 +219,7 @@
   width: 100%;
   padding: 1rem 1.75rem;
   background: var(--accent);
-  color: var(--bg-primary);
+  color: #fff;
   border: none;
   border-radius: var(--radius);
   font-size: 1.125rem;
