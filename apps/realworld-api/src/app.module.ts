@@ -90,9 +90,13 @@ const i18nModule = I18nModule.forRootAsync({
     i18nModule,
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
-      { name: 'short', ttl: 1000, limit: 5 },
-      { name: 'medium', ttl: 10_000, limit: 30 },
-      { name: 'long', ttl: 60_000, limit: 100 },
+      // Limity dobrane pod zalogowany SPA: pojedyncze wejście do panelu robi
+      // fan-out ~10 równoległych żądań (layout + dashboard), więc short=5/s
+      // przebijał się natychmiast po zalogowaniu (429). Zostawiamy zapas na
+      // burst, a sustained rate ogranicza medium/long.
+      { name: 'short', ttl: 1000, limit: 50 },
+      { name: 'medium', ttl: 10_000, limit: 200 },
+      { name: 'long', ttl: 60_000, limit: 500 },
     ]),
     ApiModule,
     HealthModule,
