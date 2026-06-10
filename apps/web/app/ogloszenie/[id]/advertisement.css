@@ -98,8 +98,11 @@
 
 @media (min-width: 768px) {
   .advertisement-details__image {
-    height: 100%;
-    min-height: 300px;
+    /* Sztywna, OKREŚLONA wysokość — wcześniej height:100% rozwiązywało się względem
+       auto-wysokości komórki grida (nieokreślone), więc object-fit nie miał punktu
+       odniesienia i wysokie zdjęcia rozpychały layout. */
+    height: 380px;
+    align-self: start;
   }
 }
 
