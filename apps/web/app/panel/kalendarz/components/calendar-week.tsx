@@ -6,7 +6,8 @@ import { Tooltip } from 'react-tooltip';
 import { toast } from 'react-hot-toast';
 import type { AvailabilityDto, AppointmentDto } from '../../../lib/api-calendar';
 import type { GuestBookingDto } from '../../../lib/api-meetings';
-import { apiCreateAvailability } from '../../../lib/api-calendar';
+import { apiCreateAvailability, apiDeleteAvailability } from '../../../lib/api-calendar';
+import { DeleteAvailabilityModal } from '../../dostepnosc/DeleteAvailabilityModal';
 
 type CalendarBusyItem =
   | { kind: 'appointment'; startsAt: string; durationMinutes: number; apt: AppointmentDto }
@@ -156,7 +157,24 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
   const [weekOffset, setWeekOffset] = useState(0);
   const [quickAdd, setQuickAdd] = useState<QuickAddState | null>(null);
   const [quickSaving, setQuickSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<AvailabilityDto | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const gridWrapperRef = useRef<HTMLDivElement>(null);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await apiDeleteAvailability(token, deleteTarget.id);
+      toast.success('Blok dostępności usunięty');
+      setDeleteTarget(null);
+      onRefresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Nie udało się usunąć bloku');
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteTarget, token, onRefresh]);
 
   // Przy wejściu przewiń do typowych godzin (8:00), zamiast 0:00
   useEffect(() => {
@@ -500,12 +518,16 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
             const showText = (block.end - block.start) >= 15;
 
             if (block.type === 'available') {
+              const deletable = new Date(avail.endsAt) > now;
               return (
                 <div
                   key={`${avail.id}-avail-${idx}`}
-                  className="calendar-week__availability"
+                  className={`calendar-week__availability${deletable ? ' calendar-week__availability--deletable' : ''}`}
                   style={{ top: `${top}px`, height: `${height}px` }}
-                  title={showText ? undefined : 'Dostępny'}
+                  onClick={deletable ? (e) => { e.stopPropagation(); setDeleteTarget(avail); } : undefined}
+                  data-tooltip-id={deletable ? 'avail-del-tooltip' : undefined}
+                  data-tooltip-content={deletable ? 'Kliknij, aby usunąć ten blok dostępności' : undefined}
+                  title={!deletable && !showText ? 'Dostępny' : undefined}
                 >
                   {showText && 'Dostępny'}
                 </div>
@@ -717,6 +739,7 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
 
         <Tooltip id="meeting-tooltip" place="top" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '8px 12px', fontSize: '0.8125rem', lineHeight: '1.4', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 9999, maxWidth: '250px' }} />
         <Tooltip id="slot-add-tooltip" place="top" style={{ backgroundColor: 'rgba(139,92,246,0.9)', color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 10px', fontSize: '0.75rem', zIndex: 9998 }} />
+        <Tooltip id="avail-del-tooltip" place="top" style={{ backgroundColor: 'rgba(248,113,113,0.92)', color: '#fff', border: 'none', borderRadius: '6px', padding: '5px 10px', fontSize: '0.75rem', zIndex: 9998 }} />
       </div>
 
       {quickAdd && (
@@ -725,6 +748,15 @@ export function CalendarWeek({ availabilities, appointments, guestBookings, onRe
           onAdd={handleQuickAdd}
           onClose={() => setQuickAdd(null)}
           saving={quickSaving}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeleteAvailabilityModal
+          target={deleteTarget}
+          deleting={deleting}
+          onConfirm={confirmDelete}
+          onClose={() => !deleting && setDeleteTarget(null)}
         />
       )}
     </>

@@ -5,6 +5,7 @@ import { getStoredUser } from '../../lib/auth-mock';
 import { apiGetMyAvailability, apiGetMyAppointments, AvailabilityDto, AppointmentDto } from '../../lib/api-calendar';
 import { apiGetWizardGuestBookings, GuestBookingDto } from '../../lib/api-meetings';
 import { CalendarWeek } from './components/calendar-week';
+import '../wnioski/wnioski.css';
 import './kalendarz.css';
 
 export default function KalendarzPage() {

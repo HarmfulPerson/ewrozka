@@ -435,6 +435,17 @@
   color: #90ee90;
 }
 
+.calendar-week__availability--deletable {
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.calendar-week__availability--deletable:hover {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(248, 113, 113, 0.5);
+  color: #fca5a5;
+}
+
 /* Klient — domyślnie (bez meetingToken, pending itp.): blade */
 .calendar-week__appointment {
   background: rgba(139, 92, 246, 0.12);
