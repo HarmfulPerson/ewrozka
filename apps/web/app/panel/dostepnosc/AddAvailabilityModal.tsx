@@ -26,6 +26,12 @@ export function AddAvailabilityModal({
   repeat, setRepeat, repeatWeeks, setRepeatWeeks,
   timeSlots, handleAdd, onClose,
 }: AddAvailabilityModalProps) {
+  const stepperBox: React.CSSProperties = {
+    width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+    background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 7,
+    color: 'var(--text-primary)', fontFamily: 'inherit',
+  };
+  const weekNoun = repeatWeeks === 1 ? 'tydzień' : repeatWeeks < 5 ? 'tygodnie' : 'tygodni';
   return (
     <div className="wnioski-modal-overlay" onClick={() => !submitting && onClose()}>
       <div className="wnioski-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
@@ -71,8 +77,24 @@ export function AddAvailabilityModal({
             {repeat && (
               <div>
                 <label style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.25rem' }}>Liczba tygodni</label>
-                <input type="number" min={1} max={12} value={repeatWeeks} onChange={e => setRepeatWeeks(Math.max(1, Math.min(12, parseInt(e.target.value) || 1)))}
-                  className="wnioski-pagination__select" style={{ width: '80px', padding: '0.5rem', textAlign: 'center' }} />
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setRepeatWeeks(Math.max(1, repeatWeeks - 1))}
+                    disabled={repeatWeeks <= 1}
+                    aria-label="Zmniejsz liczbę tygodni"
+                    style={{ ...stepperBox, fontSize: '1.25rem', lineHeight: 1, cursor: repeatWeeks <= 1 ? 'not-allowed' : 'pointer', opacity: repeatWeeks <= 1 ? 0.4 : 1, transition: 'all 0.15s' }}
+                  >−</button>
+                  <span style={{ ...stepperBox, minWidth: 48, fontSize: '0.9375rem', fontWeight: 600 }}>{repeatWeeks}</span>
+                  <button
+                    type="button"
+                    onClick={() => setRepeatWeeks(Math.min(12, repeatWeeks + 1))}
+                    disabled={repeatWeeks >= 12}
+                    aria-label="Zwiększ liczbę tygodni"
+                    style={{ ...stepperBox, fontSize: '1.25rem', lineHeight: 1, cursor: repeatWeeks >= 12 ? 'not-allowed' : 'pointer', opacity: repeatWeeks >= 12 ? 0.4 : 1, transition: 'all 0.15s' }}
+                  >+</button>
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginLeft: '0.25rem' }}>{weekNoun}</span>
+                </div>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.375rem' }}>
                   Łącznie do {selectedDays.length * repeatWeeks} bloków
                 </p>
