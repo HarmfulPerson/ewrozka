@@ -47,7 +47,7 @@
     "@sentry/profiling-node": "^10.45.0",
     "axios": "^1.13.6",
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.2",
+    "class-validator": "^0.15.1",
     "dotenv": "^16.4.5",
     "fastify": "^5.4.0",
     "fastify-file-interceptor": "^1.0.9",
