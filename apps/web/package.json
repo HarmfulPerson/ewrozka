@@ -10,7 +10,7 @@
     "lint": "eslint \"{src,app,test}/**/*.{ts,tsx}\" --fix"
   },
   "dependencies": {
-    "@daily-co/daily-js": "^0.87.0",
+    "@daily-co/daily-js": "^0.89.1",
     "@repo/ui": "workspace:*",
     "@stripe/connect-js": "^3.3.34",
     "@stripe/react-connect-js": "^3.3.33",
