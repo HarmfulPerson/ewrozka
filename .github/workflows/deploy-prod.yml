@@ -23,7 +23,7 @@ jobs:
           echo "b64=$(echo -n "$ENV_CONTENT" | base64 -w0)" >> $GITHUB_OUTPUT
 
       - name: Deploy na serwer (SSH)
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         env:
           ENV_B64: ${{ steps.prepare-env.outputs.b64 }}
         with:
